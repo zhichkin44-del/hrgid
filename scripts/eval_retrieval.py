@@ -37,6 +37,15 @@ def hit(hits: list[SearchHit], gold: list[str]) -> bool:
     return bool({h.article for h in hits[:K]} & set(gold))
 
 
+def rerank_keys(mode: str, args: list[str]) -> list[str]:
+    """Ключи переранжировщиков: select — все; report <ключ> — один; --no-rerank — ни одного."""
+    if mode == "select":
+        return list(CANDIDATES)
+    if args[0] == "--no-rerank":
+        return []
+    return [args[0]]
+
+
 def pct(values: list[float], q: float) -> float:
     s = sorted(values)
     return s[min(len(s) - 1, int(round(q * (len(s) - 1))))]
@@ -56,10 +65,9 @@ def main() -> int:
         print(f"индекс: {stats.chunks} фрагментов за {time.perf_counter() - t:.0f} с")
     if mode == "select":
         questions = [q for q in load_set("tuning.jsonl") if q["kind"] == "law"]
-        keys = list(CANDIDATES)
     else:
         questions = load_set("retrieval.jsonl")
-        keys = [sys.argv[2]]
+    keys = rerank_keys(mode, sys.argv[2:])
     law = [q for q in questions if q["kind"] == "law"]
     out: dict[str, Any] = {"n_law": len(law)}
 
