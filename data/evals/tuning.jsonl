@@ -1,0 +1,25 @@
+{"id": "tune-law-01", "kind": "law", "question": "Не позднее какого срока до начала отпуска выплачиваются отпускные?", "gold_articles": ["136"]}
+{"id": "tune-law-02", "kind": "law", "question": "В каких случаях работодатель вправе удерживать деньги из заработной платы?", "gold_articles": ["137"]}
+{"id": "tune-law-03", "kind": "law", "question": "Что такое ненормированный рабочий день?", "gold_articles": ["101"]}
+{"id": "tune-law-04", "kind": "law", "question": "Что такое сменная работа и как работодатель вводит графики сменности?", "gold_articles": ["103"]}
+{"id": "tune-law-05", "kind": "law", "question": "Можно ли работать по совместительству у другого работодателя?", "gold_articles": ["60.1"]}
+{"id": "tune-law-06", "kind": "law", "question": "Когда работник несёт полную материальную ответственность?", "gold_articles": ["243"]}
+{"id": "tune-law-07", "kind": "law", "question": "Можно ли отказать в приёме на работу из-за пола или возраста?", "gold_articles": ["64"]}
+{"id": "tune-law-08", "kind": "law", "question": "Как расторгнуть трудовой договор по соглашению сторон?", "gold_articles": ["78"]}
+{"id": "tune-law-09", "kind": "law", "question": "Что происходит при истечении срока срочного трудового договора?", "gold_articles": ["79"]}
+{"id": "tune-law-10", "kind": "law", "question": "Какой дополнительный отпуск полагается за ненормированный рабочий день?", "gold_articles": ["119"]}
+{"id": "tune-law-11", "kind": "law", "question": "Какие обязанности у работодателя по обеспечению безопасных условий труда?", "gold_articles": ["214"]}
+{"id": "tune-law-12", "kind": "law", "question": "Когда работодатель обязан выдать трудовую книжку при увольнении?", "gold_articles": ["84.1"]}
+{"id": "tune-law-13", "kind": "law", "question": "Что такое коллективный договор и что в него включается?", "gold_articles": ["40", "41"]}
+{"id": "tune-law-14", "kind": "law", "question": "В какой срок работник может обратиться в суд по спору об увольнении?", "gold_articles": ["392"]}
+{"id": "tune-law-15", "kind": "law", "question": "Какие гарантии у работников, совмещающих работу с обучением?", "gold_articles": ["173", "174", "177"]}
+{"id": "tune-noans-01", "kind": "no_answer", "question": "Как поменять водительские права после переезда в другой город?", "gold_articles": []}
+{"id": "tune-noans-02", "kind": "no_answer", "question": "Какой размер пенсии положен по старости в этом году?", "gold_articles": []}
+{"id": "tune-noans-03", "kind": "no_answer", "question": "Как оформить налоговый вычет за лечение зубов?", "gold_articles": []}
+{"id": "tune-noans-04", "kind": "no_answer", "question": "Как выбрать ноутбук для программирования?", "gold_articles": []}
+{"id": "tune-noans-05", "kind": "no_answer", "question": "Какие документы нужны для усыновления ребёнка из-за границы?", "gold_articles": []}
+{"id": "tune-noans-06", "kind": "no_answer", "question": "Как зарегистрировать ООО без уставного капитала?", "gold_articles": []}
+{"id": "tune-noans-07", "kind": "no_answer", "question": "Как подать иск о защите прав потребителей на маркетплейс?", "gold_articles": []}
+{"id": "tune-noans-08", "kind": "no_answer", "question": "Сколько стоит патент для иностранного работника в Москве?", "gold_articles": []}
+{"id": "tune-noans-09", "kind": "no_answer", "question": "Как правильно вести бухгалтерский учёт основных средств?", "gold_articles": []}
+{"id": "tune-noans-10", "kind": "no_answer", "question": "Какая страховая премия по ДМС считается нормальной?", "gold_articles": []}
