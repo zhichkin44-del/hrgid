@@ -75,7 +75,9 @@ class Employee(BaseModel):
     @property
     def first_name(self) -> str:
         parts = self.full_name.split()
-        return parts[1] if len(parts) >= 2 else (parts[0] if parts else "")
+        if len(parts) >= 3:  # «Фамилия Имя Отчество» из выгрузки
+            return parts[1]
+        return parts[0] if parts else ""
 
 
 class InviteCode(BaseModel):
