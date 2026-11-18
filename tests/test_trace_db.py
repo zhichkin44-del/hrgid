@@ -19,7 +19,7 @@ def test_trace_row_written_and_tenant_scoped(conn: Any) -> None:
             "answered",
             "вопрос",
             (1, 2),
-            ("claude-haiku-4-5",),
+            ("claude-haiku-5-5",),
             100,
             20,
             0.0123,
