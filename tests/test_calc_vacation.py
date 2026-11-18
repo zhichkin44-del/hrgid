@@ -124,3 +124,10 @@ def test_r3_bad_dates() -> None:
 def test_r3_right_to_leave_after_six_months() -> None:
     assert accrued_vacation(date(2026, 1, 12), date(2026, 5, 1)).details["can_take_now"] is False
     assert accrued_vacation(date(2026, 1, 12), date(2026, 8, 1)).details["can_take_now"] is True
+
+
+def test_r1_fully_excluded_month_skipped() -> None:
+    # март 2026 — весь месяц исключён: 11 полных месяцев
+    r = vacation_pay(D(322300), date(2026, 9, 7), 10, excluded_days={(2026, 3): 31})
+    assert r.details["divisor"] == D("322.3000")
+    assert r.details["avg_daily"] == D("1000.00")

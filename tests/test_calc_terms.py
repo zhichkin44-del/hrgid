@@ -97,3 +97,8 @@ def test_r9_short_contract() -> None:
 def test_r9_bad_months() -> None:
     with pytest.raises(CalcError):
         probation_end(date(2026, 11, 18), 0)
+
+
+def test_r9_negative_absence() -> None:
+    with pytest.raises(CalcError):
+        probation_end(date(2026, 11, 18), 3, absence_days=-1)
