@@ -42,6 +42,7 @@ def main() -> int:
     RAW.mkdir(parents=True, exist_ok=True)
     toc = get(BASE + DOC)
     edition = re.search(r"\(ред\. от (\d{2}\.\d{2}\.\d{4})\)", toc)
+    (RAW / "toc.html").write_text(toc, encoding="utf-8")
     items = list(dict.fromkeys(LINK.findall(toc)))
     print(f"статей в оглавлении: {len(items)}; редакция: {edition.group(1) if edition else '?'}")
 
