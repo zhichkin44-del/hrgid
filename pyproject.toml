@@ -19,6 +19,8 @@ dependencies = [
   "sentence-transformers>=3.0",
   "langgraph>=0.2",
   "anthropic>=0.40",
+  "httpx>=0.27",
+  "natasha>=1.6",
   "beautifulsoup4>=4.12",
   "lxml>=5.0",
   "jinja2>=3.1",
@@ -35,7 +37,11 @@ where = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
-markers = ["slow: требует моделей и локальной БД"]
+markers = [
+  "slow: требует моделей и локальной БД",
+  "db: нужен PostgreSQL (libpq); на этой Windows блокируется Smart App Control — гоняется в CI",
+  "natasha: нужна загрузка моделей natasha — гоняется в CI",
+]
 
 [tool.ruff]
 line-length = 100
@@ -53,7 +59,7 @@ files = ["src", "tests", "scripts"]
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
-module = ["pgserver.*", "sentence_transformers.*", "pgvector.*", "langgraph.*", "bs4.*", "lxml.*"]
+module = ["pgserver.*", "sentence_transformers.*", "pgvector.*", "langgraph.*", "natasha.*", "bs4.*", "lxml.*"]
 ignore_missing_imports = true
 
 [tool.ruff.lint.per-file-ignores]
