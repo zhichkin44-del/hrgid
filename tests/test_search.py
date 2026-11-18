@@ -87,3 +87,32 @@ def test_empty_tenant_list_returns_nothing(conn: psycopg.Connection[Any]) -> Non
     load(conn)
     assert vector_search(conn, EMB.embed_query("отпуск"), [], 5) == []
     assert fts_search(conn, "отпуск", [], 5) == []
+
+
+class ReverseReranker:
+    """Подставной переранжировщик: оценка тем выше, чем длиннее текст."""
+
+    def score(self, query: str, texts: list[str]) -> list[float]:
+        return [float(len(t)) for t in texts]
+
+
+def test_rerank_reorders_and_keeps_tenant_filter(conn: psycopg.Connection[Any]) -> None:
+    load(conn)
+    hits = hybrid_search(
+        conn, "отпуск работникам", ["acme"], EMB, k=2, reranker=ReverseReranker(), pool=10
+    )
+    assert len(hits) == 2
+    assert hits[0].score >= hits[1].score
+    assert "901" not in {h.article for h in hits}
+
+
+def test_fts_handles_stopword_only_and_punctuation(conn: psycopg.Connection[Any]) -> None:
+    load(conn)
+    assert fts_search(conn, "и в на", ["acme"], 5) == []
+    assert fts_search(conn, "отпуск?! (тридцать) & | ' ; --", ["acme"], 5)
+
+
+def test_unknown_tenant_cannot_see_other_company(conn: psycopg.Connection[Any]) -> None:
+    load(conn)
+    hits = hybrid_search(conn, "секретный регламент", ["nobody"], EMB, k=10)
+    assert {h.tenant_id for h in hits} <= {"law"}
