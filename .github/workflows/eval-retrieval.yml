@@ -1,0 +1,66 @@
+name: eval-retrieval
+on:
+  workflow_dispatch:
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_PASSWORD: hrgid
+          POSTGRES_DB: hrgid
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s
+          --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:hrgid@localhost:5432/hrgid
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-models-v1
+      - uses: actions/cache@v4
+        with:
+          path: data/raw
+          key: law-raw-v1
+      - run: pip install torch --index-url https://download.pytorch.org/whl/cpu
+      - run: pip install -e ".[dev]"
+      - name: Закон (data/raw не хранится в репозитории)
+        run: |
+          [ -f data/raw/st_1.html ] || python scripts/fetch_tk.py
+          cat data/raw/SOURCE.json
+          ls data/raw | wc -l
+      - name: Железо раннера
+        run: |
+          mkdir -p reports
+          { lscpu | grep -E "Model name|^CPU\(s\)"; free -h | head -2; } | tee reports/runner.txt
+      - name: select (оба переранжировщика, настроечная часть)
+        run: python scripts/eval_retrieval.py select 2>&1 | tee reports/eval.log
+      - name: report (выбранный по select)
+        run: |
+          KEY=$(python - <<'PY'
+          import json, glob
+          r = json.load(open(sorted(glob.glob("reports/retrieval-select-*.json"))[-1], encoding="utf-8"))
+          c = {k: v for k, v in r.items() if k.startswith("hybrid+rerank[")}
+          best = max(c, key=lambda k: (c[k]["hit5"], -c[k]["p95_ms"]))
+          print(best[len("hybrid+rerank["):-1])
+          PY
+          )
+          echo "выбран: $KEY" | tee -a reports/eval.log
+          python scripts/eval_retrieval.py report "$KEY" 2>&1 | tee -a reports/eval.log
+          mkdir -p reports/main-keyed && mv reports/retrieval-report-*.json reports/main-keyed/
+      - name: report --no-rerank
+        run: python scripts/eval_retrieval.py report --no-rerank 2>&1 | tee -a reports/eval.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: retrieval-eval
+          path: reports/
