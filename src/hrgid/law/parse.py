@@ -70,7 +70,7 @@ def _in_note(tag: Tag) -> bool:
 
 
 def parse_article_html(html: str) -> Article:
-    soup = BeautifulSoup(html, "lxml")
+    soup = BeautifulSoup(html, "html.parser")
     content = soup.select_one("div.document-page__content")
     if content is None:
         raise ValueError("нет блока содержимого статьи")

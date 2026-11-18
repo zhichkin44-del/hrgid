@@ -1,7 +1,7 @@
 from dataclasses import replace
 from pathlib import Path
 
-from norma.law.parse import Chunk, make_chunks, parse_article_html
+from hrgid.law.parse import Chunk, make_chunks, parse_article_html
 
 FIX = Path(__file__).parent / "fixtures"
 

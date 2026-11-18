@@ -8,7 +8,7 @@ from typing import Protocol
 
 import numpy as np
 
-from norma.db import EMBED_DIM
+from hrgid.db import EMBED_DIM
 
 MODEL_NAME = "intfloat/multilingual-e5-small"
 

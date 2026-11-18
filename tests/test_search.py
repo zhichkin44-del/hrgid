@@ -4,9 +4,9 @@ from typing import Any
 
 import psycopg
 
-from norma.embed import HashEmbedder
-from norma.law.parse import Chunk
-from norma.search import (
+from hrgid.embed import HashEmbedder
+from hrgid.law.parse import Chunk
+from hrgid.search import (
     SearchHit,
     fts_search,
     hybrid_search,

@@ -3,7 +3,7 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "norma-hr"
+name = "hrgid"
 version = "0.1.0"
 description = "HRgid — ИИ-помощник HR: ответы по Трудовому кодексу РФ и правилам компании со ссылкой на статью"
 requires-python = ">=3.12"

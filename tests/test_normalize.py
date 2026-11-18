@@ -1,4 +1,4 @@
-from norma.textnorm import normalize
+from hrgid.textnorm import normalize
 
 
 def test_yo_and_case() -> None:
@@ -14,7 +14,7 @@ def test_nbsp_and_whitespace() -> None:
 
 
 def test_soft_hyphen_and_line_break_hyphen() -> None:
-    assert normalize("работо­dатель") == "работодатель"
+    assert normalize("работо­датель") == "работодатель"
     assert normalize("работо-\nдатель") == "работодатель"
 
 

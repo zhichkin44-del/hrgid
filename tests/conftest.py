@@ -1,13 +1,15 @@
 from __future__ import annotations
 
-from collections.abc import Iterator
+import hrgid  # noqa: F401  # первым: подготавливает libpq на Windows
+
+from collections.abc import Iterator  # isort: skip
 from pathlib import Path
 from typing import Any
 
 import psycopg
 import pytest
 
-from norma.db import connect, database_url, init_schema
+from hrgid.db import connect, database_url, init_schema
 
 
 @pytest.fixture(scope="session")

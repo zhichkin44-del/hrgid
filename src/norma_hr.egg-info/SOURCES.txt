@@ -1,6 +1,0 @@
-pyproject.toml
-src/norma_hr.egg-info/PKG-INFO
-src/norma_hr.egg-info/SOURCES.txt
-src/norma_hr.egg-info/dependency_links.txt
-src/norma_hr.egg-info/requires.txt
-src/norma_hr.egg-info/top_level.txt
