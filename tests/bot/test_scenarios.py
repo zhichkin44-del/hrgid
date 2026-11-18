@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
 from decimal import Decimal
 
 import pytest
@@ -193,7 +192,9 @@ def test_4_3_answer_from_hr_knowledge_base(h: Harness) -> None:
     other = make_employee(h.repo, "e2", "Иван Петров", telegram_id=5002, consent_at=NOW)
     t = h.desk.create(other, "Можно ли перенести отпуск с декабря на январь?", NOW)
     answer = "Можно по заявлению и с согласия работодателя."
-    h.desk.answer(COMPANY, t.key, "Анна", answer, NOW, save_to_kb=KbParams(t.text, answer, "ст. 124 ТК РФ"))
+    h.desk.answer(
+        COMPANY, t.key, "Анна", answer, NOW, save_to_kb=KbParams(t.text, answer, "ст. 124 ТК РФ")
+    )
     c = login(h)
     c.say("Можно перенести отпуск с декабря на январь?")
     assert "Ответ HR из базы" in c.text and "ст. 124 ТК РФ" in c.text and "Анна" in c.text

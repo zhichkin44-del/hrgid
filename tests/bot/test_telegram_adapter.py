@@ -43,13 +43,17 @@ class FakeSession(BaseSession):
     async def close(self) -> None:
         return None
 
-    async def stream_content(self, *a: Any, **k: Any) -> AsyncGenerator[bytes, None]:  # pragma: no cover
+    async def stream_content(
+        self, *a: Any, **k: Any
+    ) -> AsyncGenerator[bytes, None]:  # pragma: no cover
         yield b""
 
-    async def make_request(self, bot: Bot, method: TelegramMethod[Any], timeout: int | None = None) -> Any:
+    async def make_request(
+        self, bot: Bot, method: TelegramMethod[Any], timeout: int | None = None
+    ) -> Any:
         self.calls.append(method)
         if isinstance(method, SendMessage):
-            if int(method.chat_id) in self.forbidden:
+            if int(method.chat_id or 0) in self.forbidden:
                 raise TelegramForbiddenError(method=method, message="Forbidden: bot was blocked")
             return Message.model_validate(
                 {"message_id": len(self.calls), "date": datetime.now(UTC),
@@ -138,7 +142,7 @@ def test_adapter_login_consent_question_and_citations(h: Harness) -> None:
         "Согласен", "Не согласен",
     ]  # fmt: skip
     edits = [c for c in session.calls if isinstance(c, EditMessageText)]
-    assert len(edits) == 1 and "Цитаты к ответу" in edits[0].text
+    assert len(edits) == 1 and "Цитаты к ответу" in (edits[0].text or "")
     assert any(isinstance(c, AnswerCallbackQuery) for c in session.calls)
 
 

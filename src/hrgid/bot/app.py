@@ -118,7 +118,9 @@ async def flush_outbox_once(bot: Bot, engine: BotEngine) -> int:
     return sent
 
 
-async def background(bot: Bot, engine: BotEngine, outbox_every: float = 3, tick_every: float = 30) -> None:
+async def background(
+    bot: Bot, engine: BotEngine, outbox_every: float = 3, tick_every: float = 30
+) -> None:
     last_tick = 0.0
     loop = asyncio.get_running_loop()
     while True:
@@ -170,7 +172,8 @@ def build_engine_from_env() -> BotEngine:
     repo = Repo(store)
     kb = KbService(repo)
     llm = ResilientLLM(make_client(os.environ.get("HRGID_PROVIDER", "claude")))
-    searcher = KbSearcher(make_searcher(conn, os.environ.get("HRGID_RERANKER", "mmarco-minilm")), kb)
+    reranker = os.environ.get("HRGID_RERANKER", "mmarco-minilm")
+    searcher = KbSearcher(make_searcher(conn, reranker), kb)
     threshold = os.environ.get("HRGID_NO_ANSWER_THRESHOLD")
     pipeline = Pipeline(
         llm, llm, searcher,
