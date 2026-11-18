@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+.pgdata*/
+.env
+data/raw/*
+!data/raw/SOURCE.json
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+models_cache/
+.pgdata_test/
+*.egg-info/
