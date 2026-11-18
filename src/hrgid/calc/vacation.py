@@ -54,7 +54,11 @@ def _pay(
     rate = dparam("R1", "ndfl_rate")
     ndfl = rubles(gross * rate)
     details: dict[str, Detail] = {
-        "avg_daily": avg, "divisor": divisor, "days": days, "ndfl": ndfl, "net": gross - ndfl,
+        "avg_daily": avg,
+        "divisor": divisor,
+        "days": days,
+        "ndfl": ndfl,
+        "net": gross - ndfl,
     }
     return CalcResult(
         code=code,
@@ -82,7 +86,12 @@ def vacation_pay(
     if not 1 <= vacation_days <= int(param("R1", "max_vacation_days")):
         raise CalcError("Дней отпуска должно быть от 1 до 56")
     r = _pay(
-        "R1", earnings, vacation_start, Decimal(vacation_days), hire_date, excluded_days,
+        "R1",
+        earnings,
+        vacation_start,
+        Decimal(vacation_days),
+        hire_date,
+        excluded_days,
         "Отпускные",
     )
     r.details["pay_deadline"] = vacation_start - timedelta(days=int(param("R1", "pay_before_days")))

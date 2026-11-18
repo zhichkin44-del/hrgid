@@ -150,7 +150,7 @@ def test_gigachat_oauth_and_chat() -> None:
 def test_gigachat_no_key(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("GIGACHAT_CREDENTIALS", raising=False)
     with pytest.raises(LLMError):
-        GigaChatClient(http=httpx.Client(transport=httpx.MockTransport(lambda r: None))).complete(  # type: ignore[arg-type,return-value]
+        GigaChatClient(http=httpx.Client(transport=httpx.MockTransport(lambda r: None))).complete(  # type: ignore[arg-type]
             REQ
         )
 
