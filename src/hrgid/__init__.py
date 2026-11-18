@@ -16,7 +16,8 @@ def _windows_libpq_fallback() -> None:
         return
     try:
         import psycopg_binary  # noqa: F401
-        import psycopg_binary.pq  # noqa: F401
+        import psycopg_binary.pq  # type: ignore[import-not-found]  # noqa: F401
+
         return
     except ImportError:
         pass

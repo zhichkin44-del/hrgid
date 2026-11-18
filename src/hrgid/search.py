@@ -93,7 +93,7 @@ def store_chunks(
 
 
 def _hit(row: tuple[Any, ...], score: float) -> SearchHit:
-    return SearchHit(*row, score=score)
+    return SearchHit(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], score)
 
 
 def vector_search(
@@ -153,9 +153,7 @@ def _replace_score(hit: SearchHit, score: float) -> SearchHit:
     )  # fmt: skip
 
 
-def rerank(
-    query: str, hits: Sequence[SearchHit], reranker: Reranker, k: int
-) -> list[SearchHit]:
+def rerank(query: str, hits: Sequence[SearchHit], reranker: Reranker, k: int) -> list[SearchHit]:
     if not hits:
         return []
     scores = reranker.score(query, [h.rerank_text for h in hits])

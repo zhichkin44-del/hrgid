@@ -1,4 +1,4 @@
-"""Эмбеддинги: intfloat/multilingual-e5-small на CPU (+ детерминированный хэш-эмбеддер для тестов)."""
+"""Эмбеддинги: multilingual-e5-small на CPU (+ детерминированный хэш-эмбеддер для тестов)."""
 
 from __future__ import annotations
 

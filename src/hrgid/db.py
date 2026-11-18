@@ -1,4 +1,4 @@
-"""Подключение к PostgreSQL: DATABASE_URL из окружения или встроенный pgserver (локальная разработка)."""
+"""Подключение к PostgreSQL: DATABASE_URL или встроенный pgserver (локальная разработка)."""
 
 from __future__ import annotations
 
@@ -6,8 +6,8 @@ import os
 from pathlib import Path
 from typing import Any
 
-import psycopg
 import pgserver
+import psycopg
 from pgvector.psycopg import register_vector
 
 EMBED_DIM = 384
@@ -49,7 +49,7 @@ def database_url(data_dir: Path | None = None) -> str:
         return env
     path = str((data_dir or Path(".pgdata")).resolve())
     if path not in _servers:
-        _servers[path] = pgserver.get_server(path, cleanup_mode="stop")
+        _servers[path] = pgserver.get_server(path, cleanup_mode="stop")  # type: ignore[attr-defined]
     url: str = _servers[path].get_uri()
     return url
 
@@ -62,4 +62,4 @@ def connect(url: str) -> psycopg.Connection[Any]:
 
 
 def init_schema(conn: psycopg.Connection[Any]) -> None:
-    conn.execute(SCHEMA)  # type: ignore[arg-type]
+    conn.execute(SCHEMA)
