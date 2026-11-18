@@ -67,10 +67,11 @@ class LLMClient(Protocol):
     def complete(self, req: LLMRequest) -> LLMResponse: ...
 
 
-# Оценочные цены, ₽ за 1 млн токенов (вход, выход). Обновлять по прайсам провайдеров.
+# Оценочные цены, ₽ за 1 млн токенов (вход, выход). СВЕРИТЬ С ПРАЙСОМ: цены claude-*-5-5 перенесены
+# с прежних версий и не проверены по актуальному прайсу Anthropic. Обновлять по прайсам провайдеров.
 RUB_PER_MTOK: dict[str, tuple[float, float]] = {
-    "claude-haiku-4-5": (90.0, 450.0),
-    "claude-sonnet-4-5": (270.0, 1350.0),
+    "claude-haiku-5-5": (90.0, 450.0),
+    "claude-sonnet-5-5": (270.0, 1350.0),
     "GigaChat-2": (65.0, 65.0),
     "GigaChat-2-Pro": (500.0, 500.0),
     "yandexgpt-lite": (200.0, 200.0),

@@ -97,7 +97,7 @@ def test_claude_parses_response() -> None:
         class messages:  # noqa: N801
             @staticmethod
             def create(**kw: Any) -> Any:
-                assert kw["model"] == "claude-sonnet-4-5"
+                assert kw["model"] == "claude-sonnet-5-5"
                 assert kw["tools"][0]["name"] == "t"
                 return Block(
                     content=[
@@ -197,9 +197,9 @@ def test_yandex_no_key(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_cost_and_meter() -> None:
-    assert cost_rub("claude-haiku-4-5", 1_000_000, 0) == 90.0
+    assert cost_rub("claude-haiku-5-5", 1_000_000, 0) == 90.0
     m = UsageMeter()
-    m.add(LLMResponse("x", "claude-haiku-4-5", input_tokens=1000, output_tokens=100))
+    m.add(LLMResponse("x", "claude-haiku-5-5", input_tokens=1000, output_tokens=100))
     assert m.calls == 1 and m.cost > 0
 
 

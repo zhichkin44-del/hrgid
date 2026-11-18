@@ -9,7 +9,7 @@ import anthropic
 
 from hrgid.llm.base import LLMError, LLMRequest, LLMResponse, Message, Tier, ToolCall
 
-MODELS: dict[Tier, str] = {"cheap": "claude-haiku-4-5", "main": "claude-sonnet-4-5"}
+MODELS: dict[Tier, str] = {"cheap": "claude-haiku-5-5", "main": "claude-sonnet-5-5"}
 
 
 def to_anthropic_messages(messages: tuple[Message, ...]) -> list[dict[str, Any]]:
