@@ -67,7 +67,7 @@ def natasha_names(text: str) -> list[tuple[int, int]]:
     """Диапазоны ФИО (PER) через natasha; модели грузятся один раз."""
     global _natasha_finder
     if _natasha_finder is None:
-        from natasha import (  # type: ignore[import-not-found]
+        from natasha import (
             Doc,
             NewsEmbedding,
             NewsNERTagger,

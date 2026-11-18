@@ -22,17 +22,10 @@ def test_r6_basic_80_percent() -> None:
     assert "730" in r.formula
 
 
-@pytest.mark.parametrize(
-    ("years", "pct"),
-    [
-        (D("0.5"), "0.60"),
-        (D("4.99"), "0.60"),
-        (D(5), "0.80"),
-        (D("7.99"), "0.80"),
-        (D(8), "1.00"),
-        (D(30), "1.00"),
-    ],
-)
+@pytest.mark.parametrize(("years", "pct"), [
+    (D("0.5"), "0.60"), (D("4.99"), "0.60"), (D(5), "0.80"), (D("7.99"), "0.80"),
+    (D(8), "1.00"), (D(30), "1.00"),
+])
 def test_r6_percent_boundaries(years: D, pct: str) -> None:
     assert sick_pay(E2, START, END, years).details["percent"] == D(pct)
 
