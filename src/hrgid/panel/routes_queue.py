@@ -226,8 +226,10 @@ def register(app: FastAPI, w: Web) -> None:
         if not text.strip():
             return queue_page(w, c, key=key, form=form, errors={"text": "Напишите ответ."})
         params = _kb_params(t, form) if save_kb and not t.confidential else None
+        if not t.assignee:  # ответ закрепляет обращение за отвечающим (по почте, как вкладка «Мои»)
+            d.desk.assign(c.company, key, c.user.email)
         try:
-            t2, entry = d.desk.answer(c.company, key, c.user.email, text, c.now, save_to_kb=params)
+            t2, entry = d.desk.answer(c.company, key, c.user.name, text, c.now, save_to_kb=params)
         except (KbError, PanelError) as e:
             fld = getattr(e, "field", "basis")
             return queue_page(w, c, key=key, win="send", form=form, errors={fld: str(e)})
@@ -261,7 +263,7 @@ def register(app: FastAPI, w: Web) -> None:
         form = {"question": question, "answer": answer, "basis": basis, "audience": audience,
                 "text": answer}  # fmt: skip
         try:
-            e = d.kbadmin.add(c.company, c.user.email, question, answer, basis, audience, c.now)
+            e = d.kbadmin.add(c.company, c.user.name, question, answer, basis, audience, c.now)
         except PanelError as err:
             return queue_page(w, c, key=key, win="savekb", form=form, errors={err.field: str(err)})
         d.journal.add(c.company, c.now, c.user.email, "kb.add", f"#{e.id}")

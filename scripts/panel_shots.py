@@ -37,6 +37,8 @@ from panel_serve import CO, RULES, build  # noqa: E402
 
 # (имя снимка, адрес, роль, эталон в out/hrgid-layouts без суффикса размера)
 SHOTS: list[tuple[str, str, str, str]] = [
+    ("m-p2-kollega", "/queue#assign", "hr", "m-p2-kollega"),
+    ("m-p9-model", "/settings/model", "admin", "m-p9-model"),
     ("p0-vhod", "/login", "anon", "p0-pochta"),
     ("p1-segodnya", "/", "hr", "p1-segodnya"),
     ("p2-ochered", "/queue", "hr", "p2-ochered"),
@@ -179,7 +181,9 @@ def main() -> None:
                 ctxs[role] = page
             for name, path, role, ref in SHOTS:
                 page = ctxs[role]
-                page.goto(url + path)
+                page.goto(url + path.split("#")[0])
+                if path.endswith("#assign"):
+                    page.get_by_role("button", name="Назначить коллеге").click()
                 page.wait_for_load_state("networkidle")
                 file = out / f"{name}-{size}.png"
                 page.screenshot(path=str(file), full_page=True)

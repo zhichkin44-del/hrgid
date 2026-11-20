@@ -74,7 +74,7 @@ def register(app: FastAPI, w: Web) -> None:
     ) -> Response:
         form = {"question": question, "answer": answer, "basis": basis, "audience": audience}
         try:
-            e = d.kbadmin.add(c.company, c.user.email, question, answer, basis, audience, c.now)
+            e = d.kbadmin.add(c.company, c.user.name, question, answer, basis, audience, c.now)
         except PanelError as err:
             return kb_page(w, c, win="new", form=form, errors={err.field: str(err)})
         d.journal.add(c.company, c.now, c.user.email, "kb.add", f"#{e.id}")
@@ -110,7 +110,7 @@ def register(app: FastAPI, w: Web) -> None:
         form = {"question": question, "answer": answer, "basis": basis, "audience": audience}
         try:
             d.kbadmin.edit(
-                c.company, entry_id, c.user.email, question, answer, basis, audience, c.now
+                c.company, entry_id, c.user.name, question, answer, basis, audience, c.now
             )
         except PanelError as err:
             return kb_page(w, c, win="edit", entry=e, form=form, errors={err.field: str(err)})
@@ -177,7 +177,7 @@ def register(app: FastAPI, w: Web) -> None:
         if decision == "fix":
             return w.see_other(f"/kb/{entry_id}/edit?review=1")
         try:
-            d.kbadmin.decide(c.company, entry_id, decision, c.now, c.user.email)
+            d.kbadmin.decide(c.company, entry_id, decision, c.now, c.user.name)
         except PanelError:
             return w.see_other("/kb/review")
         d.journal.add(c.company, c.now, c.user.email, "kb.review", f"#{entry_id}: {decision}")
