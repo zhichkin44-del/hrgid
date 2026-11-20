@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% import "_m.html" as m %}
+{% block main %}
+{{ m.head("Объявления", "Сообщение всем или группе через бота: приказ, график праздников, часы HR", "/announcements/new", "Новое объявление") }}
+{% if not items %}
+<div class="state"><div class="ic">○</div><h2>Объявлений пока нет</h2><p>Отправьте сообщение сотрудникам через бота — и увидите, кто его прочитал.</p><a class="btn pri" href="/announcements/new">Новое объявление</a></div>
+{% else %}
+<div class="tbl"><div class="tr h" style="--cols:2.4fr 1.2fr 1fr 1.2fr .8fr"><span>Заголовок</span><span>Кому</span><span>Когда</span><span>Прочитали</span><span></span></div>
+{% for a in items %}<div class="tr" style="--cols:2.4fr 1.2fr 1fr 1.2fr .8fr"><span><b style="font-weight:500">{{ a.title }}</b><small>{{ a.author }}</small></span><span data-l="Кому">{{ a.groups|join(", ") if a.groups else "все" }}</span><span class="num" data-l="Когда">{{ c.local(a.created_at).strftime("%d.%m.%Y") }}</span><span class="num" data-l="Прочитали">{{ stats[a.id][0] }} из {{ stats[a.id][1] }}</span><span><a class="btn sm ghost" href="/announcements/{{ a.id }}">Кто прочитал</a></span></div>{% endfor %}</div>
+{% endif %}
+{% endblock %}
+{% block windows %}
+{% if win == "new" %}{% call m.dlg("П11.1", "Новое объявление", "/announcements") %}
+<form method="post" action="/announcements/preview" hx-boost="false">
+<div class="cap">Кому</div>
+<label class="chk" style="margin:6px 0"><input type="radio" name="all" class="sr" checked><i>✓</i><span>Всем (если ничего не отмечено ниже)</span></label>
+{% for g in groups %}<label class="chk" style="margin:6px 0"><input type="checkbox" name="groups" value="{{ g }}" class="sr"{% if g in form.get("groups", "").split("|") %} checked{% endif %}><i>✓</i><span>Группа «{{ g }}»</span></label>{% endfor %}
+{% if errors.groups %}<div class="err">{{ errors.groups }}</div>{% endif %}
+{{ m.field("title", "Заголовок", form, errors, maxlength=80) }}
+{{ m.field("text", "Текст", form, errors, rows=5, maxlength=900) }}
+{{ m.check("asks", "Попросить сотрудников написать даты HR", form.get("asks") == "1") }}
+<div class="ft"><a class="btn ghost" href="/announcements">Отмена</a><button class="btn ghost" name="draft" value="1" type="submit">Сохранить черновик</button><button class="btn pri" type="submit">Предпросмотр</button></div></form>{% endcall %}{% endif %}
+{% if win == "confirm" %}{% call m.dlg("П11.2", "Отправить объявление?", "/announcements/new", lead="Получат " ~ extra.n ~ " сотрудников. Отозвать объявление нельзя.") %}
+<div class="draft"><b>📢 Объявление от HR</b><br>{{ form.title }}<br><br>{{ form.text }}</div>
+<form method="post" action="/announcements/send" hx-boost="false"><input type="hidden" name="title" value="{{ form.title }}"><input type="hidden" name="text" value="{{ form.text }}"><input type="hidden" name="groups" value="{{ form.groups }}">{% if form.asks == "1" %}<input type="hidden" name="asks" value="1">{% endif %}
+<div class="ft"><a class="btn ghost" href="/announcements/new">Вернуться к правке</a><button class="btn pri" type="submit">Отправить</button></div></form>{% endcall %}{% endif %}
+{% if win == "readers" %}{% call m.dlg("П11.4", "Кто прочитал — «" ~ ann.title ~ "»", "/announcements") %}
+<div class="tabs"><a href="/announcements/{{ ann.id }}?tab=unread" class="{% if extra.tab != 'read' %}on{% endif %}">Не прочитали <em>{{ extra.unread|length }}</em></a><a href="/announcements/{{ ann.id }}?tab=read" class="{% if extra.tab == 'read' %}on{% endif %}">Прочитали <em>{{ extra.read|length }}</em></a></div>
+<div class="lst">{% if extra.tab == "read" %}{% for name, at in extra.read %}<div class="it"><span>{{ name }}</span><span class="r">{{ c.local(at).strftime("%d.%m %H:%M") }}</span></div>{% else %}<div class="it"><span>Пока никто</span></div>{% endfor %}{% else %}{% for name in extra.unread %}<div class="it"><span>{{ name }}</span></div>{% else %}<div class="it"><span>Все прочитали</span></div>{% endfor %}{% endif %}</div>
+<div class="ft"><a class="btn ghost" href="/announcements">Закрыть</a>{% if extra.unread %}<a class="btn pri" href="/announcements/{{ ann.id }}/remind">Напомнить не прочитавшим</a>{% endif %}</div>{% endcall %}{% endif %}
+{% if win == "remind" %}{% call m.dlg("П11.5", "Напомнить не прочитавшим?", "/announcements/" ~ ann.id, lead="Короткое напоминание получат " ~ extra.unread|length ~ " сотрудников, текст объявления не повторяется.") %}
+<form method="post" action="/announcements/{{ ann.id }}/remind"><div class="ft"><a class="btn ghost" href="/announcements/{{ ann.id }}">Отмена</a><button class="btn pri" type="submit">Напомнить</button></div></form>{% endcall %}{% endif %}
+{% endblock %}

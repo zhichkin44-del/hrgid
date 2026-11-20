@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% import "_m.html" as m %}
+{% block main %}
+{{ m.head(title, "") }}
+{% if kind == "error" %}
+<div class="state bad"><div class="ic">!</div><h2>Не удалось загрузить раздел</h2><p>Связь с сервисом прервалась. Данные целы.</p><a class="btn" href="{{ retry }}">Повторить</a> <a class="btn ghost" href="/">Вернуться на «Сегодня»</a></div>
+{% elif kind == "noaccess" %}
+<div class="state bad"><div class="ic">!</div><h2>{{ title }}</h2><p>{{ text }}</p>{% if ask_link %}<a class="btn pri" href="{{ ask_link }}">Попросить администратора</a>{% endif %} <a class="btn ghost" href="/">Вернуться на «Сегодня»</a></div>
+{% elif kind == "loading" %}
+<div class="card pnl"><div class="skel" style="width:92%"></div><div class="skel" style="width:81%"></div><div class="skel" style="width:70%"></div><div class="skel" style="width:59%"></div></div><p class="cap" style="margin-top:12px"><a href="/">Если страница не открывается дольше 10 секунд — вернитесь на «Сегодня»</a></p>
+{% else %}
+<div class="state"><div class="ic">○</div><h2>{{ title }}</h2><p>{{ text|default("") }}</p><a class="btn" href="/">Вернуться на «Сегодня»</a></div>
+{% endif %}
+{% endblock %}

@@ -78,14 +78,18 @@ class KbService:
         res = [
             (similarity(question, e.question), e)
             for e in self.repo.kb_entries(company_id)
-            if e.audience in ("all", group)
+            if e.audience in ("all", group) and not e.archived
         ]
         return sorted((r for r in res if r[0] > 0), key=lambda r: -r[0])
 
     def find_same(self, company_id: str, question: str, group: str = "") -> KbEntry | None:
         """Тот же вопрос уже решён HR (сценарий 2): ответ отдаётся из базы."""
         ranked = self.ranked(company_id, question, group)
-        return ranked[0][1] if ranked and ranked[0][0] >= SAME_QUESTION else None
+        if not ranked or ranked[0][0] < SAME_QUESTION:
+            return None
+        hit = ranked[0][1].model_copy(update={"uses": ranked[0][1].uses + 1})
+        self.repo.save_kb(hit)
+        return hit
 
 
 class KbSearcher:

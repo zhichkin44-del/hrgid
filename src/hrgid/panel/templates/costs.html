@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% import "_m.html" as m %}
+{% block main %}
+{{ m.head("Расходы и качество", "Сколько стоит помощник в этом месяце", "/costs/limit" if admin else "/costs/ask", "Изменить лимит" if admin else "Попросить изменить лимит") }}
+{% if b.exhausted %}<div class="notice bad"><span><b>Бюджет месяца исчерпан.</b> <span class="mu">{{ over_actions[b.action] }}.</span></span></div>{% endif %}
+<div class="kpis">
+<div class="card kpi"><label>Расход за месяц</label><div class="v num">{{ rub(b.spent) }}</div><div class="s">{{ b.pct }}% лимита</div></div>
+<div class="card kpi"><label>Лимит</label><div class="v num">{{ rub(b.limit) }}</div><div class="s">при превышении: {{ "очередь HR" if b.action == "queue" else "отказ с контактом" }}</div></div>
+<div class="card kpi"><label>Модель</label><div class="v" style="font-size:20px">{{ {"gigachat": "GigaChat", "yandex": "YandexGPT", "claude": "Claude"}[tech.provider] }}</div><div class="s">меняет администратор</div></div>
+</div>
+<div class="card pnl" style="margin-bottom:14px"><h2>Расход</h2><div class="meter" role="progressbar" aria-valuenow="{{ b.pct }}" aria-valuemin="0" aria-valuemax="100"><i style="width:{{ b.pct }}%"></i></div></div>
+{% if not admin %}
+<div class="state"><div class="ic">○</div><h2>Технические показатели скрыты</h2><p>Скорость, сбои и разбор запросов видит администратор. Лимит изменяет только он — вы можете попросить.</p><a class="btn pri" href="/costs/ask">Попросить администратора</a><p class="cap" style="margin-top:8px">Доступно администратору</p></div>
+{% elif not has %}
+<div class="state"><div class="ic">○</div><h2>Данных пока нет</h2><p>Скорость, сбои и разбор запросов появятся после первых ответов помощника.</p></div>
+{% else %}
+<div class="kpis"><div class="card kpi"><label>Вопросов</label><div class="v num">{{ perf.n }}</div><div class="s">из кэша: {{ perf.cache }}</div></div><div class="card kpi"><label>Скорость, p50</label><div class="v num">{{ perf.p50 }} мс</div></div><div class="card kpi"><label>Скорость, p95</label><div class="v num">{{ perf.p95 }} мс</div></div><div class="card kpi{% if perf.errors %} bad{% endif %}"><label>Сбои провайдера</label><div class="v num">{{ perf.errors }}</div></div></div>
+<div class="card pnl" style="margin-bottom:14px"><h2>Качество по версиям набора вопросов</h2><div class="lst">{% for q in quality %}<div class="it"><span>{{ q.version }}<small>{{ q.date }}</small></span><span class="r">{{ q.result }}</span></div>{% else %}<div class="it"><span>Данных нет до первого прогона набора</span></div>{% endfor %}</div></div>
+<div class="card pnl"><h2>Разбор запросов</h2><p class="cap">Запросы без личных данных: вместо имён и номеров — метки.</p><div class="tbl">
+<div class="tr h" style="--cols:1fr 3fr .8fr .8fr"><span>Когда</span><span>Запрос</span><span>Время</span><span>Стоимость</span></div>
+{% for q in recent %}<div class="tr" style="--cols:1fr 3fr .8fr .8fr"><span class="num">{{ q.at[:16].replace("T", " ") }}</span><span>{{ q.masked_question[:120] }}<small>{{ q.route }} · {{ q.status }}</small></span><span class="num">{{ q.latency_ms }} мс</span><span class="num">{{ "%.2f"|format(q.cost_rub) }} ₽</span></div>{% endfor %}</div></div>
+{% endif %}
+{% endblock %}
+{% block windows %}
+{% if win == "limit" %}{% call m.dlg("П8.1", "Изменить лимит", "/costs") %}
+<form method="post" action="/costs/limit">{{ m.field("limit", "Лимит на месяц, ₽", form, errors, hint="Не меньше 1 000 ₽") }}
+<label class="field"><span>Что делать при превышении</span><select name="action" {% if errors.action %}class="bad"{% endif %}>{% for k, v in over_actions.items() %}<option value="{{ k }}"{% if form.get("action") == k %} selected{% endif %}>{{ v }}</option>{% endfor %}</select></label>
+<div class="ft"><a class="btn ghost" href="/costs">Отмена</a><button class="btn pri" type="submit">Сохранить</button></div></form>{% endcall %}{% endif %}
+{% if win == "ask" %}{% call m.dlg("П8.3", "Попросить администратора", "/costs") %}
+<form method="post" action="/costs/ask">{{ m.field("text", "Что нужно изменить", form, errors, rows=4, maxlength=500) }}
+<div class="ft"><a class="btn ghost" href="/costs">Отмена</a><button class="btn pri" type="submit">Отправить</button></div></form>{% endcall %}{% endif %}
+{% endblock %}

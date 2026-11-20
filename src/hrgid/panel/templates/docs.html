@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% import "_m.html" as m %}
+{% block main %}
+{{ m.head("Документы", "Версии правил компании: без приказа и даты начала версия не применяется", "/docs?w=upload", "Загрузить документ") }}
+{% if not rows %}
+<div class="state"><div class="ic">○</div><h2>Документов пока нет</h2><p>Загрузите правила компании (PDF или DOCX): по ним будет отвечать помощник и проверяться соответствие ТК.</p><a class="btn pri" href="/docs?w=upload">Загрузить документ</a></div>
+{% endif %}
+{% for r in rows %}
+<div class="card pnl" style="margin-bottom:14px"><h2>{{ r.title }}{% if r.versions|length > 1 %}<a href="/docs/{{ r.doc_id }}/compare">Сравнить версии →</a>{% endif %}</h2>
+<div class="tbl"><div class="tr h" style="--cols:.6fr 1.2fr 1.6fr 1fr 2.4fr"><span>Версия</span><span>Загружена</span><span>Приказ</span><span>Статус</span><span></span></div>
+{% for v in r.versions|reverse %}<div class="tr" style="--cols:.6fr 1.2fr 1.6fr 1fr 2.4fr">
+<span class="num"><b style="font-weight:500">{{ v.number }}</b></span>
+<span data-l="Загружена">{{ v.created_at[:10] }}<small>{{ v.author }}</small></span>
+<span data-l="Приказ">{% if v.order_no %}№ {{ v.order_no }} от {{ fmt_date(v.order_date) }}<small>действует с {{ fmt_date(v.effective_from) }}</small>{% else %}<span class="mu">не указан</span>{% endif %}</span>
+<span>{% if r.active == v.number %}<span class="pill w">действует</span>{% elif not v.order_no %}<span class="pill">проект</span>{% elif v.effective_from and v.effective_from > today %}<span class="pill">с {{ fmt_date(v.effective_from) }}</span>{% else %}<span class="pill">заменена</span>{% endif %}{% if r.report_risks.get(v.number) %} <span class="pill bad">рисков: {{ r.report_risks[v.number] }}</span>{% endif %}</span>
+<span><a class="btn sm ghost" href="/docs/{{ r.doc_id }}/{{ v.number }}">Открыть</a> <a class="btn sm ghost" href="/check?doc={{ r.doc_id }}&v={{ v.number }}">Проверка на ТК</a>
+{% if can_order %}<a class="btn sm ghost" href="/docs/{{ r.doc_id }}/{{ v.number }}/order">Указать приказ</a> {% if v.applicable(today) and r.active != v.number %}<a class="btn sm ghost" href="/docs/{{ r.doc_id }}/rollback?to={{ v.number }}">Откатить</a> {% endif %}<a class="btn sm ghost" href="/docs/{{ r.doc_id }}/{{ v.number }}/delete">Удалить</a>{% else %}<span class="cap">Приказ, откат и удаление — доступно администратору</span>{% endif %}</span></div>{% endfor %}
+</div></div>
+{% endfor %}
+{% endblock %}
+{% block windows %}
+{% if win == "upload" or win == "upload_err" %}{% call m.dlg("П4.1" if win == "upload" else "П4.1·ошибка", "Загрузить документ" if win == "upload" else "Файл не принят", "/docs") %}
+{% if win == "upload_err" %}<div class="notice bad" style="margin-bottom:12px"><span><b>{{ errors.file }}</b> <span class="mu">Выберите другой файл.</span></span></div>{% endif %}
+<form method="post" action="/docs/upload" enctype="multipart/form-data" hx-boost="false">
+<div class="steps"><i class="on"></i><i></i></div>
+<label class="drop" style="display:block"><b>Выберите файл</b>PDF или DOCX, до 20 МБ<input type="file" name="file" accept=".pdf,.docx" required style="display:block;margin-top:8px"></label>
+{% if errors.file and win == "upload" %}<div class="err">{{ errors.file }}</div>{% endif %}
+<div class="row2"><label class="field"><span>Название</span><input name="title" value="{{ form.get('title', '') }}" placeholder="Правила внутреннего трудового распорядка"></label>
+<label class="field"><span>Это новая версия документа?</span><select name="doc_id"><option value="">нет — новый документ</option>{% for r in rows %}<option value="{{ r.doc_id }}"{% if form.get('doc_id') == r.doc_id %} selected{% endif %}>да — {{ r.title }} (версия {{ r.versions|length + 1 }})</option>{% endfor %}</select></label></div>
+<p class="hint">После загрузки документ разбирается на пункты, затем указывается приказ.</p>
+<div class="ft"><a class="btn ghost" href="/docs">Отмена</a><button class="btn pri" type="submit">Загрузить</button></div></form>
+{% endcall %}{% endif %}
+{% if win == "order" %}{% call m.dlg("П4.3", "Приказ и дата начала", "/docs", lead="Версия " ~ number ~ ". Без приказа и даты начала помощник эту версию не применяет.") %}
+<form method="post" action="/docs/{{ doc_id }}/{{ number }}/order">
+{{ m.field("order_no", "Номер приказа", form, errors) }}
+<div class="row2">{{ m.field("order_date", "Дата приказа", form, errors, placeholder="15.11.2026") }}{{ m.field("effective_from", "Действует с", form, errors, placeholder="01.12.2026") }}</div>
+<div class="ft"><a class="btn ghost" href="/docs">Отмена</a><button class="btn pri" type="submit">Сохранить приказ</button></div></form>
+{% endcall %}{% endif %}
+{% if win == "compare" %}{% call m.dlg("П4.4", "Сравнение версий " ~ extra.a ~ " и " ~ extra.b, "/docs", wide=true) %}
+<div class="diff">{% for row in extra.diff if row.status != "same" %}<div><h4>Пункт {{ row.number }} · {{ {"changed": "изменён", "added": "добавлен", "removed": "удалён"}[row.status] }}</h4>{% if row.old %}<p class="del">{{ row.old }}</p>{% endif %}{% if row.new %}<p class="add">{{ row.new }}</p>{% endif %}</div>{% else %}<p class="lead">Версии одинаковы.</p>{% endfor %}</div>
+<div class="ft"><a class="btn ghost" href="/docs">Закрыть</a><a class="btn pri" href="/check?doc={{ doc_id }}&v={{ extra.b }}">Проверить версию на ТК</a></div>
+{% endcall %}{% endif %}
+{% if win == "rollback" %}{% call m.dlg("П4.5", "Откатить к версии " ~ number ~ "?", "/docs", lead="Помощник снова будет отвечать по этой версии. Ответы базы, опирающиеся на правила, получат пометку «проверить».") %}
+<form method="post" action="/docs/{{ doc_id }}/rollback"><input type="hidden" name="to" value="{{ number }}">
+{{ m.field("reason", "Причина отката", form, errors, rows=3) }}
+{% if errors.to %}<div class="err">{{ errors.to }}</div>{% endif %}
+<div class="ft"><a class="btn ghost" href="/docs">Отмена</a><button class="btn pri" type="submit">Откатить</button></div></form>
+{% endcall %}{% endif %}
+{% if win == "delete" %}{% call m.dlg("П4.6", "Удалить версию " ~ number ~ "?", "/docs", lead="Версия исчезнет из списка. Отменить можно в течение 10 секунд после нажатия.") %}
+<form method="post" action="/docs/{{ doc_id }}/{{ number }}/delete"><div class="ft"><a class="btn ghost" href="/docs">Отмена</a><button class="btn pri" type="submit">Удалить</button></div></form>
+{% endcall %}{% endif %}
+{% if win == "delete_deny" %}{% call m.dlg("П4.6·запрет", "Эту версию удалить нельзя", "/docs", lead="Версия " ~ number ~ " действует: по ней сейчас отвечает помощник. Сначала откатите документ к другой версии.") %}
+<div class="ft"><a class="btn ghost" href="/docs">Закрыть</a></div>{% endcall %}{% endif %}
+{% if win == "view" %}{% call m.dlg("П4", doc_title ~ " — версия " ~ number, "/docs", wide=true) %}
+<div class="lst">{% for r in rows if r.doc_id == doc_id %}{% for v in r.versions if v.number == number %}{% for i in v.items %}<div class="it"><span>{% if i.heading %}<b>{{ i.number }} {{ i.text }}</b>{% else %}{{ i.number }}. {{ i.text }}{% endif %}</span></div>{% endfor %}{% endfor %}{% endfor %}</div>
+<div class="ft"><a class="btn ghost" href="/docs">Закрыть</a></div>{% endcall %}{% endif %}
+{% endblock %}

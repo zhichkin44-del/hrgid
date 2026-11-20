@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% import "_m.html" as m %}
+{% block main %}
+{{ m.head("Настройки", "Только для администратора компании") }}
+{% if requests %}<div class="notice"><span><b>Запросы от HR</b> <span class="mu">{% for r in requests %}{{ r.from }}: «{{ r.text }}»{% if not loop.last %}; {% endif %}{% endfor %}</span></span><a href="/costs/limit">Изменить лимит →</a></div>{% endif %}
+<form method="post" action="/settings" class="card pnl" hx-boost="false">
+<h2>Работа HR</h2>
+<div class="row3">{{ m.field("hours_start", "HR на связи с", form, errors, placeholder="10:00") }}{{ m.field("hours_end", "до", form, errors, placeholder="19:00") }}{{ m.field("utc_offset", "Часовой пояс, часов от UTC", form, errors) }}</div>
+<div class="row2">{{ m.field("sla_hours", "Срок ответа HR, рабочих часов", form, errors) }}{{ m.field("urgent_contact", "Срочный контакт вне часов", form, errors, placeholder="Анна, HR: +7 900 000-00-00") }}</div>
+{{ m.field("greeting", "Приветствие бота", form, errors, rows=3) }}
+{{ m.field("escalation", "Эскалация, если HR не ответил в срок", form, errors, rows=2) }}
+{{ m.field("retention_days", "Срок хранения переписки, дней", form, errors, hint="По умолчанию 365 дней") }}
+<div class="ft"><button class="btn pri" type="submit">Сохранить</button></div></form>
+<div class="grid2" style="margin-top:14px">
+<div class="card pnl"><h2>Нейросеть-помощник</h2><p style="margin-bottom:10px">Сейчас: <b>{{ providers[tech.provider] }}</b></p><a class="btn" href="/settings/model">Изменить модель</a></div>
+<div class="card pnl"><h2>Бюджет</h2><p style="margin-bottom:10px">Лимит {{ rub(tech.budget_rub) }} в месяц</p><a class="btn" href="/costs/limit">Изменить лимит</a></div></div>
+<div class="grid2" style="margin-top:14px">
+<div class="card pnl"><h2>Данные компании</h2><p style="margin-bottom:10px">Профили, переписка и обращения (кроме конфиденциальных), база ответов, версии документов, журнал.</p><a class="btn" href="/settings/export">Выгрузить данные</a></div>
+<div class="card pnl"><h2>Удаление данных компании</h2><p style="margin-bottom:10px">Безвозвратно. Сначала выгрузите данные.</p><a class="btn danger" href="/settings/delete">Удалить данные компании</a></div></div>
+{% endblock %}
+{% block windows %}
+{% if win == "model" %}{% call m.dlg("П9.5", "Нейросеть-помощник", "/settings", lead="Российские модели — по умолчанию: данные остаются в России.") %}
+<form method="post" action="/settings/model"><label class="field"><span>Модель</span><select name="provider">{% for k, v in providers.items() %}<option value="{{ k }}"{% if form.get("provider") == k %} selected{% endif %}>{{ v }}</option>{% endfor %}</select>{% if errors.provider %}<div class="err">{{ errors.provider }}</div>{% endif %}</label>
+<div class="ft"><a class="btn ghost" href="/settings">Отмена</a><button class="btn pri" type="submit">Сохранить</button></div></form>{% endcall %}{% endif %}
+{% if win == "claude" %}{% call m.dlg("П9.5·предупреждение", "Вопросы уйдут за границу", "/settings/model") %}
+<div class="notice bad"><span><b>Claude — сервис Anthropic (США).</b> <span class="mu">Вопросы уходят в замаскированном виде. Нужно согласие сотрудников (ст. 12 152-ФЗ) и проверка юристом.</span></span></div>
+<form method="post" action="/settings/model"><input type="hidden" name="provider" value="claude"><input type="hidden" name="confirm_claude" value="1">{{ m.check("ack", "Сотрудники уведомлены", false, errors.ack) }}
+<div class="ft"><a class="btn ghost" href="/settings/model">Отмена</a><button class="btn pri" type="submit">Включить Claude</button></div></form>{% endcall %}{% endif %}
+{% if win == "export" %}{% call m.dlg("П9.2", "Выгрузить данные компании", "/settings", lead="В файл входят: профили, переписка и обращения (кроме конфиденциальных), база ответов, версии документов, журнал. Конфиденциальные обращения не входят.") %}
+<form method="post" action="/settings/export" hx-boost="false">{{ m.field("since", "С какой даты (необязательно)", form, errors, placeholder="01.01.2026") }}
+<div class="ft"><a class="btn ghost" href="/settings">Отмена</a><button class="btn pri" type="submit">Подготовить файл</button></div></form>{% endcall %}{% endif %}
+{% if win == "export_ready" %}{% call m.dlg("П9.2·готово", "Файл готов", "/settings", lead="Ссылка отправлена на почту администратора и действует 24 часа.") %}
+<p class="hint">Размер: {{ (extra.size / 1024)|round(1) }} КБ.</p><div class="ft"><a class="btn ghost" href="/settings">Закрыть</a><a class="btn pri" href="/settings/export/{{ extra.token }}" hx-boost="false">Скачать</a></div>{% endcall %}{% endif %}
+{% if win == "delete1" %}{% call m.dlg("П9.3", "Удалить данные компании", "/settings", lead="Шаг 1 из 2. Удалятся сотрудники, переписка, база ответов, документы, журнал и доступы HR. Это нельзя вернуть.") %}
+<form method="post" action="/settings/delete">{{ m.check("exported", "Я выгрузил данные", false, errors.exported) }}<p class="hint"><a href="/settings/export">Выгрузить данные</a></p>
+<div class="ft"><a class="btn ghost" href="/settings">Отмена</a><button class="btn pri" type="submit">Продолжить</button></div></form>{% endcall %}{% endif %}
+{% if win == "delete2" %}{% call m.dlg("П9.3·шаг 2", "Подтвердите удаление", "/settings", lead="Шаг 2 из 2. Введите название компании. После нажатия отменить нельзя.") %}
+<form method="post" action="/settings/delete/confirm" x-data="{typed: ''}"><label class="field"><span>Название компании: «{{ company_name }}»</span><input name="name" x-model="typed" autocomplete="off" {% if errors.name %}class="bad"{% endif %}>{% if errors.name %}<div class="err">{{ errors.name }}</div>{% endif %}</label>
+<div class="ft"><a class="btn ghost" href="/settings">Отмена</a><button class="btn danger" type="submit" :disabled="typed !== {{ company_name|tojson|forceescape }}">Удалить всё</button></div></form>{% endcall %}{% endif %}
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% import "_m.html" as m %}
+{% block main %}
+{{ m.head("Журнал", "Кто что сделал в панели. Текст переписки в журнале не хранится.", "/journal?w=export", "Экспорт") }}
+<div class="tabs"><a href="/journal" class="{% if tab == 'actions' %}on{% endif %}">Действия</a><a href="/journal?tab=logins" class="{% if tab == 'logins' %}on{% endif %}">Входы</a><a href="/journal?w=filters" style="margin-left:auto">Фильтры</a></div>
+{% if tab == "logins" %}
+{% if not logins %}<div class="state"><div class="ic">○</div><h2>Входов пока нет</h2><p>Здесь появятся входы в панель: кто, когда и с каким итогом.</p></div>
+{% else %}<div class="tbl"><div class="tr h" style="--cols:1.3fr 1.6fr 1.6fr 1fr"><span>Когда</span><span>Кто</span><span>Итог</span><span>Откуда</span></div>
+{% for l in logins[:200] %}<div class="tr" style="--cols:1.3fr 1.6fr 1.6fr 1fr"><span class="num">{{ c.local(l.at|todt).strftime("%d.%m.%Y %H:%M") }}</span><span>{{ l.email }}</span><span>{{ results.get(l.result, l.result) }}</span><span>{{ l.ip or "—" }}</span></div>{% endfor %}</div>{% endif %}
+{% else %}
+{% if filtered %}<div class="chipf" style="margin-bottom:10px">{% if who %}<span class="pill">{{ who }}</span> {% endif %}{% if kind %}<span class="pill">{{ labels.get(kind, kind) }}</span> {% endif %}{% if since %}<span class="pill">с {{ since }}</span> {% endif %}{% if until %}<span class="pill">по {{ until }}</span> {% endif %}<a href="/journal" class="cap">сбросить</a></div>{% endif %}
+{% if not rows %}
+{% if filtered %}<div class="state"><div class="ic">○</div><h2>По фильтру ничего нет</h2><p>Измените условия или сбросьте фильтры.</p><a class="btn" href="/journal">Сбросить фильтры</a></div>
+{% else %}<div class="state"><div class="ic">○</div><h2>Журнал пуст</h2><p>Действия сотрудников HR появятся здесь.</p></div>{% endif %}
+{% else %}
+<div class="tbl"><div class="tr h" style="--cols:1.3fr 1.6fr 2fr 1.6fr .6fr"><span>Когда</span><span>Кто</span><span>Что</span><span>С чем</span><span></span></div>
+{% for e in rows %}<div class="tr" style="--cols:1.3fr 1.6fr 2fr 1.6fr .6fr"><span class="num">{{ c.local(e.at).strftime("%d.%m.%Y %H:%M") }}</span><span>{{ e.user }}</span><span>{{ e.label }}</span><span>{{ e.target }}</span><span><a class="btn sm ghost" href="/journal/{{ e.n }}">Открыть</a></span></div>{% endfor %}</div>
+<p class="cap" style="margin-top:8px">Показано {{ rows|length }} из {{ total }}.</p>
+{% endif %}
+{% endif %}
+{% endblock %}
+{% block windows %}
+{% if win == "filters" %}{% call m.dlg("П10.1", "Фильтры журнала", "/journal") %}
+<form method="get" action="/journal" hx-boost="false">
+<label class="field"><span>Кто</span><select name="who"><option value="">все</option>{% for u in users %}<option value="{{ u.email }}">{{ u.name }}</option>{% endfor %}</select></label>
+<label class="field"><span>Тип события</span><select name="kind"><option value="">любое</option>{% for k, v in labels.items() %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></label>
+<div class="row2"><label class="field"><span>С даты</span><input name="since" placeholder="01.11.2026"></label><label class="field"><span>По дату</span><input name="until" placeholder="30.11.2026"></label></div>
+<div class="ft"><a class="btn ghost" href="/journal">Отмена</a><button class="btn pri" type="submit">Применить</button></div></form>{% endcall %}{% endif %}
+{% if win == "entry" and entry %}{% call m.dlg("П10.2", "Запись журнала", "/journal") %}
+<div class="lst"><div class="it"><span>Когда</span><span class="r">{{ c.local(entry.at).strftime("%d.%m.%Y %H:%M") }}</span></div><div class="it"><span>Кто</span><span class="r">{{ entry.user }}</span></div><div class="it"><span>Что</span><span class="r">{{ entry.label }}</span></div><div class="it"><span>С чем</span><span class="r">{{ entry.target or "—" }}</span></div></div>
+<p class="hint">Текст переписки в журнале не хранится.</p><div class="ft"><a class="btn ghost" href="/journal">Закрыть</a></div>{% endcall %}{% endif %}
+{% if win == "export" or win == "export_err" %}{% call m.dlg("П10.3" if win == "export" else "П10.3·ошибка", "Экспорт журнала", "/journal", lead="Журнал хранится 1 год: период не больше 365 дней.") %}
+<form method="post" action="/journal/export" hx-boost="false">
+<div class="row2">{{ m.field("since", "С даты", form, errors, placeholder="01.11.2026") }}{{ m.field("until", "По дату", form, errors, placeholder="30.11.2026") }}</div>
+<label class="field"><span>Формат</span><select name="fmt"><option value="csv">CSV</option><option value="pdf">PDF</option></select></label>
+<div class="ft"><a class="btn ghost" href="/journal">Отмена</a><button class="btn pri" type="submit">Выгрузить</button></div></form>{% endcall %}{% endif %}
+{% if win == "logins_deny" %}{% call m.dlg("П10.4", "Журнал входов", "/journal", lead="Журнал входов — доступно администратору. Ваши действия видны на вкладке «Действия».") %}<div class="ft"><a class="btn ghost" href="/journal">Закрыть</a></div>{% endcall %}{% endif %}
+{% endblock %}

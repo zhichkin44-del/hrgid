@@ -7,6 +7,7 @@ Telegram (уведомление HR, ответ сотруднику, объяв
 from __future__ import annotations
 
 import secrets
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Literal
@@ -361,6 +362,7 @@ class HrDesk:
         now: datetime,
         *,
         asks_dates: bool = False,
+        groups: Sequence[str] = (),
     ) -> Announcement:
         a = Announcement(
             id=secrets.token_hex(4),
@@ -370,13 +372,16 @@ class HrDesk:
             author=author,
             created_at=now,
             asks_dates=asks_dates,
+            groups=list(groups),
         )
-        self.repo.save_announcement(a)
         rows = [[Button(text="Прочитано", data=f"ann:read:{a.id}")]]
         if asks_dates:
             rows.append([Button(text="Написать даты HR", data=f"ann:dates:{a.id}")])
         for e in self.repo.employees(company_id):
+            if groups and e.group not in groups:
+                continue
             if e.status == "active" and e.telegram_id is not None and e.consent_at is not None:
+                a.recipients.append(e.id)
                 self.repo.enqueue(
                     Out(
                         chat_id=e.telegram_id,
@@ -389,6 +394,7 @@ class HrDesk:
                     ),
                     now,
                 )
+        self.repo.save_announcement(a)
         return a
 
     def mark_read(self, company_id: str, ann_id: str, employee_id: str, now: datetime) -> bool:
@@ -407,5 +413,8 @@ class HrDesk:
         return [
             e.full_name
             for e in self.repo.employees(company_id)
-            if e.status == "active" and e.telegram_id is not None and e.id not in a.reads
+            if e.status == "active"
+            and e.telegram_id is not None
+            and e.id not in a.reads
+            and (not a.recipients or e.id in a.recipients)
         ]

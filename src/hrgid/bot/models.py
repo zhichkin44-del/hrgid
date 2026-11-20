@@ -138,6 +138,11 @@ class KbEntry(BaseModel):
     author: str = ""
     created_at: datetime
     source_ticket: str = ""
+    archived: bool = False  # П3.3: в архиве бот не берёт ответ
+    needs_review: bool = False  # «проверить»: изменился закон или правило (сценарий 4)
+    review_note: str = ""
+    uses: int = 0  # сколько раз ответ отдан из базы
+    history: list[str] = Field(default_factory=list)  # история изменений (П3.2)
 
 
 class Announcement(BaseModel):
@@ -149,6 +154,9 @@ class Announcement(BaseModel):
     created_at: datetime
     asks_dates: bool = False
     reads: dict[str, datetime] = Field(default_factory=dict)  # employee_id -> когда прочитал
+    groups: list[str] = Field(default_factory=list)  # пусто = всем
+    recipients: list[str] = Field(default_factory=list)  # кому ушло (employee_id)
+    reminded_at: datetime | None = None
 
 
 class Feedback(BaseModel):

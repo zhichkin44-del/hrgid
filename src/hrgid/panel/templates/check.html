@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% import "_m.html" as m %}
+{% block main %}
+{% if not docs %}
+{{ m.head("Проверка на ТК", "Сравнение правил компании с Трудовым кодексом") }}
+<div class="state"><div class="ic">○</div><h2>Пока нечего проверять</h2><p>Загрузите правила компании — каждый пункт будет оценён по Трудовому кодексу.</p><a class="btn pri" href="/docs?w=upload">Загрузить документ</a></div>
+{% else %}
+{{ m.head("Проверка на ТК", "Каждый пункт правил: соответствует, лучше закона или риск нарушения") }}
+<form method="get" action="/check" class="bar-act" style="margin-bottom:12px">
+<label class="field" style="margin:0"><select name="doc" aria-label="Документ" onchange="this.form.submit()">{% for x in docs %}<option value="{{ x.doc_id }}"{% if x.doc_id == doc_id %} selected{% endif %}>{{ x.title }}</option>{% endfor %}</select></label>
+<label class="field" style="margin:0"><select name="v" aria-label="Версия" onchange="this.form.submit()">{% for v in vs %}<option value="{{ v.number }}"{% if v.number == number %} selected{% endif %}>версия {{ v.number }}{% if v.number == active %} (действует){% elif not v.order_no %} (проект){% endif %}</option>{% endfor %}</select></label>
+<noscript><button class="btn" type="submit">Показать</button></noscript></form>
+{% if ver and not rep %}
+<div class="state"><div class="ic">○</div><h2>Версия {{ number }} ещё не проверена</h2><p>В версии {{ ver.checkable|length }} пунктов. Проверка сравнивает каждый с нормами ТК.</p>
+{% if has_checker %}<form method="post" action="/check/{{ doc_id }}/{{ number }}/run"><button class="btn pri" type="submit">Проверить версию на ТК</button></form>{% endif %}</div>
+{% elif rep %}
+<div class="sum"><div class="card"><b class="num">{{ rep.count("ok") }}</b><span>соответствует</span></div><div class="card"><b class="num">{{ rep.count("better") }}</b><span>лучше закона</span></div><div class="card"><b class="num" style="color:var(--bad)">{{ rep.open_risks|length }}</b><span>риск нарушения</span></div><div class="card"><b class="num">{{ rep.count("unclear") }}</b><span>нужен человек</span></div></div>
+{% if ver and not ver.applicable(today) %}<div class="notice"><span><b>Версия {{ number }} — проект, ещё не утверждена приказом.</b> <span class="mu">Помощник её не применяет{% if active %}, действует версия {{ active }}{% endif %}.</span></span>{% if can_accept %}<a href="/docs/{{ doc_id }}/{{ number }}/order">Указать приказ →</a>{% endif %}</div>{% endif %}
+<div class="bar-act" style="margin:10px 0"><a class="btn ghost" href="/check/{{ doc_id }}/{{ number }}/pdf">Скачать PDF</a><form method="post" action="/check/{{ doc_id }}/{{ number }}/run"><button class="btn ghost" type="submit">Проверить заново</button></form>{% if show_all %}<a class="btn ghost" href="/check?doc={{ doc_id }}&v={{ number }}">Вернуться к рискам</a>{% else %}<a class="btn ghost" href="/check?doc={{ doc_id }}&v={{ number }}&all=1">Все {{ rep.items|length }} пунктов</a>{% endif %}</div>
+<div class="rep">
+{% for it in rep.items if show_all or it.verdict in ("risk", "unclear") %}
+<div class="tr{% if it.verdict == "risk" %} risk{% endif %}" style="--cols:.5fr 3fr 1.4fr"><b class="num">{{ it.number }}</b><span>{{ it.text }}<small>{{ it.explanation }}{% if it.article %} · {{ it.article }}{% endif %}</small>
+{% if it.suggestion and it.verdict == "risk" %}<div class="fix"><b>Предложенная формулировка</b>{{ it.suggestion }}</div>{% endif %}
+{% if it.accepted %}<small>Принято с риском: {{ it.accepted.comment }} ({{ it.accepted.author }})</small>{% endif %}</span>
+<span><span class="pill{% if it.verdict == 'risk' %} bad{% elif it.verdict == 'better' %} ok{% endif %}">{{ it.label }}</span>
+{% if it.verdict == "risk" or it.verdict == "unclear" %}<br><a class="btn sm" href="/check/{{ doc_id }}/{{ number }}/fix?item={{ it.number }}">Исправить пункт</a>
+{% if it.verdict == "risk" and not it.accepted %}{% if can_accept %}<a class="btn sm ghost" href="/check/{{ doc_id }}/{{ number }}/accept?item={{ it.number }}">Принять с риском</a>{% else %}<br><span class="cap">Принять с риском — доступно администратору</span>{% endif %}{% endif %}{% endif %}</span></div>
+{% else %}<div class="state"><div class="ic">✓</div><h2>Рисков нет</h2><p>Все пункты соответствуют ТК или лучше закона.</p><a class="btn" href="/check?doc={{ doc_id }}&v={{ number }}&all=1">Показать все пункты</a></div>{% endfor %}
+</div>
+{% endif %}
+{% endif %}
+{% endblock %}
+{% block windows %}
+{% if win == "fix" and cur %}{% call m.dlg("П5.1", "Исправить пункт " ~ item, "/check?doc=" ~ doc_id ~ "&v=" ~ number, lead="Создаётся новая версия (проект) и проверяется заново.") %}
+<form method="post" action="/check/{{ doc_id }}/{{ number }}/fix"><input type="hidden" name="item" value="{{ item }}">
+<div class="cap">Сейчас</div><div class="qt">{{ cur.text }}</div>
+{% if cur.suggestion %}<div class="fix" style="margin-top:8px"><b>Предложено</b>{{ cur.suggestion }}</div>{% endif %}
+<label class="field" style="margin-top:12px"><span>Итоговый текст пункта</span><textarea name="text" rows="4" {% if errors.text %}class="bad"{% endif %}>{{ form.get("text", cur.suggestion or cur.text) }}</textarea>{% if errors.text %}<div class="err">{{ errors.text }}</div>{% endif %}</label>
+<div class="ft"><a class="btn ghost" href="/check?doc={{ doc_id }}&v={{ number }}">Отмена</a><button class="btn pri" type="submit">Сохранить версию и проверить заново</button></div></form>
+{% endcall %}{% endif %}
+{% if win == "accept" and cur %}{% call m.dlg("П5.3", "Принять пункт " ~ item ~ " с риском", "/check?doc=" ~ doc_id ~ "&v=" ~ number, lead="Пункт останется как есть. Автор, время и причина запишутся в журнал.") %}
+<form method="post" action="/check/{{ doc_id }}/{{ number }}/accept"><input type="hidden" name="item" value="{{ item }}">
+<div class="qt">{{ cur.text }}</div>
+{{ m.field("comment", "Почему принимаем риск", form, errors, rows=3) }}
+{{ m.check("understood", "Понимаю последствия: пункт может нарушать закон", false, errors.understood) }}
+<div class="ft"><a class="btn ghost" href="/check?doc={{ doc_id }}&v={{ number }}">Отмена</a><button class="btn pri" type="submit">Принять с риском</button></div></form>
+{% endcall %}{% endif %}
+{% endblock %}
