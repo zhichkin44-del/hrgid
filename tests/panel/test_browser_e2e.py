@@ -13,6 +13,7 @@ import socket
 import threading
 import time
 from collections.abc import Iterator
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -150,7 +151,9 @@ def test_browser_scenario_1_new_company(browser: Any, live: Live) -> None:
     with page.expect_download() as dl:
         page.get_by_role("button", name="Сформировать").click()
     rows = list(
-        csv.reader(io.StringIO(open(dl.value.path(), encoding="utf-8-sig").read()), delimiter=";")
+        csv.reader(
+            io.StringIO(Path(dl.value.path()).read_text(encoding="utf-8-sig")), delimiter=";"
+        )
     )
     codes = {r[0]: r[2] for r in rows[1:]}
     assert len(codes) == 3
