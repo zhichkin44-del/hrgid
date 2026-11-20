@@ -59,7 +59,7 @@
 <label class="chk" style="margin:10px 0"><input type="checkbox" name="save_kb" value="1" class="sr" x-model="kb"><i>✓</i><span>Сохранить ответ в базу — следующий такой вопрос отвечается из базы</span></label>
 <div x-show="kb" x-transition.opacity>
 {{ m.field("question", "Вопрос в общем виде", form, errors, maxlength=300) }}
-{{ m.field("basis", "Основание (статья ТК или пункт правил)", form, errors, placeholder="ст. 124 ТК РФ") }}
+{{ m.basis(form, errors, basis_options) }}
 </div>
 {% else %}<p class="hint">Конфиденциальный ответ в базу не сохраняется.</p>{% endif %}
 <div class="ft"><a class="btn ghost" href="/queue?k={{ sel.key }}">Вернуться к правке</a><button class="btn pri" type="submit">Отправить</button></div></form>
@@ -79,7 +79,7 @@
 <form method="post" action="/queue/{{ sel.key }}/savekb">
 {{ m.field("question", "Вопрос (в общем виде)", form, errors, maxlength=300) }}
 {{ m.field("answer", "Ответ", form, errors, rows=5, maxlength=900) }}
-<div class="row2">{{ m.field("basis", "Основание", form, errors, placeholder="ст. 124 ТК РФ или п. 4.5 Правил") }}
+<div class="row2">{{ m.basis(form, errors, basis_options) }}
 <label class="field"><span>Кому показывать</span><select name="audience"><option value="all">всем сотрудникам</option>{% for g in groups %}<option value="{{ g }}"{% if form.get("audience") == g %} selected{% endif %}>{{ g }}</option>{% endfor %}</select></label></div>
 <div class="ft"><a class="btn ghost" href="/queue?k={{ sel.key }}">Отмена</a><button class="btn pri" type="submit">Сохранить</button></div></form>
 {% endcall %}{% endif %}

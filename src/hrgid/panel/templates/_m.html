@@ -32,3 +32,10 @@
 {% macro head(title, sub, action_url="", action_text="") %}
 <div class="ph"><div><h1>{{ title }}</h1><p>{{ sub }}</p></div>{% if action_url %}<a class="btn pri" href="{{ action_url }}">{{ action_text }}</a>{% endif %}</div>
 {% endmacro %}
+
+{% macro basis(form, errors, options, label="Основание") %}
+<label class="field"><span>{{ label }}</span><select name="basis"{% if errors.get("basis") %} class="bad"{% endif %}><option value="">— выберите статью или пункт —</option>
+{% set cur = form.get("basis", "") %}{% if cur and cur not in options %}<option value="{{ cur }}" selected>{{ cur }}</option>{% endif %}
+{% for o in options %}<option value="{{ o }}"{% if o == cur %} selected{% endif %}>{{ o }}</option>{% endfor %}</select>
+{% if errors.get("basis") %}<div class="err">{{ errors["basis"] }}</div>{% else %}<div class="hint">Обязательно: статья ТК или пункт правил компании</div>{% endif %}</label>
+{% endmacro %}

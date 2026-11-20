@@ -164,6 +164,17 @@ class Web:
             return {}
         return {"queue": (len(queue), False), "check": (risks, True)}
 
+    def basis_options(self, c: Ctx) -> list[str]:
+        """Варианты поля «Основание»: частые статьи ТК, основания уже сохранённых ответов,
+        пункты действующих правил компании."""
+        opts = [f"ст. {n} ТК РФ" for n in (70, 115, 124, 136, 152, 153)]
+        opts += [e.basis for e in self.d.repo.kb_entries(c.company) if e.basis]
+        for doc in self.d.docs.documents(c.company):
+            v = self.d.docs.active_version(c.company, doc["doc_id"], c.today)
+            if v is not None:
+                opts += [f"п. {i.number} ({doc['title']})" for i in v.checkable]
+        return list(dict.fromkeys(opts))
+
     def risk_count(self, c: Ctx) -> int:
         n = 0
         for doc in self.d.docs.documents(c.company):
@@ -194,6 +205,7 @@ class Web:
             "form": {},
             "win": "",
             "retry": c.request.url.path,
+            "basis_options": [],
         }
         ctx.update(kw)
         resp = self.templates.TemplateResponse(c.request, template, ctx, status_code=status)

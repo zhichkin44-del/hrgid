@@ -60,3 +60,10 @@ class FileMailer:
             f"Кому: {to}\nТема: {subject}\n\n{body}\n", encoding="utf-8"
         )
         log.info("письмо «%s» записано в файл для %s", subject, mask_email(to))
+
+
+class ConsoleMailer:
+    """Запуск для владельца без почты: письмо с кодом печатается в консоль (только локально)."""
+
+    def send(self, to: str, subject: str, body: str) -> None:
+        print(f"\n[письмо для {to}] {subject}\n{body}\n", flush=True)

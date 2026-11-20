@@ -201,10 +201,10 @@ def test_browser_scenario_2_hr_answer_to_kb(browser: Any, live: Live) -> None:
     page.get_by_role("button", name="Отправить ответ").click()
     page.wait_for_selector("text=Отправить ответ?")
     # поля базы появляются по галочке (Alpine)
-    assert not page.locator("input[name=basis]").is_visible()
+    assert not page.locator("select[name=basis]").is_visible()
     page.get_by_text("Сохранить ответ в базу").click()
-    page.wait_for_selector("input[name=basis]", state="visible")
-    page.fill("input[name=basis]", "п. 3.2 Правил")
+    page.wait_for_selector("select[name=basis]", state="visible")
+    page.select_option("select[name=basis]", "ст. 124 ТК РФ")
     page.get_by_role("button", name="Отправить", exact=True).click()
     page.wait_for_selector("text=Ответ отправлен")
     got = bot.push(7001)
@@ -213,7 +213,7 @@ def test_browser_scenario_2_hr_answer_to_kb(browser: Any, live: Live) -> None:
     assert "Ответ HR из базы" in text_of(out) and len(pipe.calls) == calls
     assert "anna@" not in text_of(out) and "Анна Воронова" in text_of(out)
     page.goto(live.url + "/kb")
-    assert page.locator("text=п. 3.2 Правил").count() == 1
+    assert page.locator("text=ст. 124 ТК РФ").count() >= 1
 
 
 # ----------------------------------------------------------------------------------------

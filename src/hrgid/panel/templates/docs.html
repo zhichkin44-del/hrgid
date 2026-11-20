@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 {% import "_m.html" as m %}
 {% block main %}
-{{ m.head("Документы", "Правила компании, по которым отвечает помощник. Без приказа и даты версия не применяется", "/docs?w=upload", "Загрузить документ") }}
-{% if not can_order and rows %}<p class="cap" style="margin-bottom:10px">Приказ, откат и удаление версий — доступно администратору.</p>{% endif %}
+{{ m.head("Документы", "Правила компании, по которым отвечает помощник. Без приказа и даты версия не применяется" ~ ("" if can_order else " · приказ, откат и удаление — доступно администратору"), "/docs?w=upload", "Загрузить документ") }}
+{% if false %}{% endif %}
 {% if not rows %}
 <div class="state"><div class="ic">○</div><h2>Документов пока нет</h2><p>Загрузите правила компании (PDF или DOCX): по ним будет отвечать помощник и проверяться соответствие ТК.</p><a class="btn pri" href="/docs?w=upload">Загрузить документ</a></div>
 {% endif %}
@@ -16,8 +16,7 @@
 <span data-l="Приказ">{% if v.order_no %}№ {{ v.order_no }} от {{ fmt_date(v.order_date) }}{% else %}<span class="bad">не указан</span>{% endif %}</span><span data-l="Действует с" class="num">{{ fmt_date(v.effective_from) or "—" }}</span>
 <span style="display:flex;gap:6px;flex-wrap:wrap">{% if prev %}<a class="btn sm ghost" href="/docs/{{ r.doc_id }}/compare?a={{ prev.number }}&b={{ v.number }}">Сравнить с {{ prev.number }}</a>{% endif %}
 {% if can_order %}{% if not v.order_no %}<a class="btn sm" href="/docs/{{ r.doc_id }}/{{ v.number }}/order">Указать приказ</a>{% endif %}{% if v.applicable(today) and r.active != v.number %}<a class="btn sm ghost" href="/docs/{{ r.doc_id }}/rollback?to={{ v.number }}">Откатить</a>{% endif %}{% if r.active != v.number %}<a class="btn sm danger" href="/docs/{{ r.doc_id }}/{{ v.number }}/delete">Удалить</a>{% endif %}{% else %}<span class="pill">Доступно администратору</span>{% endif %}</span></div>{% endfor %}</div>
-{% if last and not last.order_no %}<div class="card pnl" style="margin-bottom:22px"><h2>Версия {{ last.number }} станет рабочей после приказа</h2>
-{% if can_order %}<form method="post" action="/docs/{{ r.doc_id }}/{{ last.number }}/order"><div class="row3"><label class="field" style="margin:0"><span>Приказ №</span><input name="order_no" placeholder="в приказе, цифрой: 14"></label><label class="field" style="margin:0"><span>от</span><input name="order_date" placeholder="дд.мм.гггг"></label><label class="field" style="margin:0"><span>Действует с</span><input name="effective_from" placeholder="дд.мм.гггг"></label></div><div style="margin-top:12px"><button class="btn sm" type="submit">Сохранить приказ</button></div></form>{% else %}<p class="mu" style="font-size:14px">Приказ и дату начала указывает администратор. <span class="pill">Доступно администратору</span></p>{% endif %}</div>{% endif %}
+{% if last and not last.order_no %}{% if can_order %}<div class="card pnl" style="margin-bottom:22px"><h2>Версия {{ last.number }} станет рабочей после приказа</h2><form method="post" action="/docs/{{ r.doc_id }}/{{ last.number }}/order"><div class="row3"><label class="field" style="margin:0"><span>Приказ №</span><input name="order_no" placeholder="в приказе, цифрой: 14"></label><label class="field" style="margin:0"><span>от</span><input name="order_date" placeholder="дд.мм.гггг"></label><label class="field" style="margin:0"><span>Действует с</span><input name="effective_from" placeholder="дд.мм.гггг"></label></div><div style="margin-top:12px"><button class="btn sm" type="submit">Сохранить приказ</button></div></form></div>{% else %}<div class="notice"><span><b>Версия {{ last.number }} станет рабочей после приказа.</b> <span class="mu">Номер приказа и дату начала указывает администратор.</span></span><span class="pill">Доступно администратору</span></div>{% endif %}{% endif %}
 {% endif %}
 {% endfor %}
 {% endblock %}

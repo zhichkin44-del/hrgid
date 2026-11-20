@@ -66,7 +66,7 @@ def test_hr_has_no_order_rollback_delete() -> None:
     s = seed(env)
     hr = env.login(HR)
     page = hr.get("/docs").text
-    assert "доступно администратору" in page and "/order" not in page.split("<main")[1]
+    assert "доступно администратору" in page.lower() and "/order" not in page.split("<main")[1]
     for url in (
         f"/docs/{s.doc_id}/1/order",
         f"/docs/{s.doc_id}/rollback?to=1",

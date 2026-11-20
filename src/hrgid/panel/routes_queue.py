@@ -109,6 +109,7 @@ def queue_page(
         overdue=bool(sel and sel.status == "queue" and c.now > sel.due_at),
         mates=colleagues(w, c), groups=d.staff.groups(c.company),
         hidden=bool(sel and sel.confidential and not sel.revealed), section_title="Очередь",
+        basis_options=w.basis_options(c),
     )  # fmt: skip
 
 

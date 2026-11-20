@@ -75,5 +75,6 @@ ignore_missing_imports = true
 # длинные русские строки интерфейса панели не переносим
 "src/hrgid/panel/*.py" = ["E501"]
 "scripts/panel_*.py" = ["E501"]
+"scripts/run_panel.py" = ["E501"]
 "src/hrgid/flow/prompts.py" = ["E501"]
 "data/evals/*" = ["E501", "I001"]

@@ -158,6 +158,9 @@ def register(app: FastAPI, w: Web) -> None:
         escalation: Annotated[str, Form()] = "",
         retention_days: Annotated[str, Form()] = "",
         utc_offset: Annotated[str, Form()] = "3",
+        provider: Annotated[str, Form()] = "",
+        budget_rub: Annotated[str, Form()] = "",
+        over_action: Annotated[str, Form()] = "",
     ) -> Response:
         if (deny := _admin_only(c)) is not None:
             return deny
@@ -199,8 +202,23 @@ def register(app: FastAPI, w: Web) -> None:
                 "retention_days": int(retention_days),
             }  # fmt: skip
         )
+        if budget_rub.isdigit() and int(budget_rub) >= 1000:
+            t = t.model_copy(update={"budget_rub": float(budget_rub)})
+        if over_action in OVER_ACTIONS:
+            t = t.model_copy(
+                update={"over_action": "queue" if over_action == "queue" else "refuse"}
+            )
         d.ops.save_tech(c.company, t)
         d.journal.add(c.company, c.now, c.user.email, "settings.save", "")
+        if provider in PROVIDER_NAMES and provider != t.provider:
+            if provider == "claude":  # за границу — только через предупреждение (П9.5)
+                return settings_page(w, c, win="claude", form={"provider": provider})
+            d.ops.save_tech(
+                c.company, t.model_copy(update={"provider": provider, "claude_ack": False})
+            )
+            d.journal.add(
+                c.company, c.now, c.user.email, "settings.model", PROVIDER_NAMES[provider]
+            )
         w.flash(c, "Настройки сохранены.")
         return w.see_other("/settings")
 

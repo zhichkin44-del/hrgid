@@ -32,6 +32,7 @@ def kb_page(
         c, "kb.html", "kb", status, tab=tab, q=q, entries=entries, review=review, total=total,
         win=win, entry=entry, form=form or {}, errors=errors or {}, step=step,
         n_review=len(queue), groups=d.staff.groups(c.company), section_title="База ответов",
+        basis_options=w.basis_options(c),
     )  # fmt: skip
 
 
