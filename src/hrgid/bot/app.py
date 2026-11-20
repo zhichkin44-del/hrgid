@@ -171,8 +171,8 @@ def build_engine_from_env() -> BotEngine:
     store.init_schema()
     repo = Repo(store)
     kb = KbService(repo)
-    llm = ResilientLLM(make_client(os.environ.get("HRGID_PROVIDER", "claude")))
-    reranker = os.environ.get("HRGID_RERANKER", "mmarco-minilm")
+    llm = ResilientLLM(make_client(os.environ.get("HRGID_PROVIDER") or "claude"))
+    reranker = os.environ.get("HRGID_RERANKER") or "mmarco-minilm"
     searcher = KbSearcher(make_searcher(conn, reranker), kb)
     threshold = os.environ.get("HRGID_NO_ANSWER_THRESHOLD")
     pipeline = Pipeline(

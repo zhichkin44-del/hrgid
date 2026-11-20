@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable
 
 from hrgid.llm.base import LLMRequest, LLMResponse, Tier
@@ -28,3 +29,15 @@ class FakeLLM:
                 input_tokens=len(req.system) // 4, output_tokens=len(out) // 4,
             )  # fmt: skip
         return out
+
+
+NO_MODEL_ANSWER = json.dumps({"no_answer": True, "answer": "", "claims": []})
+
+
+def no_model_client() -> FakeLLM:
+    """Запуск без ключей (HRGID_PROVIDER=fake): маршрут «закон», на любой вопрос — «ответа нет»."""
+
+    def handler(req: LLMRequest) -> LLMResponse | str:
+        return json.dumps({"route": "law"}) if req.purpose == "route" else NO_MODEL_ANSWER
+
+    return FakeLLM(handler)

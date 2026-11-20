@@ -13,6 +13,7 @@ from hrgid.flow.graph import FlowConfig, Pipeline
 from hrgid.flow.searcher import HybridSearcher
 from hrgid.llm.base import LLMClient
 from hrgid.llm.claude import ClaudeClient
+from hrgid.llm.fake import no_model_client
 from hrgid.llm.gigachat import GigaChatClient
 from hrgid.llm.recordings import DEFAULT_DIR, RecordingLLM
 from hrgid.llm.resilient import ResilientLLM
@@ -34,6 +35,8 @@ def make_client(provider: str) -> LLMClient:
         return GigaChatClient()
     if provider == "yandex":
         return YandexGPTClient()
+    if provider == "fake":  # запуск без ключей: поиск и панель работают, ответы — отказы
+        return no_model_client()
     raise ValueError(f"неизвестный провайдер: {provider}")
 
 

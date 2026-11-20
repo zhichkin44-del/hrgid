@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import sys
 import time
@@ -16,7 +17,9 @@ from pathlib import Path
 
 BASE = "https://www.consultant.ru"
 DOC = "/document/cons_doc_LAW_34683/"
-RAW = Path(__file__).resolve().parent.parent / "data" / "raw"
+RAW = Path(
+    os.environ.get("HRGID_LAW_DIR") or Path(__file__).resolve().parent.parent / "data" / "raw"
+)
 UA = "Mozilla/5.0 (compatible; hrgid-loader/0.1)"
 LINK = re.compile(
     r'href="(/document/cons_doc_LAW_34683/[0-9a-f]{40}/)"[^>]*>\s*(Статья \d+(?:\.\d+)?\.[^<]*)'
