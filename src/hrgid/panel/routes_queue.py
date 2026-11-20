@@ -10,6 +10,7 @@ from fastapi.responses import HTMLResponse, Response
 from hrgid.bot.desk import DeskError, KbParams
 from hrgid.bot.kb import KbError
 from hrgid.bot.models import Employee, Ticket
+from hrgid.panel.ops import topic_of
 from hrgid.panel.security import PanelUser
 from hrgid.panel.services import K_NOTE, PanelError
 from hrgid.panel.web_base import Ctx, Web, human_span
@@ -40,7 +41,7 @@ def suggest(w: Web, c: Ctx, t: Ticket) -> Suggestion:
     if fn is not None:
         res: Suggestion = fn(c.company, t.text)
         return res
-    sug = Suggestion()
+    sug = Suggestion(summary=f"Тема обращения: {topic_of(t.text)}.")
     ranked = w.d.kb.ranked(c.company, t.text)[:3]
     for _, e in ranked:
         sug.found.append((e.basis, e.answer[:160]))

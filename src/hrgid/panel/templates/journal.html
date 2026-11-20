@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 {% import "_m.html" as m %}
 {% block main %}
-{{ m.head("Журнал", "Кто что сделал в панели. Текст переписки в журнале не хранится.", "/journal?w=export", "Экспорт") }}
-<div class="tabs"><a href="/journal" class="{% if tab == 'actions' %}on{% endif %}">Действия</a><a href="/journal?tab=logins" class="{% if tab == 'logins' %}on{% endif %}">Входы</a><a href="/journal?w=filters" style="margin-left:auto">Фильтры</a></div>
+<div class="ph"><div><h1>Журнал</h1><p>Кто и что делал в панели · хранится 1 год</p></div><span class="bar-act"><a class="btn ghost" href="/journal?w=filters">Фильтры</a><a class="btn pri" href="/journal?w=export">Экспорт</a></span></div>
+<div class="tabs"><a href="/journal" class="{% if tab == 'actions' %}on{% endif %}">Действия</a><a href="/journal?tab=logins" class="{% if tab == 'logins' %}on{% endif %}">Входы</a></div>
 {% if tab == "logins" %}
 {% if not logins %}<div class="state"><div class="ic">○</div><h2>Входов пока нет</h2><p>Здесь появятся входы в панель: кто, когда и с каким итогом.</p></div>
 {% else %}<div class="tbl"><div class="tr h" style="--cols:1.3fr 1.6fr 1.6fr 1fr"><span>Когда</span><span>Кто</span><span>Итог</span><span>Откуда</span></div>
@@ -13,8 +13,8 @@
 {% if filtered %}<div class="state"><div class="ic">○</div><h2>По фильтру ничего нет</h2><p>Измените условия или сбросьте фильтры.</p><a class="btn" href="/journal">Сбросить фильтры</a></div>
 {% else %}<div class="state"><div class="ic">○</div><h2>Журнал пуст</h2><p>Действия сотрудников HR появятся здесь.</p></div>{% endif %}
 {% else %}
-<div class="tbl"><div class="tr h" style="--cols:1.3fr 1.6fr 2fr 1.6fr .6fr"><span>Когда</span><span>Кто</span><span>Что</span><span>С чем</span><span></span></div>
-{% for e in rows %}<div class="tr" style="--cols:1.3fr 1.6fr 2fr 1.6fr .6fr"><span class="num">{{ c.local(e.at).strftime("%d.%m.%Y %H:%M") }}</span><span>{{ e.user }}</span><span>{{ e.label }}</span><span>{{ e.target }}</span><span><a class="btn sm ghost" href="/journal/{{ e.n }}">Открыть</a></span></div>{% endfor %}</div>
+<div class="tbl"><div class="tr h" style="--cols:1fr 1.2fr 2.4fr 1.6fr"><span>Когда</span><span>Кто</span><span>Что сделал</span><span>С чем</span></div>
+{% for e in rows %}<div class="tr" style="--cols:1fr 1.2fr 2.4fr 1.6fr"><span class="num">{{ c.local(e.at).strftime("%d.%m.%Y %H:%M") }}</span><span>{{ e.user }}</span><span>{{ e.label }}</span><span class="mu"><a class="rowlink" href="/journal/{{ e.n }}">{{ e.target or "—" }}</a></span></div>{% endfor %}</div>
 <p class="cap" style="margin-top:8px">Показано {{ rows|length }} из {{ total }}.</p>
 {% endif %}
 {% endif %}

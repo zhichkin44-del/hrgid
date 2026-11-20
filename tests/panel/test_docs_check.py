@@ -151,8 +151,8 @@ def test_check_finds_planted_violations_and_suggests_fix() -> None:
     rep = env.deps.checker.report(CO, s.doc_id, 1)
     assert rep is not None and {i.number for i in rep.risks} == {"3.1"}  # выплата раз в месяц
     page = hr.get(f"/check?doc={s.doc_id}&v=1").text
-    assert "ст. 136" in page and "Предложенная формулировка" in page
-    assert "Принять с риском — доступно администратору" in page
+    assert "ст. 136" in page and "Предлагаем:" in page
+    assert "Доступно администратору" in page
 
 
 def test_fix_item_creates_new_version_and_rechecks() -> None:

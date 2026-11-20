@@ -14,7 +14,7 @@
 <div class="card kpi"><label>Без ответа в базе</label><div class="v num">{{ unanswered|length }}</div><div class="s">повторяются</div></div></div>
 <div class="tbl" style="margin-bottom:14px"><div class="tr h" style="--cols:1.4fr 1.2fr .6fr .8fr .8fr 1fr"><span>Тема</span><span>6 недель</span><span>Неделя</span><span>Рост</span><span>Без HR</span><span>👍 / 👎</span></div>
 {% for t in topics %}<div class="tr" style="--cols:1.4fr 1.2fr .6fr .8fr .8fr 1fr"><span><a class="rowlink" href="/analytics/topic?name={{ t.topic|urlencode }}"><b style="font-weight:500">{{ t.topic }}</b></a></span><span class="bars">{% for h in t.bars %}<i style="height:{{ h }}px"></i>{% endfor %}</span><span class="num" data-l="За неделю">{{ t.this_week }}</span><span class="num" data-l="Рост">{{ "+" if t.growth_pct > 0 }}{{ t.growth_pct }} %</span><span class="num" data-l="Без HR">{{ t.share_without_hr }} %</span><span class="num" data-l="👍 / 👎">{{ t.up }} / {{ t.down }}</span></div>{% endfor %}</div>
-<div class="card pnl" style="margin-bottom:14px"><h2>Вопросы по неделям</h2><div class="chartbox"><canvas id="weekly" aria-label="Вопросы по неделям"></canvas></div></div>
+<details style="margin-bottom:14px"><summary class="cap" style="cursor:pointer">График по неделям</summary><div class="card pnl" style="margin-top:8px"><div class="chartbox"><canvas id="weekly" aria-label="Вопросы по неделям"></canvas></div></div></details>
 <script id="weekly-data" type="application/json">{{ weekly|tojson }}</script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {

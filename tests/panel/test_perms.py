@@ -108,7 +108,7 @@ def test_hr_variants_of_screens_hide_buttons_with_caption() -> None:
     )
     env.login(HR).post(f"/check/{s.doc_id}/1/run")
     chk = hr.get(f"/check?doc={s.doc_id}&v=1").text
-    assert "Принять с риском</a>" not in chk and "Принять с риском — доступно администратору" in chk
+    assert "/accept?item" not in chk and "Доступно администратору" in chk
     assert "Исправить пункт" in chk
     adm = env.login(ADMIN)
     assert "Принять с риском</a>" in adm.get(f"/check?doc={s.doc_id}&v=1").text

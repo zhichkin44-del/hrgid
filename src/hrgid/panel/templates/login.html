@@ -6,7 +6,7 @@
 <h1>Вход для HR</h1><p class="mu" style="font-size:14px">Введите рабочую почту — пришлём одноразовый код.</p>
 {% if error %}<div class="notice bad" style="margin:14px 0"><span><b>{{ error }}</b></span></div>{% endif %}
 <form method="post" action="/login"><label class="field" style="margin-top:18px"><span>Почта</span><input type="email" name="email" value="{{ email|default('') }}" autocomplete="email" required autofocus placeholder="Рабочая почта HR"></label>
-<button class="btn pri" style="width:100%;padding:11px" type="submit">Прислать код</button></form>
+<button class="btn pri" style="width:100%;padding:11px" type="submit">Прислать код</button></form><p class="cap" style="margin-top:12px;text-align:center">Почты нет в списке HR? Доступ выдаёт администратор компании.</p>
 {% elif step == "code" %}
 <h1>Вход для HR</h1><p class="mu" style="font-size:14px">Код отправлен на почту {{ masked }}, действует 10 минут.</p>
 {% if error %}<div class="notice bad" style="margin:14px 0"><span><b>{{ error }}</b>{% if detail %} <span class="mu">{{ detail }}</span>{% endif %}</span></div>{% endif %}
