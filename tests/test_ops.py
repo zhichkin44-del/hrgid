@@ -109,5 +109,10 @@ def test_launch_rejects_unknown_role_and_idles_without_token(
     monkeypatch.setattr("hrgid.bot.app.main", lambda: None)
     launch.run("bot")
     assert "TELEGRAM_BOT_TOKEN" in reasons[0]
+    started: list[str] = []
+    monkeypatch.setattr(
+        launch.runpy, "run_module", lambda name, run_name: started.append(name)
+    )
     launch.run("mcp")
-    assert "hrgid.mcp" in reasons[1]
+    assert started == ["hrgid.mcp"]
+    assert len(reasons) == 1
