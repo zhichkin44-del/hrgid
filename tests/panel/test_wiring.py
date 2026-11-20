@@ -50,7 +50,7 @@ def test_live_pipeline_traces_reach_panel_analytics_and_costs() -> None:
     qs = env.deps.ops.questions(CO)
     assert len(qs) == 1 and qs[0]["topic"] == "Отпуск" and qs[0]["masked_question"]
     adm = env.login(ADMIN)
-    assert "Сколько дней отпуска" in adm.get("/costs").text
+    assert "Сколько дней отпуска" in adm.get("/costs/trace").text
     assert env.deps.analytics.has_data(CO)
 
 

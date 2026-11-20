@@ -7,13 +7,13 @@
 <div class="tbl"><div class="tr h" style="--cols:.5fr 1.5fr 3fr"><span>Строка</span><span>Сотрудник</span><span>Что не так</span></div>{% for e in extra.plan.errors %}<div class="tr" style="--cols:.5fr 1.5fr 3fr"><span class="num">{{ e.line }}</span><span>{{ e.who }}</span><span>{{ e.problem }}</span></div>{% endfor %}</div>
 <div class="bar-act" style="margin-top:12px"><a class="btn pri" href="/staff?w=import1">Загрузить исправленный файл</a></div>
 {% else %}
-<div class="bar-act" style="margin-bottom:14px"><a class="btn ghost" href="/staff?w=import1">Загрузить выгрузку 1С:ЗУП</a><a class="btn ghost" href="/staff?w=codes">Коды: файл CSV и лист с QR</a><a class="btn ghost" href="/staff/groups/list">Группы</a></div>
+<div class="bar-act" style="margin-bottom:14px"><a class="btn ghost" href="/staff?w=import1">Загрузить выгрузку 1С:ЗУП</a><a class="btn ghost" href="/staff?w=codes">Коды: файл CSV</a><a class="btn ghost" href="/staff?w=codes">Коды: лист с QR для печати</a><a class="btn ghost" href="/staff/groups/list">Группы</a></div>
 {% if not rows %}
 <div class="state"><div class="ic">○</div><h2>Сотрудников пока нет</h2><p>Загрузите выгрузку из 1С:ЗУП или пригласите первого сотрудника — он получит код для бота.</p><a class="btn pri" href="/staff?w=invite">Пригласить</a> <a class="btn" href="/staff?w=import1">Импорт из 1С</a></div>
 {% else %}
 <div class="tbl"><div class="tr h" style="--cols:1.7fr 1fr 1fr .8fr 1.2fr 1.4fr"><span>Сотрудник</span><span>Группа</span><span>Принят</span><span>График</span><span>Доступ</span><span></span></div>
 {% for r in rows %}<div class="tr" style="--cols:1.7fr 1fr 1fr .8fr 1.2fr 1.4fr"><span><a class="rowlink" href="/staff/{{ r.emp.id }}"><b style="font-weight:500">{{ r.emp.full_name }}</b></a><small>{{ r.emp.position }}</small></span><span data-l="Группа">{{ r.emp.group or "—" }}</span><span class="num" data-l="Принят">{{ fmt_date(r.emp.hire_date) or "—" }}</span><span data-l="График">{{ r.emp.schedule or "—" }}</span><span><span class="pill{% if r.state == 'disabled' %} bad{% elif r.state == 'connected' %} w{% endif %}">{{ r.label }}</span></span>
-<span>{% if r.state == "disabled" %}<form method="post" action="/staff/{{ r.emp.id }}/enable"><button class="btn sm ghost" type="submit">Вернуть доступ</button></form>{% else %}<a class="btn sm ghost" href="/staff/{{ r.emp.id }}/newcode">Код заново</a> <a class="btn sm danger" href="/staff/{{ r.emp.id }}/disable">Отключить</a>{% endif %}</span></div>{% endfor %}</div>
+<span>{% if r.state == "disabled" %}<form method="post" action="/staff/{{ r.emp.id }}/enable"><button class="btn sm ghost" type="submit">Вернуть доступ</button></form>{% else %}<a class="btn sm ghost" href="/staff/{{ r.emp.id }}/newcode">Код заново</a>{% endif %}</span></div>{% endfor %}</div>
 <p class="cap" style="margin-top:10px">Профили из 1С используются для расчётов; импорт обновляет данные тех, кто уже есть.</p>
 {% endif %}
 {% endif %}
@@ -60,7 +60,7 @@
 <div class="steps"><i class="on"></i><i></i><i></i><i></i></div>
 {% if win == "import1_err" %}<div class="notice bad" style="margin-bottom:12px"><span><b>{{ errors.file }}</b> <span class="mu">Нужен файл CSV или XLSX с колонкой «ФИО».</span></span></div>{% endif %}
 <form method="post" action="/staff/import" enctype="multipart/form-data" hx-boost="false">
-<label class="drop" style="display:block"><b>Выберите выгрузку</b>CSV или XLSX из 1С:ЗУП<input type="file" name="file" accept=".csv,.xlsx" required style="display:block;margin-top:8px"></label>
+<label class="drop" style="display:block;cursor:pointer" x-data="{n: ''}"><b>Выберите выгрузку</b>CSV или XLSX из 1С:ЗУП<input type="file" name="file" accept=".csv,.xlsx" class="sr" @change="n = $event.target.files[0] ? $event.target.files[0].name : ''"><span class="cap" style="display:block;margin-top:8px" x-text="n || 'Файл не выбран'">Файл не выбран</span></label>
 {% if errors.file and win == "import1" %}<div class="err">{{ errors.file }}</div>{% endif %}
 <p class="hint">Колонки: ФИО, дата приёма, график, оклад, группа, заработок за 12 месяцев (если есть). <a href="/staff/import/sample.csv">Скачать образец файла</a></p>
 <div class="ft"><a class="btn ghost" href="/staff">Отмена</a><button class="btn pri" type="submit">Дальше</button></div></form>{% endcall %}{% endif %}

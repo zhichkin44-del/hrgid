@@ -35,7 +35,7 @@
 <button class="btn pri" type="submit" formaction="/queue/{{ sel.key }}/w/send">Отправить ответ</button>
 <button class="btn" type="submit" formaction="/queue/{{ sel.key }}/w/tpl">Шаблон из базы</button>
 <button class="btn" type="submit" formaction="/queue/{{ sel.key }}/w/assign">Назначить коллеге</button>
-{% if not sel.confidential %}<button class="btn ghost" type="submit" formaction="/queue/{{ sel.key }}/w/savekb">Сохранить в базу</button>{% endif %}
+{% if not sel.confidential %}<label class="chk" style="margin-left:6px"><input type="checkbox" name="save_kb" value="1" class="sr"{% if form.get("save_kb") %} checked{% endif %}><i>✓</i><span>Сохранить в базу</span></label>{% endif %}
 </div></form>
 {% endif %}
 {% if sel.confidential %}<p class="cap" style="margin-top:12px">Конфиденциальное обращение: имя автора скрыто, в базу ответов оно не сохраняется.</p>
@@ -71,9 +71,9 @@
 {% endcall %}{% endif %}
 {% if win == "assign" and sel %}{% call m.dlg("П2.3", "Назначить коллеге", "/queue?k=" ~ sel.key) %}
 <form method="post" action="/queue/{{ sel.key }}/assign"><input type="hidden" name="text" value="{{ form.get('text', '') }}">
-<label class="field"><span>Кому</span><select name="to" {% if errors.to %}class="bad"{% endif %}><option value="">— выберите —</option>{% for u in mates %}<option value="{{ u.email }}"{% if u.away %} disabled{% endif %}{% if form.get("to") == u.email %} selected{% endif %}>{{ u.name }}{% if u.away %} (в отпуске){% endif %}</option>{% endfor %}</select>{% if errors.to %}<div class="err">{{ errors.to }}</div>{% endif %}</label>
+<p class="lead" style="margin:-4px 0 12px">Вопрос {{ sel.label }}: {{ sel.text[:80] }}</p><div class="field"><span>Кому</span>{% for u in mates %}<label class="opt{% if form.get("to") == u.email %} on{% endif %}{% if u.away %} off{% endif %}" style="display:flex;gap:10px;align-items:center;margin:6px 0;cursor:pointer"><input type="radio" name="to" value="{{ u.email }}"{% if u.away %} disabled{% endif %}{% if form.get("to") == u.email %} checked{% endif %}><span><b>{{ u.name }}</b><small style="display:block;color:var(--mu)">{{ "в отпуске — назначить нельзя" if u.away else "на связи" }}</small></span></label>{% endfor %}{% if errors.to %}<div class="err">{{ errors.to }}</div>{% endif %}</div>
 {{ m.field("comment", "Комментарий (необязательно)", form, errors, rows=3, maxlength=500) }}
-<div class="ft"><a class="btn ghost" href="/queue?k={{ sel.key }}">Отмена</a><button class="btn pri" type="submit">Назначить коллеге</button></div></form>
+<div class="ft"><a class="btn ghost" href="/queue?k={{ sel.key }}">Отмена</a><button class="btn pri" type="submit">Назначить</button></div></form>
 {% endcall %}{% endif %}
 {% if win == "savekb" and sel %}{% call m.dlg("П2.5", "Сохранить в базу", "/queue?k=" ~ sel.key) %}
 <form method="post" action="/queue/{{ sel.key }}/savekb">

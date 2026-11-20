@@ -97,6 +97,28 @@ def fill(deps: Any, now: datetime) -> None:
         CO, v.doc_id, 1, "12", date(2026, 10, 30), date(2026, 11, 1), "maria@studio.test"
     )
     d.checker.check_version(CO, v.doc_id, 1, "anna@studio.test")
+    v2 = d.docs.upload(
+        CO,
+        "rules2.docx",
+        docx_bytes(RULES + ["4. Разное", "4.1. Новый пункт."]),
+        "maria@studio.test",
+        doc_id=v.doc_id,
+    )
+    d.checker.check_version(CO, v.doc_id, v2.number, "maria@studio.test")
+    d.docs.upload(
+        CO,
+        "pay.docx",
+        docx_bytes(
+            [
+                "Положение об оплате труда",
+                "1. Общие положения",
+                "1.1. Положение действует для всех.",
+            ]
+        ),
+        "anna@studio.test",
+        "Положение об оплате труда",
+    )
+    d.docs.set_order(CO, "d2", 1, "9", date(2026, 1, 10), date(2026, 2, 1), "maria@studio.test")
     questions = [
         "Можно ли перенести отпуск с декабря на январь?",
         "Можно ли работать из другого города две недели?",

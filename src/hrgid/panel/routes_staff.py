@@ -83,6 +83,7 @@ def ann_page(
     errors: dict[str, str] | None = None,
     extra: dict[str, Any] | None = None,
     status: int = 200,
+    compose: bool = False,
 ) -> HTMLResponse:
     d = w.d
     items = sorted(d.repo.announcements(c.company), key=lambda a: a.created_at, reverse=True)
@@ -91,6 +92,8 @@ def ann_page(
         c, "ann.html", "ann", status, items=items, stats=stats, win=win, ann=ann, form=form or {},
         errors=errors or {}, extra=extra or {}, groups=d.staff.groups(c.company),
         section_title="Объявления",
+        compose=compose,
+        n_all=len(recipients(w, c, [])),
     )  # fmt: skip
 
 
@@ -389,7 +392,7 @@ def register(app: FastAPI, w: Web) -> None:
     @app.get("/announcements/new", response_class=HTMLResponse)
     def ann_new(c: Annotated[Ctx, Depends(w.ctx)]) -> Response:
         draft = d.store.get("pdraft", c.company, c.user.email) or {}
-        return ann_page(w, c, win="", form={k: str(v) for k, v in draft.items()})
+        return ann_page(w, c, form={k: str(v) for k, v in draft.items()}, compose=True)
 
     def _ann_form(title: str, text: str, groups: list[str], asks: str) -> dict[str, str]:
         return {"title": title, "text": text, "groups": "|".join(groups), "asks": asks}
@@ -423,7 +426,7 @@ def register(app: FastAPI, w: Web) -> None:
         n = len(recipients(w, c, groups))
         err = _ann_check(title, text, n)
         if err:
-            return ann_page(w, c, win="", form=form, errors=err)
+            return ann_page(w, c, form=form, errors=err, compose=True)
         return ann_page(w, c, win="confirm", form=form, extra={"n": n})
 
     @app.post("/announcements/send", response_class=HTMLResponse)

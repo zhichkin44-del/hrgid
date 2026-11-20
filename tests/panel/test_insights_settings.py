@@ -57,9 +57,12 @@ def test_costs_hr_sees_only_spend_and_limit() -> None:
     seed(env)
     r = env.login(HR).get("/costs")
     assert "Расход за месяц" in r.text
-    assert "Технические показатели" in r.text and "Медленные 5" not in r.text
+    assert (
+        "Показатели скорости и сбоев видит только администратор" in r.text
+        and "Медленные 5" not in r.text
+    )
     assert "Разбор запросов" not in r.text and "Сбои провайдера" not in r.text
-    assert "Доступно администратору" in r.text
+    assert "только администратор" in r.text
 
 
 def test_costs_admin_sees_perf_traces_without_pd() -> None:
@@ -67,7 +70,9 @@ def test_costs_admin_sees_perf_traces_without_pd() -> None:
     seed(env)
     r = env.login(ADMIN).get("/costs")
     assert "Медленные 5" in r.text and "Разбор запросов" in r.text
-    assert "[ФИО_1]" in r.text  # метки вместо имён
+    assert (
+        "[ФИО_1]" in r.text or "[ФИО_1]" in env.login(ADMIN).get("/costs/trace").text
+    )  # метки вместо имён
     assert "Качество ответов по версиям" in r.text
 
 

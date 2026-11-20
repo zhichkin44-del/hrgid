@@ -3,7 +3,7 @@
 {% block main %}
 {{ m.head("База ответов", "Ответы HR, которые помощник использует при следующих похожих вопросах", "/kb/new", "Добавить ответ") }}
 {% if n_review %}<div class="notice"><span><b>{{ n_review }} ответ(ов) нужно пересмотреть.</b> <span class="mu">Изменился закон или правило, на которые они опираются.</span></span><a href="/kb/review">Пересмотреть →</a></div>{% endif %}
-<form method="get" action="/kb" style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap"><input type="hidden" name="tab" value="{{ tab }}"><label class="field" style="margin:0;max-width:360px;flex:1"><input name="q" value="{{ q }}" placeholder="Поиск по ответам" aria-label="Поиск по ответам"></label><button class="btn" type="submit">Найти</button>{% if tab == "archive" %}<a class="btn ghost" href="/kb">Действующие</a>{% else %}<a class="btn ghost" href="/kb?tab=archive">Архив</a>{% endif %}<a class="btn ghost" href="/kb/affected">Затронутые ответы</a></form>
+<form method="get" action="/kb" style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap"><input type="hidden" name="tab" value="{{ tab }}"><label class="field" style="margin:0;max-width:360px;flex:1"><input name="q" value="{{ q }}" placeholder="Поиск по ответам" aria-label="Поиск по ответам"></label>{% if tab == "archive" %}<a class="btn ghost" href="/kb">Действующие</a>{% else %}<a class="btn ghost" href="/kb?tab=archive">Архив</a>{% endif %}</form>
 {% set rows = review if tab == "review" else entries %}
 {% if not rows %}
 {% if q %}<div class="state"><div class="ic">○</div><h2>Ничего не найдено</h2><p>Попробуйте другие слова или откройте всю базу.</p><a class="btn" href="/kb">Сбросить поиск</a></div>
@@ -15,9 +15,10 @@
 {% for e in rows %}<div class="tr" style="--cols:2.6fr 1fr 1fr .6fr 1.5fr"><span><a class="rowlink" href="{% if e.archived %}/kb?tab=archive{% else %}/kb/{{ e.id }}/edit{% endif %}"><b style="font-weight:500">{{ e.question[:90] }}</b></a></span><span data-l="Автор">{{ e.author or "—" }}</span><span data-l="Дата" class="num">{{ fmt_date(e.created_at) }}</span><span data-l="Использован" class="num">{{ e.uses }}</span><span>{% if e.archived %}<span class="pill">В архиве</span> <form method="post" action="/kb/{{ e.id }}/restore" style="display:inline"><button class="btn sm ghost" type="submit">Вернуть</button></form>{% elif e.needs_review %}<span class="pill bad">Проверить</span> <span class="mu" style="font-size:13px">{{ e.basis }}</span>{% else %}<span class="pill w">Актуален</span> <span class="mu" style="font-size:13px">{{ e.basis }}</span> <a class="mu" style="font-size:13px" href="/kb/{{ e.id }}/archive">в архив</a>{% endif %}</span></div>{% endfor %}
 </div>
 {% endif %}
+<p class="cap" style="margin-top:10px"><a href="/kb/affected">Затронутые ответы: изменился закон или правило</a></p>
 {% endblock %}
 {% block windows %}
-{% if win == "new" %}{% call m.dlg("П3.1", "Новый ответ в базу", "/kb") %}
+{% if win == "new" %}{% call m.dlg("П3.1", "Новый ответ в базу", "/kb", lead="Автор и дата запишутся сами. Основание — статья ТК или пункт правил — обязательно.") %}
 <form method="post" action="/kb">
 {{ m.field("question", "Вопрос (в общем виде)", form, errors, maxlength=300) }}
 {{ m.field("answer", "Ответ", form, errors, rows=5, maxlength=900) }}

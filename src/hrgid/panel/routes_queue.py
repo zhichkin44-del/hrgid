@@ -139,6 +139,7 @@ def register(app: FastAPI, w: Web) -> None:
         c: Annotated[Ctx, Depends(w.ctx)],
         text: Annotated[str, Form()] = "",
         q: Annotated[str, Form()] = "",
+        save_kb: Annotated[str, Form()] = "",
     ) -> Response:
         """Окна над карточкой (отправить / шаблон / назначить / в базу): черновик не теряется."""
         if win not in ("send", "tpl", "assign", "savekb"):
@@ -146,7 +147,7 @@ def register(app: FastAPI, w: Web) -> None:
         t = d.repo.ticket(c.company, key)
         if t is None:
             return w.error_page(c, "queue", "Обращение не найдено", 404)
-        form = {"text": text, "q": q, "question": t.text, "answer": text}
+        form = {"text": text, "q": q, "question": t.text, "answer": text, "save_kb": save_kb}
         return queue_page(w, c, key=key, win=win, form=form)
 
     @app.post("/queue/{key}/tpl", response_class=HTMLResponse)

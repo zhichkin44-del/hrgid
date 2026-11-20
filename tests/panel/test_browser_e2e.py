@@ -348,6 +348,7 @@ def test_browser_scenario_6_dismissal(browser: Any, live: Live) -> None:
     page = new_page(browser)
     login(page, live, HR)
     page.goto(live.url + "/staff")
+    page.get_by_role("link", name="Никитин Сергей").click()
     page.get_by_role("link", name="Отключить").click()
     page.wait_for_selector("text=Отключить доступ?")
     page.get_by_role("button", name="Отключить доступ").click()
@@ -359,6 +360,7 @@ def test_browser_scenario_6_dismissal(browser: Any, live: Live) -> None:
     page.wait_for_selector("text=Действие отменено")
     assert env.deps.repo.employee(CO, emp.id).status == "active"  # type: ignore[union-attr]
     page.goto(live.url + "/staff")
+    page.get_by_role("link", name="Никитин Сергей").click()
     page.get_by_role("link", name="Отключить").click()
     page.get_by_text("Сотрудник больше не работает в компании").click()
     page.get_by_role("button", name="Отключить доступ").click()

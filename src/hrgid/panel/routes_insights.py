@@ -113,6 +113,11 @@ def register(app: FastAPI, w: Web) -> None:
         w.flash(c, "Лимит изменён.")
         return w.see_other("/costs")
 
+    @app.get("/costs/trace", response_class=HTMLResponse)
+    def trace(c: Annotated[Ctx, Depends(w.ctx)]) -> Response:
+        w.require(c, "perf.view")
+        return costs_page(w, c, win="trace")
+
     @app.get("/costs/ask", response_class=HTMLResponse)
     def ask_form(c: Annotated[Ctx, Depends(w.ctx)]) -> Response:
         return costs_page(w, c, win="ask")

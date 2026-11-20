@@ -59,7 +59,7 @@ def test_no_rights_state_for_hr_settings_names_who_can() -> None:
     env = make_env()
     r = env.login(HR).get("/settings")
     assert r.status_code == 403 and "только для администратора" in r.text
-    assert 'href="/costs/ask"' in r.text and "Вернуться на «Сегодня»" in r.text
+    assert 'href="/costs/ask"' in r.text and "Попросить администратора" in r.text
 
 
 def test_not_found_state_is_not_a_dead_end() -> None:

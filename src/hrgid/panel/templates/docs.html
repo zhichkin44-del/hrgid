@@ -26,7 +26,7 @@
 {% if win == "upload_err" %}<div class="notice bad" style="margin-bottom:12px"><span><b>{{ errors.file }}</b> <span class="mu">Выберите другой файл.</span></span></div>{% endif %}
 <form method="post" action="/docs/upload" enctype="multipart/form-data" hx-boost="false">
 <div class="steps"><i class="on"></i><i></i></div>
-<label class="drop" style="display:block"><b>Выберите файл</b>PDF или DOCX, до 20 МБ<input type="file" name="file" accept=".pdf,.docx" required style="display:block;margin-top:8px"></label>
+<label class="drop" style="display:block;cursor:pointer" x-data="{n: ''}"><b>Выберите файл</b>PDF или DOCX, до 20 МБ<input type="file" name="file" accept=".pdf,.docx" class="sr" @change="n = $event.target.files[0] ? $event.target.files[0].name : ''"><span class="cap" style="display:block;margin-top:8px" x-text="n || 'Файл не выбран'">Файл не выбран</span></label>
 {% if errors.file and win == "upload" %}<div class="err">{{ errors.file }}</div>{% endif %}
 <div class="row2"><label class="field"><span>Название</span><input name="title" value="{{ form.get('title', '') }}" placeholder="Правила внутреннего трудового распорядка"></label>
 <label class="field"><span>Это новая версия документа?</span><select name="doc_id"><option value="">нет — новый документ</option>{% for r in rows %}<option value="{{ r.doc_id }}"{% if form.get('doc_id') == r.doc_id %} selected{% endif %}>да — {{ r.title }} (версия {{ r.versions|length + 1 }})</option>{% endfor %}</select></label></div>

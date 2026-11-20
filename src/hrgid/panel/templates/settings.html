@@ -1,12 +1,11 @@
 {% extends "base.html" %}
 {% import "_m.html" as m %}
 {% block main %}
-{{ m.head("Настройки", "Для всей компании «" ~ company_name ~ "»") }}
+<div class="ph"><div><h1>Настройки</h1><p>Для всей компании «{{ company_name }}»</p></div><button class="btn pri" type="submit" form="settingsform">Сохранить</button></div>
 {% if requests %}<div class="notice"><span><b>Запросы от HR</b> <span class="mu">{% for r in requests %}{{ r.from }}: «{{ r.text }}»{% if not loop.last %}; {% endif %}{% endfor %}</span></span><a href="/costs/limit">Изменить лимит →</a></div>{% endif %}
 <form method="post" action="/settings" id="settingsform" hx-boost="false">
-<div class="bar-act" style="justify-content:flex-end;margin:-8px 0 12px"><button class="btn pri" type="submit">Сохранить</button></div>
 <div class="grid2 e"><div class="card pnl"><h2>Работа HR</h2>
-<div class="row3">{{ m.field("hours_start", "HR на связи с", form, errors, placeholder="10:00") }}{{ m.field("hours_end", "до", form, errors, placeholder="19:00") }}{{ m.field("utc_offset", "Часовой пояс, часов от UTC", form, errors) }}</div>
+<div class="row3">{{ m.field("hours_start", "Часы работы HR, с", form, errors, placeholder="10:00") }}{{ m.field("hours_end", "до", form, errors, placeholder="19:00") }}{{ m.field("utc_offset", "Часовой пояс, часов от UTC", form, errors) }}</div>
 <div class="row2">{{ m.field("sla_hours", "Срок ответа сотруднику, рабочих часов", form, errors) }}{{ m.field("urgent_contact", "Срочный контакт вне часов", form, errors, placeholder="Анна, HR: +7 900 000-00-00") }}</div>
 {{ m.field("escalation", "Если ответ просрочен — сообщить", form, errors, rows=2) }}
 {{ m.field("greeting", "Приветствие бота", form, errors, rows=3) }}</div>
@@ -22,7 +21,7 @@
 {% endblock %}
 {% block windows %}
 {% if win == "model" %}{% call m.dlg("П9.5", "Нейросеть-помощник", "/settings", lead="Российские модели — по умолчанию: данные остаются в России.") %}
-<form method="post" action="/settings/model"><label class="field"><span>Модель</span><select name="provider">{% for k, v in providers.items() %}<option value="{{ k }}"{% if form.get("provider") == k %} selected{% endif %}>{{ v }}</option>{% endfor %}</select>{% if errors.provider %}<div class="err">{{ errors.provider }}</div>{% endif %}</label>
+<form method="post" action="/settings/model"><div class="field"><span>Модель</span>{% set desc = {"gigachat": "Россия, данные не покидают страну — рекомендуем", "yandex": "Россия, данные не покидают страну", "claude": "США: данные уходят за границу в обезличенном виде"} %}{% for k, v in providers.items() %}<label class="opt{% if form.get("provider") == k %} on{% endif %}" style="display:flex;gap:10px;align-items:center;margin:6px 0;cursor:pointer"><input type="radio" name="provider" value="{{ k }}"{% if form.get("provider") == k %} checked{% endif %}><span><b>{{ v }}</b><small style="display:block;color:var(--mu)">{{ desc[k] }}</small></span></label>{% endfor %}{% if errors.provider %}<div class="err">{{ errors.provider }}</div>{% endif %}</div>
 <div class="ft"><a class="btn ghost" href="/settings">Отмена</a><button class="btn pri" type="submit">Сохранить</button></div></form>{% endcall %}{% endif %}
 {% if win == "claude" %}{% call m.dlg("П9.5·предупреждение", "Вопросы уйдут за границу", "/settings/model") %}
 <div class="notice bad"><span><b>Claude — сервис Anthropic (США).</b> <span class="mu">Вопросы уходят в замаскированном виде. Нужно согласие сотрудников (ст. 12 152-ФЗ) и проверка юристом.</span></span></div>
