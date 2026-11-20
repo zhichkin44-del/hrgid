@@ -22,7 +22,7 @@
 {% block windows %}
 {% if win == "model" %}{% call m.dlg("П9.5", "Нейросеть-помощник", "/settings", lead="Российские модели — по умолчанию: данные остаются в России.") %}
 <form method="post" action="/settings/model"><div class="field"><span>Модель</span>{% set desc = {"gigachat": "Россия, данные не покидают страну — рекомендуем", "yandex": "Россия, данные не покидают страну", "claude": "США: данные уходят за границу в обезличенном виде"} %}{% for k, v in providers.items() %}<label class="optr"><input type="radio" name="provider" value="{{ k }}"{% if form.get("provider") == k %} checked{% endif %}><span><b>{{ v }}</b><small style="display:block;color:var(--mu)">{{ desc[k] }}</small></span></label>{% endfor %}{% if errors.provider %}<div class="err">{{ errors.provider }}</div>{% endif %}</div>
-<div class="ft"><a class="btn ghost" href="/settings">Отмена</a><button class="btn pri" type="submit">Сохранить</button></div></form>{% endcall %}{% endif %}
+<p class="hint">Claude: данные уходят за границу — перед включением покажем предупреждение.</p><div class="ft"><a class="btn ghost" href="/settings">Отмена</a><button class="btn pri" type="submit">Выбрать</button></div></form>{% endcall %}{% endif %}
 {% if win == "claude" %}{% call m.dlg("П9.5·предупреждение", "Вопросы уйдут за границу", "/settings/model") %}
 <div class="notice bad"><span><b>Claude — сервис Anthropic (США).</b> <span class="mu">Вопросы уходят в замаскированном виде. Нужно согласие сотрудников (ст. 12 152-ФЗ) и проверка юристом.</span></span></div>
 <form method="post" action="/settings/model"><input type="hidden" name="provider" value="claude"><input type="hidden" name="confirm_claude" value="1">{{ m.check("ack", "Сотрудники уведомлены", false, errors.ack) }}

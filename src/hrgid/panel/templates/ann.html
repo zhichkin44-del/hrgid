@@ -9,9 +9,10 @@
 <label class="field"><span>Кому</span><select name="groups"><option value="">Все сотрудники · {{ n_all }} человек</option>{% for g in groups %}<option value="{{ g }}"{% if g in sel %} selected{% endif %}>Группа «{{ g }}»</option>{% endfor %}</select>{% if errors.groups %}<div class="err">{{ errors.groups }}</div>{% endif %}<div class="hint">Группы: {% for g in groups %}{{ g }}{% if not loop.last %} · {% endif %}{% endfor %}</div></label>
 <label class="field"><span>Заголовок</span><input name="title" x-model="title" value="{{ form.get('title', '') }}" maxlength="80"{% if errors.title %} class="bad"{% endif %}>{% if errors.title %}<div class="err">{{ errors.title }}</div>{% endif %}</label>
 <label class="field"><span>Текст</span><textarea name="text" rows="6" x-model="text" maxlength="900"{% if errors.text %} class="bad"{% endif %}>{{ form.get("text", "") }}</textarea><div class="hint"><span x-text="text.length"></span> из 900 знаков</div>{% if errors.text %}<div class="err">{{ errors.text }}</div>{% endif %}</label>
-{{ m.check("asks", "Кнопка «Написать даты HR» — сотрудник ответит прямо в боте", form.get("asks") == "1") }}
-<div class="bar-act"><button class="btn pri" type="submit">Отправить {{ n_all }} сотрудникам</button><button class="btn ghost" name="draft" value="1" type="submit">Сохранить черновик</button></div></div>
-<div class="card pnl"><h2>Как увидят сотрудники</h2><div class="tgp"><b>📢 Объявление от HR</b>
+{% if compose %}{{ m.check("asks", "Кнопка «Написать даты HR» — сотрудник ответит прямо в боте", form.get("asks") == "1") }}
+<label class="field"><span>Когда</span><select name="when"><option>сейчас</option></select></label>
+<div class="bar-act"><button class="btn pri" type="submit">Отправить {{ n_all }} сотрудникам</button><button class="btn ghost" name="draft" value="1" type="submit">Сохранить черновик</button></div>{% else %}<button class="sr" type="submit" aria-hidden="true" tabindex="-1"></button><p class="cap">Черновик и кнопку «Прочитано» можно задать на странице нового объявления.</p>{% endif %}</div>
+<div class="card pnl"><h2>Так увидят сотрудники</h2><div class="tgp"><b>📢 Объявление от HR</b>
 <b x-text="title || 'Заголовок'"></b>
 
 <span x-text="text || 'Текст объявления'" style="white-space:pre-line"></span><span class="tbtn">Прочитано</span></div></div></div></form>
