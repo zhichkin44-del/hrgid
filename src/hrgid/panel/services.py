@@ -663,7 +663,16 @@ class Analytics:
             a[2] += wk0 - timedelta(days=7) <= d < wk0
             a[3] += no_hr
         rows = [
-            TopicRow(t, a[0], a[1], a[2], a[3], *votes.get(t, [0, 0]), tuple(wk.get(t, [0] * 6)))
+            TopicRow(
+                t,
+                a[0],
+                a[1],
+                a[2],
+                a[3],
+                votes.get(t, [0, 0])[0],
+                votes.get(t, [0, 0])[1],
+                weeks=tuple(wk.get(t, [0] * 6)),
+            )
             for t, a in acc.items()
         ]
         return sorted(rows, key=lambda r: -r.total)

@@ -82,7 +82,9 @@ def main() -> None:
                      telegram_id=5000 + i, consent_at=now)  # fmt: skip
         deps.repo.save_employee(e)
         deps.desk.create(e, "Можно ли перенести отпуск с декабря на январь?", now)
-    print(f"Панель: http://127.0.0.1:{args.port}  (вход: anna@studio.test; код — в каталоге {args.outbox}/)")
+    print(
+        f"Панель: http://127.0.0.1:{args.port}  (вход: anna@studio.test; код — в каталоге {args.outbox}/)"
+    )
     uvicorn.run(create_panel_app(deps), host="127.0.0.1", port=args.port, log_level="warning")
 
 

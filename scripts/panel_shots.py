@@ -31,10 +31,9 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "src"))
 
-from panel_serve import CO, RULES, build  # noqa: E402
-
 from hrgid.bot.models import Employee  # noqa: E402
 from hrgid.panel.app import create_panel_app  # noqa: E402
+from panel_serve import CO, RULES, build  # noqa: E402
 
 # (имя снимка, адрес, роль, эталон в out/hrgid-layouts без суффикса размера)
 SHOTS: list[tuple[str, str, str, str]] = [
@@ -92,7 +91,9 @@ def fill(deps: Any, now: datetime) -> None:
     d.staff.invite(CO, "Новикова Елена", "16.11.2026", now)
     d.docs.clock = lambda: now
     v = d.docs.upload(CO, "rules.docx", docx_bytes(RULES), "anna@studio.test", "Правила студии")
-    d.docs.set_order(CO, v.doc_id, 1, "12", date(2026, 10, 30), date(2026, 11, 1), "maria@studio.test")
+    d.docs.set_order(
+        CO, v.doc_id, 1, "12", date(2026, 10, 30), date(2026, 11, 1), "maria@studio.test"
+    )
     d.checker.check_version(CO, v.doc_id, 1, "anna@studio.test")
     questions = [
         "Можно ли перенести отпуск с декабря на январь?",
@@ -161,7 +162,11 @@ def main() -> None:
         browser = launch(p)
         for size, (w, h) in {"1440": (1440, 900), "375": (375, 812)}.items():
             ctxs: dict[str, Any] = {}
-            for role, email in (("hr", "anna@studio.test"), ("admin", "maria@studio.test"), ("anon", "")):
+            for role, email in (
+                ("hr", "anna@studio.test"),
+                ("admin", "maria@studio.test"),
+                ("anon", ""),
+            ):
                 ctx = browser.new_context(viewport={"width": w, "height": h}, locale="ru-RU")
                 page = ctx.new_page()
                 if email:
@@ -183,7 +188,9 @@ def main() -> None:
             for pg in ctxs.values():
                 pg.context.close()
         browser.close()
-    (out / "index.json").write_text(json.dumps(index, ensure_ascii=False, indent=1), encoding="utf-8")
+    (out / "index.json").write_text(
+        json.dumps(index, ensure_ascii=False, indent=1), encoding="utf-8"
+    )
     server.should_exit = True
     shutil.rmtree(outbox, ignore_errors=True)
     print(f"снимков: {len(index)} -> {out}")
