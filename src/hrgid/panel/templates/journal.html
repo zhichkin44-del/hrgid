@@ -15,7 +15,7 @@
 {% else %}
 <div class="tbl"><div class="tr h" style="--cols:1fr 1.2fr 2.4fr 1.6fr"><span>Когда</span><span>Кто</span><span>Что сделал</span><span>С чем</span></div>
 {% for e in rows %}<div class="tr" style="--cols:1fr 1.2fr 2.4fr 1.6fr"><span class="num">{{ c.local(e.at).strftime("%d.%m.%Y %H:%M") }}</span><span>{{ e.user }}</span><span>{{ e.label }}</span><span class="mu"><a class="rowlink" href="/journal/{{ e.n }}">{{ e.target or "—" }}</a></span></div>{% endfor %}</div>
-<p class="cap" style="margin-top:8px">Показано {{ rows|length }} из {{ total }}.</p>
+
 {% endif %}
 {% endif %}
 {% endblock %}

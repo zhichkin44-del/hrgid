@@ -5,8 +5,9 @@
 {% if requests %}<div class="notice"><span><b>Запросы от HR</b> <span class="mu">{% for r in requests %}{{ r.from }}: «{{ r.text }}»{% if not loop.last %}; {% endif %}{% endfor %}</span></span><a href="/costs/limit">Изменить лимит →</a></div>{% endif %}
 <form method="post" action="/settings" id="settingsform" hx-boost="false">
 <div class="grid2 e"><div class="card pnl"><h2>Работа HR</h2>
-<div class="row3">{{ m.field("hours_start", "Часы работы HR, с", form, errors, placeholder="10:00") }}{{ m.field("hours_end", "до", form, errors, placeholder="19:00") }}{{ m.field("utc_offset", "Часовой пояс, часов от UTC", form, errors) }}</div>
-<div class="row2">{{ m.field("sla_hours", "Срок ответа сотруднику, рабочих часов", form, errors) }}{{ m.field("urgent_contact", "Срочный контакт вне часов", form, errors, placeholder="Анна, HR: +7 900 000-00-00") }}</div>
+<div class="row2">{{ m.field("hours_start", "Часы работы HR, с", form, errors, placeholder="10:00") }}{{ m.field("hours_end", "до", form, errors, placeholder="19:00") }}</div>
+<div class="row2">{{ m.field("utc_offset", "Часовой пояс, часов от UTC", form, errors) }}{{ m.field("sla_hours", "Срок ответа сотруднику, рабочих часов", form, errors) }}</div>
+{{ m.field("urgent_contact", "Срочный контакт вне часов", form, errors, placeholder="Анна, HR: +7 900 000-00-00") }}
 {{ m.field("escalation", "Если ответ просрочен — сообщить", form, errors, rows=2) }}
 {{ m.field("greeting", "Приветствие бота", form, errors, rows=3) }}</div>
 <div class="card pnl"><h2>Данные сотрудников</h2>
