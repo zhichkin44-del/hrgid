@@ -25,7 +25,9 @@ def run(case: dict[str, Any]) -> CalcResult:
     rule = case["rule"]
     if rule == "R1":
         return vacation.vacation_pay(
-            Decimal(a["earnings"]), a["start"], a["days"],
+            Decimal(a["earnings"]),
+            a["start"],
+            a["days"],
             excluded_days={(2026, 3): a["excluded_mar"]} if "excluded_mar" in a else None,
         )
     if rule == "R2":
@@ -43,7 +45,9 @@ def run(case: dict[str, Any]) -> CalcResult:
         )
     if rule == "R6":
         return sick.sick_pay(
-            {int(y): Decimal(v) for y, v in a["earnings"].items()}, a["start"], a["end"],
+            {int(y): Decimal(v) for y, v in a["earnings"].items()},
+            a["start"],
+            a["end"],
             Decimal(a["stazh"]),
         )
     if rule == "R7":

@@ -225,6 +225,7 @@ def test_pii_masked_before_models_and_restored_after() -> None:
         },
         ensure_ascii=False,
     )
+
     def main(r: LLMRequest) -> str:
         seen.append(r.messages[0].content)
         return answer

@@ -1,0 +1,41 @@
+{# Общие кусочки панели: окно, поле, состояние. #}
+{% macro dlg(idl, title, close, wide=false, lead="") %}
+<div class="ov" role="dialog" aria-modal="true" aria-label="{{ title }}"><div class="dlg{% if wide %} wide{% endif %}">
+<a class="x" href="{{ close }}" title="Закрыть">✕</a><div class="idl">{{ idl }}</div><h2>{{ title }}</h2>
+{% if lead %}<p class="lead">{{ lead }}</p>{% else %}<div style="height:10px"></div>{% endif %}
+{{ caller() }}
+</div></div>
+{% endmacro %}
+
+{% macro field(name, label, form, errors, type="text", rows=0, hint="", placeholder="", maxlength=0) %}
+<label class="field"><span>{{ label }}</span>
+{% if rows %}<textarea name="{{ name }}" rows="{{ rows }}"{% if errors.get(name) %} class="bad"{% endif %}{% if maxlength %} maxlength="{{ maxlength }}"{% endif %} placeholder="{{ placeholder }}">{{ form.get(name, "") }}</textarea>
+{% else %}<input type="{{ type }}" name="{{ name }}" value="{{ form.get(name, "") }}"{% if errors.get(name) %} class="bad"{% endif %}{% if maxlength %} maxlength="{{ maxlength }}"{% endif %} placeholder="{{ placeholder }}">{% endif %}
+{% if errors.get(name) %}<div class="err">{{ errors[name] }}</div>{% elif hint %}<div class="hint">{{ hint }}</div>{% endif %}</label>
+{% endmacro %}
+
+{% macro select(name, label, options, current, errors) %}
+<label class="field"><span>{{ label }}</span><select name="{{ name }}"{% if errors.get(name) %} class="bad"{% endif %}>
+{% for val, text in options %}<option value="{{ val }}"{% if val|string == current|string %} selected{% endif %}>{{ text }}</option>{% endfor %}</select>
+{% if errors.get(name) %}<div class="err">{{ errors[name] }}</div>{% endif %}</label>
+{% endmacro %}
+
+{% macro check(name, label, checked=false, error="") %}
+<label class="chk" style="margin:8px 0"><input type="checkbox" name="{{ name }}" value="1"{% if checked %} checked{% endif %} class="sr"><i>✓</i><span>{{ label }}</span></label>
+{% if error %}<div class="err">{{ error }}</div>{% endif %}
+{% endmacro %}
+
+{% macro state(kind, icon, title, text, link="", link_text="") %}
+<div class="state{% if kind == 'error' or kind == 'bad' %} bad{% endif %}"><div class="ic">{{ icon }}</div><h2>{{ title }}</h2><p>{{ text }}</p>{% if link %}<a class="btn" href="{{ link }}">{{ link_text }}</a>{% endif %}</div>
+{% endmacro %}
+
+{% macro head(title, sub, action_url="", action_text="") %}
+<div class="ph"><div><h1>{{ title }}</h1><p>{{ sub }}</p></div>{% if action_url %}<a class="btn pri" href="{{ action_url }}">{{ action_text }}</a>{% endif %}</div>
+{% endmacro %}
+
+{% macro basis(form, errors, options, label="Основание") %}
+<label class="field"><span>{{ label }}</span><select name="basis"{% if errors.get("basis") %} class="bad"{% endif %}><option value="">— выберите статью или пункт —</option>
+{% set cur = form.get("basis", "") %}{% if cur and cur not in options %}<option value="{{ cur }}" selected>{{ cur }}</option>{% endif %}
+{% for o in options %}<option value="{{ o }}"{% if o == cur %} selected{% endif %}>{{ o }}</option>{% endfor %}</select>
+{% if errors.get("basis") %}<div class="err">{{ errors["basis"] }}</div>{% else %}<div class="hint">Обязательно: статья ТК или пункт правил компании</div>{% endif %}</label>
+{% endmacro %}

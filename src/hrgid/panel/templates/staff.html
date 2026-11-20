@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% import "_m.html" as m %}
+{% block main %}
+{{ m.head("Сотрудники", (rows|length ~ " сотрудников" ~ (" · данные из 1С на " ~ fmt_date(asof) if asof else "")), "/staff?w=invite", "Пригласить") }}
+{% if win == "import_errors" %}
+<div class="notice bad"><span><b>Строки с ошибками не попадут в импорт</b> <span class="mu">— остальные загрузятся.</span></span><a href="/staff/import/{{ extra.token }}/preview">Вернуться к предпросмотру</a></div>
+<div class="tbl"><div class="tr h" style="--cols:.5fr 1.5fr 3fr"><span>Строка</span><span>Сотрудник</span><span>Что не так</span></div>{% for e in extra.plan.errors %}<div class="tr" style="--cols:.5fr 1.5fr 3fr"><span class="num">{{ e.line }}</span><span>{{ e.who }}</span><span>{{ e.problem }}</span></div>{% endfor %}</div>
+<div class="bar-act" style="margin-top:12px"><a class="btn pri" href="/staff?w=import1">Загрузить исправленный файл</a></div>
+{% else %}
+<div class="bar-act" style="margin-bottom:14px"><a class="btn ghost" href="/staff?w=import1">Загрузить выгрузку 1С:ЗУП</a><a class="btn ghost" href="/staff?w=codes">Коды: файл CSV</a><a class="btn ghost" href="/staff?w=codes">Коды: лист с QR для печати</a><a class="btn ghost" href="/staff/groups/list">Группы</a></div>
+{% if not rows %}
+<div class="state"><div class="ic">○</div><h2>Сотрудников пока нет</h2><p>Загрузите выгрузку из 1С:ЗУП или пригласите первого сотрудника — он получит код для бота.</p><a class="btn pri" href="/staff?w=invite">Пригласить</a> <a class="btn" href="/staff?w=import1">Импорт из 1С</a></div>
+{% else %}
+<div class="tbl"><div class="tr h" style="--cols:1.7fr 1fr 1fr .8fr 1.2fr 1.4fr"><span>Сотрудник</span><span>Группа</span><span>Принят</span><span>График</span><span>Доступ</span><span></span></div>
+{% for r in rows %}<div class="tr" style="--cols:1.7fr 1fr 1fr .8fr 1.2fr 1.4fr"><span><a class="rowlink" href="/staff/{{ r.emp.id }}"><b style="font-weight:500">{{ r.emp.full_name }}</b></a><small>{{ r.emp.position }}</small></span><span data-l="Группа">{{ r.emp.group or "—" }}</span><span class="num" data-l="Принят">{{ fmt_date(r.emp.hire_date) or "—" }}</span><span data-l="График">{{ r.emp.schedule or "—" }}</span><span><span class="pill{% if r.state == 'disabled' %} bad{% elif r.state == 'connected' %} w{% endif %}">{{ r.label }}</span></span>
+<span>{% if r.state == "disabled" %}<form method="post" action="/staff/{{ r.emp.id }}/enable"><button class="btn sm ghost" type="submit">Вернуть доступ</button></form>{% else %}<a class="btn sm ghost" href="/staff/{{ r.emp.id }}/newcode">Код заново</a>{% endif %}</span></div>{% endfor %}</div>
+<p class="cap" style="margin-top:10px">Профили из 1С используются для расчётов; импорт обновляет данные тех, кто уже есть.</p>
+{% endif %}
+{% endif %}
+{% endblock %}
+{% block windows %}
+{% if win == "invite" %}{% call m.dlg("П6.1", "Пригласить сотрудника", "/staff") %}
+<form method="post" action="/staff/invite" hx-boost="false">
+{{ m.field("full_name", "ФИО", form, errors, placeholder="Иванов Иван Иванович") }}
+{% if extra.dup_id %}<p class="hint"><a href="/staff/{{ extra.dup_id }}">Открыть профиль дубля</a></p>{% endif %}
+<div class="row2">{{ m.field("hire_date", "Дата приёма", form, errors, placeholder="01.12.2026") }}{{ m.field("position", "Должность", form, errors) }}</div>
+<div class="row2">{{ m.field("schedule", "График", form, errors, placeholder="5/2") }}<label class="field"><span>Группа</span><select name="group"><option value="">— без группы —</option>{% for g in groups %}<option value="{{ g }}"{% if form.get("group") == g %} selected{% endif %}>{{ g }}</option>{% endfor %}</select></label></div>
+<div class="ft"><a class="btn ghost" href="/staff">Отмена</a><button class="btn pri" type="submit">Создать код</button></div></form>
+{% endcall %}{% endif %}
+{% if win == "code" %}{% call m.dlg("П6.1·код" if not extra.again else "П6.7·код", "Код выдан" if not extra.again else "Новый код выдан", "/staff", lead=emp.full_name ~ ". Код одноразовый, хранится хэшем — покажем его только сейчас.") %}
+<div class="draft" style="font-size:24px;letter-spacing:.08em;text-align:center" data-code>{{ extra.code }}</div>
+<p class="hint">Сотрудник открывает бота @{{ extra.bot }} и вводит код. Если выдан новый код, прежний больше не работает.</p>
+<div class="ft"><a class="btn ghost" href="/staff">Готово</a></div>{% endcall %}{% endif %}
+{% if win == "newcode" and emp %}{% call m.dlg("П6.7", "Выдать новый код", "/staff", lead=emp.full_name ~ ". Прежний код перестанет работать.") %}
+<form method="post" action="/staff/{{ emp.id }}/newcode" hx-boost="false">{% if errors.employee %}<div class="err">{{ errors.employee }}</div>{% endif %}
+<label class="field"><span>Причина</span><select name="reason"><option>Сотрудник потерял код</option><option>Не пришёл код</option><option>Новый телефон</option></select></label>
+<div class="ft"><a class="btn ghost" href="/staff">Отмена</a><button class="btn pri" type="submit">Выдать новый код</button></div></form>{% endcall %}{% endif %}
+{% if win == "disable" and emp %}{% call m.dlg("П6.8", "Отключить доступ?", "/staff", lead=emp.full_name ~ " больше не сможет пользоваться ботом. История хранится по сроку. Отменить можно в течение 10 секунд.") %}
+<form method="post" action="/staff/{{ emp.id }}/disable">{{ m.check("confirm", "Сотрудник больше не работает в компании", false, errors.confirm) }}
+<div class="ft"><a class="btn ghost" href="/staff">Отмена</a><button class="btn pri" type="submit">Отключить доступ</button></div></form>{% endcall %}{% endif %}
+{% if win == "profile" and emp %}{% call m.dlg("П6.9", "Профиль сотрудника", "/staff", lead=emp.full_name) %}
+<div class="lst"><div class="it"><span>Должность</span><span class="r">{{ emp.position or "—" }}</span></div><div class="it"><span>Группа</span><span class="r">{{ emp.group or "—" }}</span></div><div class="it"><span>Дата приёма</span><span class="r">{{ fmt_date(emp.hire_date) or "—" }}</span></div><div class="it"><span>График</span><span class="r">{{ emp.schedule or "—" }}</span></div><div class="it"><span>Оклад</span><span class="r">{{ emp.salary or "—" }}</span></div><div class="it"><span>Заработок за 12 месяцев</span><span class="r">{{ emp.earnings_12m or "—" }}</span></div><div class="it"><span>Данные из 1С на</span><span class="r">{{ fmt_date(emp.profile_date) or "—" }}</span></div>
+<div class="it"><span>Доступ</span><span class="r">{{ "отключён" if emp.status == "disabled" else ("подключён" if emp.telegram_id else "ждёт код") }}</span></div><div class="it"><span>Согласие на обработку данных</span><span class="r">{{ c.local(emp.consent_at).strftime("%d.%m.%Y %H:%M") if emp.consent_at else "не дано" }}</span></div><div class="it"><span>Обращений к HR</span><span class="r">{{ prof.tickets }}</span></div></div>
+<p class="hint">Конфиденциальные обращения здесь не считаются и не показываются.</p>
+<div class="ft"><a class="btn ghost" href="/staff/{{ emp.id }}/purge">Удалить данные</a>{% if emp.status != "disabled" %}<a class="btn ghost" href="/staff/{{ emp.id }}/newcode">Новый код</a><a class="btn ghost" href="/staff/{{ emp.id }}/disable">Отключить</a>{% endif %}<a class="btn pri" href="/staff/{{ emp.id }}/edit">Исправить данные</a></div>{% endcall %}{% endif %}
+{% if win == "edit" and emp %}{% call m.dlg("П6.10", "Исправить данные сотрудника", "/staff/" ~ emp.id, lead=emp.full_name ~ ". Следующий импорт из 1С перезапишет исправления.") %}
+<form method="post" action="/staff/{{ emp.id }}/edit">
+<div class="row2">{{ m.field("hire_date", "Дата приёма", form, errors) }}{{ m.field("schedule", "График", form, errors) }}</div>
+<div class="row2">{{ m.field("salary", "Оклад, ₽", form, errors) }}<label class="field"><span>Группа</span><select name="group"><option value="">— без группы —</option>{% for g in groups %}<option value="{{ g }}"{% if form.get("group") == g %} selected{% endif %}>{{ g }}</option>{% endfor %}</select></label></div>
+{{ m.field("position", "Должность", form, errors) }}
+<div class="ft"><a class="btn ghost" href="/staff/{{ emp.id }}">Отмена</a><button class="btn pri" type="submit">Сохранить</button></div></form>{% endcall %}{% endif %}
+{% if win == "purge" and emp %}{% call m.dlg("П6.12", "Удалить данные сотрудника", "/staff/" ~ emp.id, lead="Профиль, привязка к Telegram и тексты обращений будут удалены. По закону срок — 30 дней с запроса. Отменить можно в течение 10 секунд.") %}
+<form method="post" action="/staff/{{ emp.id }}/purge">{{ m.field("reason", "Основание", form, errors, rows=2, placeholder="Например: запрос сотрудника от 18.11") }}{{ m.check("understood", "Понимаю: удалённые данные не восстановить", false, errors.understood) }}
+<div class="ft"><a class="btn ghost" href="/staff/{{ emp.id }}">Отмена</a><button class="btn pri" type="submit">Удалить данные</button></div></form>{% endcall %}{% endif %}
+{% if win == "groups" %}{% call m.dlg("П6.11", "Группы", "/staff") %}
+<div class="lst">{% for g in groups %}<div class="it"><span>{{ g }}<small>{{ sizes[g] }} сотрудников</small></span><form method="post" action="/staff/groups/delete"><input type="hidden" name="name" value="{{ g }}"><button class="btn sm ghost" type="submit">Удалить</button></form></div>{% else %}<div class="it"><span>Групп пока нет</span></div>{% endfor %}</div>
+{% if errors.name and form.get("name") is none %}<div class="err">{{ errors.name }}</div>{% endif %}
+<form method="post" action="/staff/groups/add" style="margin-top:12px">{{ m.field("name", "Новая группа", form, errors, placeholder="Монтаж") }}<div class="ft"><a class="btn ghost" href="/staff">Закрыть</a><button class="btn pri" type="submit">Добавить группу</button></div></form>{% endcall %}{% endif %}
+{% if win == "import1" or win == "import1_err" %}{% call m.dlg("П6.2" if win == "import1" else "П6.2·ошибка", "Импорт из 1С:ЗУП — файл" if win == "import1" else "Импорт — файл не подошёл", "/staff", lead="Шаг 1 из 4") %}
+<div class="steps"><i class="on"></i><i></i><i></i><i></i></div>
+{% if win == "import1_err" %}<div class="notice bad" style="margin-bottom:12px"><span><b>{{ errors.file }}</b> <span class="mu">Нужен файл CSV или XLSX с колонкой «ФИО».</span></span></div>{% endif %}
+<form method="post" action="/staff/import" enctype="multipart/form-data" hx-boost="false">
+<label class="drop" style="display:block;cursor:pointer" x-data="{n: ''}"><b>Выберите выгрузку</b>CSV или XLSX из 1С:ЗУП<input type="file" name="file" accept=".csv,.xlsx" class="sr" @change="n = $event.target.files[0] ? $event.target.files[0].name : ''"><span class="cap" style="display:block;margin-top:8px" x-text="n || 'Файл не выбран'">Файл не выбран</span></label>
+{% if errors.file and win == "import1" %}<div class="err">{{ errors.file }}</div>{% endif %}
+<p class="hint">Колонки: ФИО, дата приёма, график, оклад, группа, заработок за 12 месяцев (если есть). <a href="/staff/import/sample.csv">Скачать образец файла</a></p>
+<div class="ft"><a class="btn ghost" href="/staff">Отмена</a><button class="btn pri" type="submit">Дальше</button></div></form>{% endcall %}{% endif %}
+{% if win == "import2" %}{% call m.dlg("П6.3", "Импорт — сопоставление колонок", "/staff", lead="Шаг 2 из 4") %}
+<div class="steps"><i class="on"></i><i class="on"></i><i></i><i></i></div>
+<form method="post" action="/staff/import/{{ extra.token }}/map">
+{% for key, label in fields.items() %}<label class="field"><span>{{ label }}{% if key in required %} *{% endif %}</span><select name="{{ key }}" {% if errors.get(key) %}class="bad"{% endif %}><option value="">— нет такой колонки —</option>{% for h in extra.headers %}<option value="{{ loop.index0 }}"{% if extra.mapping.get(key) is not none and extra.mapping.get(key) == loop.index0 %} selected{% endif %}>{{ h }}</option>{% endfor %}</select>{% if errors.get(key) %}<div class="err">{{ errors[key] }}</div>{% endif %}</label>{% endfor %}
+<div class="ft"><a class="btn ghost" href="/staff?w=import1">Назад</a><button class="btn pri" type="submit">Дальше</button></div></form>{% endcall %}{% endif %}
+{% if win == "import3" %}{% call m.dlg("П6.4", "Импорт — предпросмотр", "/staff", wide=true, lead="Шаг 3 из 4") %}
+<div class="steps"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>
+<div class="kpis" style="grid-template-columns:repeat(4,1fr)"><div class="card kpi"><label>Обновятся</label><div class="v num">{{ extra.plan.update|length }}</div></div><div class="card kpi"><label>Новые</label><div class="v num">{{ extra.plan.new|length }}</div></div><div class="card kpi{% if extra.plan.errors %} bad{% endif %}"><label>С ошибкой</label><div class="v num">{{ extra.plan.errors|length }}</div></div><div class="card kpi"><label>Нет в файле</label><div class="v num">{{ extra.plan.missing|length }}</div></div></div>
+{% if extra.plan.errors %}<div class="notice bad"><span><b>{{ extra.plan.errors|length }} строк с ошибкой</b> <span class="mu">— их пропустим, остальные загрузятся.</span></span><a href="/staff/import/{{ extra.token }}/errors">Показать</a></div>{% endif %}
+<form method="post" action="/staff/import/{{ extra.token }}/apply">
+{% if extra.plan.missing %}<div class="cap" style="margin:8px 0">Кого нет в новой выгрузке</div>{% for e in extra.plan.missing %}<label class="chk" style="margin:8px 0"><input type="checkbox" name="disable" value="{{ e.id }}" checked class="sr"><i>✓</i><span>{{ e.full_name }}{% if e.position %}, {{ e.position }}{% endif %} — отключить доступ</span></label>{% endfor %}<p class="hint">Отметку можно снять: доступ останется. Отключённые теряют доступ к боту, история хранится по сроку.</p>{% endif %}
+<div class="ft"><a class="btn ghost" href="/staff/import/{{ extra.token }}/map">Назад</a><button class="btn pri" type="submit">Импортировать {{ extra.plan.new|length + extra.plan.update|length }} строк</button></div></form>{% endcall %}{% endif %}
+{% if win == "import4" %}{% call m.dlg("П6.5", "Импорт — итог", "/staff", lead="Шаг 4 из 4 · данные на " ~ fmt_date(extra.res.on_date)) %}
+<div class="steps"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div>
+<div class="lst"><div class="it"><span>Новых сотрудников</span><span class="r">{{ extra.res.created }}</span></div><div class="it"><span>Обновлено</span><span class="r">{{ extra.res.updated }}</span></div><div class="it"><span>Пропущено с ошибкой</span><span class="r">{{ extra.res.skipped }}</span></div><div class="it"><span>Доступ отключён</span><span class="r">{{ extra.res.disabled }}</span></div></div>
+<div class="ft"><a class="btn ghost" href="/staff">Закрыть</a>{% if extra.res.created %}<a class="btn pri" href="/staff?w=codes">Выдать коды новым</a>{% endif %}</div>{% endcall %}{% endif %}
+{% if win == "codes" %}{% call m.dlg("П6.6", "Выдать коды приглашения", "/staff", lead="Прежние коды тех, кому выдаём заново, перестанут работать.") %}
+<form method="post" action="/staff/codes" hx-boost="false">
+<label class="field"><span>Кому</span><select name="who"><option value="new">новым — у кого ещё нет кода</option><option value="all">всем без Telegram</option></select></label>
+<label class="field"><span>Формат</span><select name="fmt"><option value="csv">файл CSV</option><option value="print">лист для печати с QR</option></select></label>
+<div class="ft"><a class="btn ghost" href="/staff">Отмена</a><button class="btn pri" type="submit">Сформировать</button></div></form>{% endcall %}{% endif %}
+{% endblock %}

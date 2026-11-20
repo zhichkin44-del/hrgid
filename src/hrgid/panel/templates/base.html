@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HRgid — {% block title %}{{ section_title|default("Панель HR") }}{% endblock %}</title>
+<link rel="stylesheet" href="/static/style.css"><link rel="stylesheet" href="/static/panel.css">
+<script src="/static/panel.js" defer></script>
+<script src="/static/vendor/htmx.min.js" defer></script>
+<script src="/static/vendor/alpine.min.js" defer></script>
+{% block head %}{% endblock %}
+</head>
+<body{% if win %} class="mo"{% endif %} hx-boost="true" hx-indicator="#busy">
+<div id="busy" class="busy htmx-indicator" aria-hidden="true"></div>
+<div class="app" x-data="{menu:false}">
+<button class="menu-btn" type="button" @click="menu=!menu" aria-label="Меню">☰</button>
+<nav class="nav" :class="{open:menu}" aria-label="Разделы">
+<div class="brand"><i>HR</i>HRgid</div><div class="co">{{ company_name }}</div>
+{% for key, url, label, cnt in nav %}<a href="{{ url }}"{% if key == section %} class="on"{% endif %}><span>{{ label }}</span>{% if cnt[0] %}<em{% if cnt[1] %} class="bad"{% endif %}>{{ cnt[0] }}</em>{% endif %}</a>{% endfor %}
+<div class="who"><a href="/logout" title="Выйти из панели" style="all:unset;cursor:pointer;display:block"><b>{{ user.name }}</b>{{ role_names[user.role] }}</a></div>
+</nav>
+<main class="main">{% block main %}{% endblock %}</main>
+</div>
+{% block windows %}{% endblock %}
+{% for f in flash %}<div class="toast {{ f.kind }} live" role="status" x-data="{open:true}" x-show="open" x-init="setTimeout(()=>open=false, {{ 11000 if f.undo else 4500 }})"><span>{{ f.text }}</span>{% if f.undo %}<form method="post" action="/undo/{{ f.undo }}" hx-boost="false"><input type="hidden" name="back" value="{{ retry }}"><button class="btn sm ghost" type="submit">Отменить — 10 с</button></form>{% endif %}</div>{% endfor %}
+</body></html>

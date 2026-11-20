@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% import "_m.html" as m %}
+{% block main %}
+<div class="ph"><div><h1>Настройки</h1><p>Для всей компании «{{ company_name }}»</p></div><button class="btn pri" type="submit" form="settingsform">Сохранить</button></div>
+{% if requests %}<div class="notice"><span><b>Запросы от HR</b> <span class="mu">{% for r in requests %}{{ r.from }}: «{{ r.text }}»{% if not loop.last %}; {% endif %}{% endfor %}</span></span><a href="/costs/limit">Изменить лимит →</a></div>{% endif %}
+<form method="post" action="/settings" id="settingsform" hx-boost="false">
+<div class="grid2 e"><div class="card pnl"><h2>Работа HR</h2>
+<div class="row2">{{ m.field("hours_start", "Часы работы HR, с", form, errors, placeholder="10:00") }}{{ m.field("hours_end", "до", form, errors, placeholder="19:00") }}</div>
+<div class="row2">{{ m.field("utc_offset", "Часовой пояс, часов от UTC", form, errors) }}{{ m.field("sla_hours", "Срок ответа сотруднику, рабочих часов", form, errors) }}</div>
+{{ m.field("urgent_contact", "Срочный контакт вне часов", form, errors, placeholder="Анна, HR: +7 900 000-00-00") }}
+{{ m.field("escalation", "Если ответ просрочен — сообщить", form, errors, rows=2) }}
+{{ m.field("greeting", "Приветствие бота", form, errors, rows=3) }}</div>
+<div class="card pnl"><h2>Данные сотрудников</h2>
+<label class="field"><span>Срок хранения переписки</span><select name="retention_days" form="settingsform">{% set cur = form.get("retention_days") %}{% for d, t in [("90", "3 месяца"), ("180", "6 месяцев"), ("365", "1 год"), ("730", "2 года"), ("1095", "3 года")] %}<option value="{{ d }}"{% if cur == d %} selected{% endif %}>{{ t }}</option>{% endfor %}{% if cur not in ["90", "180", "365", "730", "1095"] %}<option value="{{ cur }}" selected>{{ cur }} дн.</option>{% endif %}</select>{% if errors.retention_days %}<div class="err">{{ errors.retention_days }}</div>{% endif %}<div class="hint">По умолчанию 1 год</div></label>
+<p class="mu" style="font-size:14px;margin-bottom:12px">Выгрузить данные компании или удалить их целиком. Данные одного сотрудника HR удаляет в его профиле («Сотрудники»).</p>
+<div class="bar-act"><a class="btn ghost" href="/settings/export">Выгрузить данные</a><a class="btn danger" href="/settings/delete">Удалить данные компании…</a></div>
+<p class="cap" style="margin-top:8px">Удаление данных компании подтверждается двумя шагами и вводом названия; отменить его нельзя.</p></div></div></form>
+<div class="card pnl" style="margin-top:14px"><h2>Только для администратора <span class="pill">{{ user.name }}</span></h2>
+<div class="row3"><label class="field"><span>Нейросеть-помощник</span><select name="provider" form="settingsform">{% for k, v in providers.items() %}<option value="{{ k }}"{% if tech.provider == k %} selected{% endif %}>{{ v }}{% if k != "claude" %} (Россия){% else %} (США, за границу){% endif %}</option>{% endfor %}</select></label>
+<label class="field"><span>Бюджет на месяц</span><select name="budget_rub" form="settingsform">{% for v in [5000, 10000, 15000, 25000, 50000, 100000] %}<option value="{{ v }}"{% if tech.budget_rub|int == v %} selected{% endif %}>{{ rub(v) }}</option>{% endfor %}{% if tech.budget_rub|int not in [5000, 10000, 15000, 25000, 50000, 100000] %}<option value="{{ tech.budget_rub|int }}" selected>{{ rub(tech.budget_rub) }}</option>{% endif %}</select></label>
+<label class="field"><span>Если бюджет закончился</span><select name="over_action" form="settingsform">{% for k, v in over_actions.items() %}<option value="{{ k }}"{% if tech.over_action == k %} selected{% endif %}>{{ v }}</option>{% endfor %}</select></label></div>
+<p class="cap">Сумму можно менять и в разделе «Расходы и качество». Другие варианты: YandexGPT, Claude. При выборе Claude данные уходят за границу в обезличенном виде — перед включением покажем предупреждение.</p></div></div>
+<p class="cap">Сумму можно менять и в разделе «Расходы и качество». Другие варианты: YandexGPT, Claude. При выборе Claude данные уходят за границу в обезличенном виде — перед включением покажем предупреждение.</p></div>
+
+{% endblock %}
+{% block windows %}
+{% if win == "model" %}{% call m.dlg("П9.5", "Нейросеть-помощник", "/settings", lead="Российские модели — по умолчанию: данные остаются в России.") %}
+<form method="post" action="/settings/model"><div class="field"><span>Модель</span>{% set desc = {"gigachat": "Россия, данные не покидают страну — рекомендуем", "yandex": "Россия, данные не покидают страну", "claude": "США: данные уходят за границу в обезличенном виде"} %}{% for k, v in providers.items() %}<label class="optr"><input type="radio" name="provider" value="{{ k }}"{% if form.get("provider") == k %} checked{% endif %}><span><b>{{ v }}</b><small style="display:block;color:var(--mu)">{{ desc[k] }}</small></span></label>{% endfor %}{% if errors.provider %}<div class="err">{{ errors.provider }}</div>{% endif %}</div>
+<p class="hint">Claude: данные уходят за границу — перед включением покажем предупреждение.</p><div class="ft"><a class="btn ghost" href="/settings">Отмена</a><button class="btn" type="submit" name="provider" value="claude">Выбрать Claude</button><button class="btn pri" type="submit">Сохранить</button></div></form>{% endcall %}{% endif %}
+{% if win == "claude" %}{% call m.dlg("П9.5·предупреждение", "Вопросы уйдут за границу", "/settings/model") %}
+<div class="notice bad"><span><b>Claude — сервис Anthropic (США).</b> <span class="mu">Вопросы уходят в замаскированном виде. Нужно согласие сотрудников (ст. 12 152-ФЗ) и проверка юристом.</span></span></div>
+<form method="post" action="/settings/model"><input type="hidden" name="provider" value="claude"><input type="hidden" name="confirm_claude" value="1">{{ m.check("ack", "Сотрудники уведомлены", false, errors.ack) }}
+<div class="ft"><a class="btn ghost" href="/settings/model">Отмена</a><button class="btn pri" type="submit">Включить Claude</button></div></form>{% endcall %}{% endif %}
+{% if win == "export" %}{% call m.dlg("П9.2", "Выгрузить данные компании", "/settings", lead="В файл входят: профили, переписка и обращения (кроме конфиденциальных), база ответов, версии документов, журнал. Конфиденциальные обращения не входят.") %}
+<form method="post" action="/settings/export" hx-boost="false">{{ m.field("since", "С какой даты (необязательно)", form, errors, placeholder="01.01.2026") }}
+<div class="ft"><a class="btn ghost" href="/settings">Отмена</a><button class="btn pri" type="submit">Подготовить файл</button></div></form>{% endcall %}{% endif %}
+{% if win == "export_ready" %}{% call m.dlg("П9.2·готово", "Файл готов", "/settings", lead="Ссылка отправлена на почту администратора и действует 24 часа.") %}
+<p class="hint">Размер: {{ (extra.size / 1024)|round(1) }} КБ.</p><div class="ft"><a class="btn ghost" href="/settings">Закрыть</a><a class="btn pri" href="/settings/export/{{ extra.token }}" hx-boost="false">Скачать</a></div>{% endcall %}{% endif %}
+{% if win == "delete1" %}{% call m.dlg("П9.3", "Удалить данные компании", "/settings", lead="Шаг 1 из 2. Удалятся сотрудники, переписка, база ответов, документы, журнал и доступы HR. Это нельзя вернуть.") %}
+<form method="post" action="/settings/delete">{{ m.check("exported", "Я выгрузил данные", false, errors.exported) }}<p class="hint"><a href="/settings/export">Выгрузить данные</a></p>
+<div class="ft"><a class="btn ghost" href="/settings">Отмена</a><button class="btn pri" type="submit">Продолжить</button></div></form>{% endcall %}{% endif %}
+{% if win == "delete2" %}{% call m.dlg("П9.3·шаг 2", "Подтвердите удаление", "/settings", lead="Шаг 2 из 2. Введите название компании. После нажатия отменить нельзя.") %}
+<form method="post" action="/settings/delete/confirm" x-data="{typed: ''}"><label class="field"><span>Название компании: «{{ company_name }}»</span><input name="name" x-model="typed" autocomplete="off" {% if errors.name %}class="bad"{% endif %}>{% if errors.name %}<div class="err">{{ errors.name }}</div>{% endif %}</label>
+<div class="ft"><a class="btn ghost" href="/settings">Отмена</a><button class="btn danger" type="submit" :disabled="typed !== {{ company_name|tojson|forceescape }}">Удалить всё</button></div></form>{% endcall %}{% endif %}
+{% endblock %}

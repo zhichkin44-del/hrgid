@@ -1,0 +1,7 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Коды приглашения — {{ company }}</title>
+<style>body{font:14px/1.4 sans-serif;color:#000;background:#fff;margin:24px}h1{font-size:18px}.card{display:inline-block;width:230px;border:1px solid #999;border-radius:8px;padding:12px;margin:6px;vertical-align:top;text-align:center;page-break-inside:avoid}.card svg{width:150px;height:150px}.code{font:700 16px monospace;letter-spacing:.06em}small{color:#555}</style></head>
+<body><h1>Коды приглашения HRgid — {{ company }}</h1><p>Откройте бота @{{ bot }} в Telegram и введите код (или наведите камеру на QR). Код одноразовый. Лист содержит секреты: напечатайте и не храните файл.</p>
+{% for e, code, svg in items %}<div class="card"><b>{{ e.full_name }}</b><br><small>{{ e.group }}</small><div>{{ svg|safe }}</div><div class="code">{{ code }}</div></div>{% endfor %}
+</body></html>

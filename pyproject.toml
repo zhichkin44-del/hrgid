@@ -30,21 +30,25 @@ dependencies = [
   "pypdf>=5",
   "python-docx>=1.1",
   "reportlab>=4",
+  "openpyxl>=3.1",
+  "segno>=1.6",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "pytest-cov>=5", "httpx>=0.27", "ruff>=0.6", "mypy>=1.11", "types-beautifulsoup4", "types-PyYAML"]
+dev = ["playwright>=1.45", "pytest>=8", "pytest-cov>=5", "httpx>=0.27", "ruff>=0.6", "mypy>=1.11", "types-beautifulsoup4", "types-PyYAML"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["src"]
 addopts = "-q"
 markers = [
   "slow: требует моделей и локальной БД",
   "db: нужен PostgreSQL (libpq); на этой Windows блокируется Smart App Control — гоняется в CI",
   "natasha: нужна загрузка моделей natasha — гоняется в CI",
+  "browser: нужен Playwright и скачанный браузер (на этой Windows блокируется) — гоняется в CI",
 ]
 
 [tool.ruff]
@@ -63,10 +67,14 @@ files = ["src", "tests", "scripts"]
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
-module = ["pgserver.*", "sentence_transformers.*", "pgvector.*", "langgraph.*", "natasha.*", "bs4.*", "lxml.*", "reportlab.*"]
+module = ["openpyxl.*", "segno.*", "playwright.*", "pgserver.*", "sentence_transformers.*", "pgvector.*", "langgraph.*", "natasha.*", "bs4.*", "lxml.*", "reportlab.*"]
 ignore_missing_imports = true
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["E501"]
+# длинные русские строки интерфейса панели не переносим
+"src/hrgid/panel/*.py" = ["E501"]
+"scripts/panel_*.py" = ["E501"]
+"scripts/run_panel.py" = ["E501"]
 "src/hrgid/flow/prompts.py" = ["E501"]
 "data/evals/*" = ["E501", "I001"]

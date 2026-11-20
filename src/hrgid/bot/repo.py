@@ -116,6 +116,9 @@ class Repo:
     def announcement(self, company_id: str, ann_id: str) -> Announcement | None:
         return self._get(Announcement, "announcement", company_id, ann_id)
 
+    def announcements(self, company_id: str) -> list[Announcement]:
+        return self._all(Announcement, "announcement", company_id)
+
     def save_feedback(self, f: Feedback) -> None:
         self.store.put("feedback", f.company_id, f.id, _dump(f))
 

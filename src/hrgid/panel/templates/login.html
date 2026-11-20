@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HRgid — Вход</title><link rel="stylesheet" href="/static/style.css"><link rel="stylesheet" href="/static/panel.css"></head>
+<body><div class="login"><div class="card box"><div class="brand" style="padding:0"><i>HR</i>HRgid</div>
+{% if step == "email" %}
+<h1>Вход для HR</h1><p class="mu" style="font-size:14px">Введите рабочую почту — пришлём одноразовый код.</p>
+{% if error %}<div class="notice bad" style="margin:14px 0"><span><b>{{ error }}</b></span></div>{% endif %}
+<form method="post" action="/login"><label class="field" style="margin-top:18px"><span>Почта</span><input type="email" name="email" value="{{ email|default('') }}" autocomplete="email" required autofocus placeholder="Рабочая почта HR"></label>
+<button class="btn pri" style="width:100%;padding:11px" type="submit">Прислать код</button></form><p class="cap" style="margin-top:12px;text-align:center">Почты нет в списке HR? Доступ выдаёт администратор компании.</p>
+{% elif step == "code" %}
+<h1>Вход для HR</h1><p class="mu" style="font-size:14px">Код отправлен на почту {{ masked }}, действует 10 минут.</p>
+{% if error %}<div class="notice bad" style="margin:14px 0"><span><b>{{ error }}</b>{% if detail %} <span class="mu">{{ detail }}</span>{% endif %}</span></div>{% endif %}
+<form method="post" action="/login/code"><label class="field"><span>Код из письма</span><input name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required autofocus class="codein{% if error %} bad{% endif %}" placeholder="6 цифр"></label>
+<button class="btn pri" style="width:100%;padding:11px" type="submit">Войти</button></form>
+<form method="post" action="/login/resend" style="margin-top:12px;text-align:center">{% if wait %}<span class="cap">Прислать код заново — через {{ wait }} с · </span>{% endif %}<button class="linkbtn" type="submit">Прислать код заново</button> · <a class="cap" href="/login">Другая почта</a></form>
+{% elif step == "noaccess" %}
+<h1>Нет доступа</h1><div class="state bad" style="margin:14px 0;padding:22px"><div class="ic">!</div><p>Этой почты нет среди HR компании. Доступ в панель выдаёт администратор компании.</p></div>
+<a class="btn" href="/login" style="width:100%;padding:11px;text-align:center">Войти с другой почтой</a><p class="cap" style="margin-top:12px;text-align:center">Если вы сотрудник, а не HR, вопросы по кадрам — в боте HRgid в Telegram.</p>
+{% elif step == "expired" %}
+<h1>Сессия закрыта</h1><div class="state" style="margin:14px 0;padding:22px"><div class="ic">○</div><p>Вы долго не работали в панели, и сессия закрылась (через 8 часов без действий). Данные целы.</p></div>
+<a class="btn pri" href="/login" style="width:100%;padding:11px;text-align:center">Войти снова</a>
+{% endif %}
+</div></div></body></html>

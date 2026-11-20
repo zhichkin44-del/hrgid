@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% import "_m.html" as m %}
+{% block main %}
+{{ m.head("Очередь", "Обращения, на которые помощник не ответил сам или сотрудник позвал HR") }}
+<div class="tabs">
+{% for k, label in tabs %}<a href="/queue?tab={{ k }}" class="{% if tab == k %}on{% endif %}"{% if k == "overdue" %} style="margin-left:auto"{% endif %}>{{ label }} <em>{{ counts[k] }}</em></a>{% endfor %}
+</div>
+{% if not views and not sel %}
+{% if tab == "all" %}
+<div class="state"><div class="ic">○</div><h2>В очереди пусто</h2><p>Все обращения отвечены. Новое появится здесь, когда сотрудник позовёт HR.</p><a class="btn" href="/kb">Открыть базу ответов</a></div>
+{% else %}
+<div class="state"><div class="ic">○</div><h2>В этой вкладке пусто</h2><p>Обращений нет. Посмотрите другие вкладки.</p><a class="btn" href="/queue">Все обращения</a></div>
+{% endif %}
+{% else %}
+<div class="split">
+<div class="card q-list">
+{% for v in views %}<a href="/queue?tab={{ tab }}&k={{ v.key }}" class="qi{% if sel and sel.key == v.key %} sel{% endif %}"><b>{{ v.text[:80] }}</b><small><span>{{ v.label }}{% if v.employee_name %} · {{ v.employee_name }}{% elif v.confidential %} · автор скрыт{% endif %}</span><span class="{% if v.overdue %}bad{% endif %}">{{ waits[v.key] }}</span></small></a>{% endfor %}
+</div>
+{% if sel %}
+<div class="card pnl" id="card">
+<div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px"><div>
+<b style="font-size:17px">{{ sel.label }}{% if hidden %} · автор скрыт{% elif emp %} · {{ emp.full_name }}{% if emp.position %}, {{ emp.position }}{% endif %}{% endif %}</b>
+<div class="mu" style="font-size:13.5px">{% if emp and not hidden %}{% if emp.hire_date %}в компании с {{ fmt_date(emp.hire_date) }}{% endif %}{% if emp.group %} · группа «{{ emp.group }}»{% endif %}{% endif %}{% if sel.assignee == user.email %} · назначено вам{% elif sel.assignee %} · назначено коллеге{% endif %}</div></div>
+{% if due_note %}<span class="pill{% if overdue %} bad{% endif %}">{{ due_note }}</span>{% endif %}</div>
+<div class="cap" style="margin-bottom:4px">Вопрос сотрудника</div><div class="qt">{{ sel.text }}</div>
+{% if sug.summary %}<div class="cap" style="margin:12px 0 4px">Суть</div><p style="font-size:14.5px">{{ sug.summary }}</p>{% endif %}
+<div class="cap" style="margin:14px 0 6px">Что нашлось в законе и правилах</div>
+{% for src, quote in sug.found %}<div class="found"><b>{{ src }}</b><small>{{ quote }}</small></div>
+{% else %}<p class="mu" style="font-size:14px">Помощник ничего подходящего не нашёл — ответьте по своему усмотрению.</p>{% endfor %}
+{% if sel.status == "queue" %}
+<form method="post" action="/queue/{{ sel.key }}/answer" id="answerform">
+<div class="cap" style="margin:14px 0 6px">Черновик ответа</div>
+<label class="field"><textarea name="text" rows="6" {% if errors.text %}class="bad"{% endif %} aria-label="Текст ответа">{{ form.get("text", "") }}</textarea>{% if errors.text %}<div class="err">{{ errors.text }}</div>{% endif %}</label>
+<div class="bar-act" style="margin-top:14px;align-items:center">
+<button class="btn pri" type="submit" formaction="/queue/{{ sel.key }}/w/send">Отправить ответ</button>
+<button class="btn" type="submit" formaction="/queue/{{ sel.key }}/w/tpl">Шаблон из базы</button>
+<button class="btn" type="submit" formaction="/queue/{{ sel.key }}/w/assign">Назначить коллеге</button>
+{% if not sel.confidential %}<label class="chk" style="margin-left:6px"><input type="checkbox" name="save_kb" value="1" class="sr"{% if form.get("save_kb") %} checked{% endif %}><i>✓</i><span>Сохранить в базу</span></label>{% endif %}
+</div></form>
+{% endif %}
+{% if sel.confidential %}<p class="cap" style="margin-top:12px">Конфиденциальное обращение: имя автора скрыто, в базу ответов оно не сохраняется.</p>
+{% else %}
+<div class="cap" style="margin:18px 0 6px">История диалога сотрудника</div>
+<div class="lst">{% for h in hist %}<div class="it"><span>{{ h.text[:80] }}<small>{{ h.created_at.strftime("%d.%m") }} · {{ "ответил HR" if h.status == "answered" else "в очереди" }}</small></span></div>
+{% else %}<div class="it"><span>Раньше не обращался</span></div>{% endfor %}</div>
+{% if hist %}<a class="btn sm ghost" style="margin-top:8px" href="/queue/{{ sel.key }}/history">Вся история</a>{% endif %}
+{% endif %}
+</div>
+{% endif %}
+</div>
+{% endif %}
+{% endblock %}
+{% block windows %}
+{% if win == "send" and sel %}{% call m.dlg("П2.4", "Отправить ответ?", "/queue?k=" ~ sel.key) %}
+<form method="post" action="/queue/{{ sel.key }}/answer" x-data="{kb: {{ 'true' if form.get('save_kb') else 'false' }}}">
+<div class="cap">Получит</div><p style="font-size:14.5px;margin-bottom:10px">{% if hidden %}автор обращения (имя скрыто){% elif emp %}{{ emp.full_name }}{% endif %} — в Telegram, обращение {{ sel.label }}</p>
+<input type="hidden" name="text" value="{{ form.text }}"><div class="draft" style="font-size:14px">{{ form.text }}</div>
+{% if not sel.confidential %}
+<label class="chk" style="margin:10px 0"><input type="checkbox" name="save_kb" value="1" class="sr" x-model="kb"><i>✓</i><span>Сохранить ответ в базу — следующий такой вопрос отвечается из базы</span></label>
+<div x-show="kb" x-transition.opacity>
+{{ m.field("question", "Вопрос в общем виде", form, errors, maxlength=300) }}
+{{ m.basis(form, errors, basis_options) }}
+</div>
+{% else %}<p class="hint">Конфиденциальный ответ в базу не сохраняется.</p>{% endif %}
+<div class="ft"><a class="btn ghost" href="/queue?k={{ sel.key }}">Вернуться к правке</a><button class="btn pri" type="submit">Отправить</button></div></form>
+{% endcall %}{% endif %}
+{% if win == "tpl" and sel %}{% call m.dlg("П2.2", "Шаблон из базы", "/queue?k=" ~ sel.key, lead="Выберите ответ — он подставится в черновик, но не отправится.") %}
+<form method="post" action="/queue/{{ sel.key }}/w/tpl"><input type="hidden" name="text" value="{{ form.get('text', '') }}"><label class="field"><span>Поиск по базе</span><input name="q" value="{{ form.get('q', '') }}" placeholder="например: перенос отпуска"></label><button class="btn sm" type="submit">Найти</button></form>
+{% for e in tpl_results %}<form method="post" action="/queue/{{ sel.key }}/tpl" class="found" style="margin-top:8px"><input type="hidden" name="entry" value="{{ e.id }}"><b>{{ e.question }}</b><small>{{ e.answer[:140] }} · {{ e.basis }}</small><button class="btn sm pri" type="submit" style="margin-top:6px">Подставить</button></form>
+{% else %}<div class="state" style="margin-top:12px"><h2>Ничего не найдено</h2><p>В базе нет подходящего ответа.</p><a class="btn" href="/kb">Открыть всю базу</a></div>{% endfor %}
+{% endcall %}{% endif %}
+{% if win == "assign" and sel %}{% call m.dlg("П2.3", "Назначить коллеге", "/queue?k=" ~ sel.key) %}
+<form method="post" action="/queue/{{ sel.key }}/assign"><input type="hidden" name="text" value="{{ form.get('text', '') }}">
+<p class="lead" style="margin:-4px 0 12px">Вопрос {{ sel.label }}: {{ sel.text[:80] }}</p><div class="field"><span>Кому</span>{% for u in mates %}<label class="optr"><input type="radio" name="to" value="{{ u.email }}"{% if u.away %} disabled{% endif %}{% if form.get("to") == u.email %} checked{% endif %}><span><b>{{ u.name }}</b><small style="display:block;color:var(--mu)">{{ "в отпуске — назначить нельзя" if u.away else "на связи" }}</small></span></label>{% endfor %}{% if errors.to %}<div class="err">{{ errors.to }}</div>{% endif %}</div>
+{{ m.field("comment", "Комментарий (необязательно)", form, errors, rows=3, maxlength=500) }}
+<div class="ft"><a class="btn ghost" href="/queue?k={{ sel.key }}">Отмена</a><button class="btn pri" type="submit">Назначить</button></div></form>
+{% endcall %}{% endif %}
+{% if win == "savekb" and sel %}{% call m.dlg("П2.5", "Сохранить в базу", "/queue?k=" ~ sel.key) %}
+<form method="post" action="/queue/{{ sel.key }}/savekb">
+{{ m.field("question", "Вопрос (в общем виде)", form, errors, maxlength=300) }}
+{{ m.field("answer", "Ответ", form, errors, rows=5, maxlength=900) }}
+<div class="row2">{{ m.basis(form, errors, basis_options) }}
+<label class="field"><span>Кому показывать</span><select name="audience"><option value="all">всем сотрудникам</option>{% for g in groups %}<option value="{{ g }}"{% if form.get("audience") == g %} selected{% endif %}>{{ g }}</option>{% endfor %}</select></label></div>
+<div class="ft"><a class="btn ghost" href="/queue?k={{ sel.key }}">Отмена</a><button class="btn pri" type="submit">Сохранить</button></div></form>
+{% endcall %}{% endif %}
+{% if win == "history" and sel %}{% call m.dlg("П2.6", "История диалога", "/queue?k=" ~ sel.key) %}
+<div class="lst">{% for h in hist %}<div class="it"><span>{{ h.text[:120] }}<small>{{ h.created_at.strftime("%d.%m.%Y") }} · {{ "ответил HR" if h.status == "answered" else "в очереди" }}</small></span></div>{% else %}<div class="it"><span>Раньше не обращался</span></div>{% endfor %}</div>
+<div class="ft"><a class="btn ghost" href="/queue?k={{ sel.key }}">Закрыть</a></div>
+{% endcall %}{% endif %}
+{% endblock %}

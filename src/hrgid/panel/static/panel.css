@@ -1,0 +1,26 @@
+/* Дополнения к утверждённой вёрстке: только то, чего нет в style.css (формы на сервере). */
+.sr{position:absolute;opacity:0;width:0;height:0}
+.chk{cursor:pointer;display:flex;gap:10px;align-items:flex-start}
+.chk input:checked + i{background:var(--ac);border-color:var(--ac);color:var(--ac-ink)}
+.chk input:focus-visible + i{outline:2px solid var(--ac)}
+.chk i{flex:none;width:20px;height:20px;border:1px solid var(--line2);border-radius:6px;display:grid;place-items:center;font-size:13px;font-style:normal;color:transparent}
+.linkbtn{background:none;border:0;color:var(--mu);text-decoration:underline;padding:0}
+.codein{letter-spacing:.5em;text-align:center;font-size:22px}
+.menu-btn{display:none}
+.busy{position:fixed;top:0;left:0;right:0;height:2px;background:var(--ac);opacity:0;z-index:70}
+.busy.htmx-request{opacity:1}
+select{background:var(--s1);border:1px solid var(--line2);border-radius:10px;padding:9px 12px;width:100%}
+.field input.bad,.field textarea.bad,.field select.bad{border-color:var(--bad)}
+.q-list a.qi{text-decoration:none;display:block}
+.bar-act form{display:inline}
+.pill.ok{color:var(--ac)}
+.chartbox{position:relative;height:220px}
+.rowlink{text-decoration:none}
+@media (max-width:760px){.kpis{grid-template-columns:repeat(2,1fr)!important}.main{padding-top:56px}.menu-btn{display:block;position:fixed;top:10px;right:10px;z-index:30;background:var(--s3);border:1px solid var(--line2);border-radius:8px;padding:6px 12px}
+.nav{display:none}.nav.open{display:block;position:fixed;inset:0;z-index:25;overflow:auto;background:var(--bg)}}
+@media print{.nav,.menu-btn,.bar-act,.toast{display:none}.main{padding:0}body{background:#fff;color:#000}}
+
+.field input[type=radio],.field input[type=checkbox],label input[type=radio]{width:auto;flex:none;margin:0}
+.optr{display:flex;gap:10px;align-items:flex-start;margin:8px 0;cursor:pointer;padding:10px 12px;border:1px solid var(--line2);border-radius:10px}
+
+.tabs a.on{color:var(--tx);border-color:var(--tx)}

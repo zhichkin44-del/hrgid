@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% import "_m.html" as m %}
+{% block main %}
+{% if is_new %}
+{{ m.head("Начало работы", "Новая компания: четыре шага до первого ответа сотруднику") }}
+<div class="tbl">
+<div class="tr" style="--cols:40px 2.4fr 1fr"><b class="num">1</b><span><b style="font-weight:500">Загрузите правила компании</b><small>PDF или DOCX — по ним будет отвечать помощник</small></span><a class="btn pri" href="/docs?w=upload">Загрузить документ</a></div>
+<div class="tr" style="--cols:40px 2.4fr 1fr"><b class="num">2</b><span><b style="font-weight:500">Проверьте правила на соответствие ТК</b><small>после приказа и даты начала</small></span><a class="btn" href="/check">Проверка на ТК</a></div>
+<div class="tr" style="--cols:40px 2.4fr 1fr"><b class="num">3</b><span><b style="font-weight:500">Добавьте сотрудников</b><small>выгрузка из 1С:ЗУП или приглашение по одному</small></span><a class="btn" href="/staff?w=import1">Импорт из 1С</a></div>
+<div class="tr" style="--cols:40px 2.4fr 1fr"><b class="num">4</b><span><b style="font-weight:500">Задайте первый вопрос боту</b><small>так увидите ответ глазами сотрудника</small></span><a class="btn" href="https://t.me/{{ c.request.app.state.bot_username }}">Открыть бота</a></div>
+</div>
+{% else %}
+{{ m.head("Сегодня", date_line ~ ", " ~ now_local.strftime("%H:%M") ~ " · " ~ hours_line, "/queue", "Разобрать очередь") }}
+<div class="kpis">
+<div class="card kpi"><label>В очереди</label><div class="v num">{{ views|length }}</div><div class="s">{{ oldest or "очередь пуста" }}</div></div>
+<div class="card kpi{% if overdue %} bad{% endif %}"><label>Просрочено</label><div class="v num">{{ overdue|length }}</div><div class="s">срок ответа — {{ sla }} ч</div></div>
+<div class="card kpi"><label>Назначено мне</label><div class="v num">{{ mine|length }}</div><div class="s">{% for v in mine[:3] %}{{ v.label }}{% if not loop.last %}, {% endif %}{% endfor %}</div></div>
+<div class="card kpi"><label>Оценок 👎 за сутки</label><div class="v num">{{ downs|length }}</div><div class="s">{% if downs %}разобрать ниже{% else %}нет{% endif %}</div></div>
+<div class="card kpi"><label>Расход в {{ month_prep }}</label>{% if budget.spent %}<div class="v num">{{ rub(budget.spent) }}<small> из {{ rub(budget.limit) }}</small></div><div class="s">{{ budget.pct }}% лимита</div>{% else %}<div class="v dash">—<small> из {{ rub(budget.limit) }}</small></div><div class="s">Данные появятся после первых ответов помощника</div>{% endif %}</div>
+</div>
+{% for r in risks %}<div class="notice bad"><span><b>В правилах {{ r.open_risks }} пункт(ов) с риском нарушения.</b> <span class="mu">{{ r.doc_title }}, версия {{ r.version }}{% if not r.applicable %} — проект, ещё не утверждён{% endif %}.</span></span><a href="/check">Открыть проверку →</a></div>{% endfor %}
+{% if budget.exhausted %}<div class="notice bad"><span><b>Бюджет месяца исчерпан.</b> <span class="mu">{% if budget.action == "queue" %}Помощник отвечает только из базы ответов; вопросы без готового ответа уходят в очередь HR.{% else %}Помощник отвечает только из базы и правил; на новые вопросы вежливо отказывает и даёт контакт HR.{% endif %}</span></span><a href="{% if user.role == 'admin' %}/settings{% else %}/costs/ask{% endif %}">{% if user.role == 'admin' %}Открыть настройки →{% else %}Попросить администратора →{% endif %}</a></div>{% endif %}
+{% if empty %}
+<div class="state"><div class="ic">○</div><h2>Очередь пуста, рисков нет</h2><p>Все обращения отвечены, правила проверены. Новое обращение появится здесь.</p><a class="btn ghost" href="/kb">Открыть базу ответов</a></div>
+{% else %}
+<div class="grid2"><div class="card pnl"><h2>Ждут ответа <a href="/queue">вся очередь →</a></h2><div class="lst">
+{% for v in views[:6] %}<a class="it rowlink" href="/queue?k={{ v.key }}"><span>{{ v.text[:70] }}<small>{{ v.label }}{% if v.employee_name %} · {{ v.employee_name }}{% endif %}{% if v.assignee == user.email %} · назначено мне{% endif %}</small></span><span class="r{% if v.overdue %} bad{% endif %}">{{ waits[v.key] }}</span></a>
+{% else %}<div class="it"><span>Нет обращений в очереди</span></div>{% endfor %}
+</div></div>
+<div class="card pnl"><h2>Не понравилось за сутки <a href="/analytics">аналитика →</a></h2><div class="lst">
+{% for t in downs %}<a class="it rowlink" href="/rating/{{ t.key }}"><span>{{ t.text[:70] }}<small>ответил HR · 👎 {{ t.label }}</small></span><span class="r">разобрать</span></a>
+{% else %}<div class="it"><span>Новых оценок 👎 нет</span></div>{% endfor %}
+</div></div></div>
+{% endif %}
+{% endif %}
+{% endblock %}
+{% block windows %}
+{% if win == "logout" %}{% call m.dlg("П0.5", "Выйти из панели?", "/") %}
+<p class="lead">Сессия закроется, запись о выходе попадёт в журнал входов.</p>
+<form method="post" action="/logout" hx-boost="false"><div class="ft"><a class="btn ghost" href="/">Остаться</a><button class="btn pri" type="submit">Выйти</button></div></form>
+{% endcall %}{% endif %}
+{% if win == "rating" and rating_ticket %}{% call m.dlg("П1.1", "Разбор оценки 👎", "/", lead="Сотруднику ответ не помог. Решите, что делать.") %}
+<div class="cap">Вопрос сотрудника</div><div class="qt">{{ rating_ticket.text }}</div>
+{% for msg in rating_ticket.messages if msg.author == "hr" %}<div class="cap" style="margin-top:12px">Ответ HR</div><div class="draft">{{ msg.text }}</div>{% endfor %}
+<form method="post" action="/rating/{{ rating_ticket.key }}"><div class="ft"><button class="btn ghost" name="decision" value="ok" type="submit">Ответ верный</button><button class="btn pri" name="decision" value="fix" type="submit">Исправить в базе</button></div></form>
+{% endcall %}{% endif %}
+{% endblock %}
