@@ -1,7 +1,7 @@
 """П6 «Сотрудники» (приглашение, импорт 1С, коды, группы, профиль) и П11 «Объявления»."""
 
 from dataclasses import dataclass
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import HTMLResponse, Response
@@ -43,7 +43,7 @@ def staff_page(
     emp: Employee | None = None,
     form: dict[str, str] | None = None,
     errors: dict[str, str] | None = None,
-    extra: dict[str, object] | None = None,
+    extra: dict[str, Any] | None = None,
     status: int = 200,
 ) -> HTMLResponse:
     d = w.d
@@ -51,7 +51,7 @@ def staff_page(
     asof = max(
         (e.profile_date for e in d.repo.employees(c.company) if e.profile_date), default=None
     )
-    prof: dict[str, object] = {}
+    prof: dict[str, Any] = {}
     if emp is not None:
         prof = {
             "tickets": d.staff.ticket_count(c.company, emp.id),
@@ -81,7 +81,7 @@ def ann_page(
     ann: Announcement | None = None,
     form: dict[str, str] | None = None,
     errors: dict[str, str] | None = None,
-    extra: dict[str, object] | None = None,
+    extra: dict[str, Any] | None = None,
     status: int = 200,
 ) -> HTMLResponse:
     d = w.d
@@ -291,7 +291,7 @@ def register(app: FastAPI, w: Web) -> None:
             )
         return w.see_other(f"/staff/import/{token}/map")
 
-    def _imp(c: Ctx, token: str) -> dict[str, object]:
+    def _imp(c: Ctx, token: str) -> dict[str, Any]:
         try:
             return d.staff.import_doc(c.company, token)
         except PanelError:

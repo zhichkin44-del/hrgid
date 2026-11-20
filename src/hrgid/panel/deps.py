@@ -103,8 +103,15 @@ def build_deps(
         bot_username=bot_username,
         secure_cookie=secure_cookie,
     )
-    undo.restore["kb.archive"] = lambda c, p: kbadmin.set_archived(c, int(p["id"]), False) and None
-    undo.restore["emp.disable"] = lambda c, p: staff.enable(c, str(p["id"])) and None
+
+    def restore_kb(company: str, p: dict[str, Any]) -> None:
+        kbadmin.set_archived(company, int(p["id"]), False)
+
+    def restore_emp(company: str, p: dict[str, Any]) -> None:
+        staff.enable(company, str(p["id"]))
+
+    undo.restore["kb.archive"] = restore_kb
+    undo.restore["emp.disable"] = restore_emp
     undo.finish["doc.delete_version"] = lambda c, p: docs.delete_version(
         c, str(p["doc_id"]), int(p["number"]), str(p["user"]), clk().date()
     )

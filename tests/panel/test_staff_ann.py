@@ -50,7 +50,10 @@ def test_invite_validation_and_duplicate_blocked() -> None:
     env = make_env()
     hr = env.login(HR)
     assert "Напишите ФИО" in hr.post("/staff/invite", data={"full_name": "", "hire_date": ""}).text
-    assert "Укажите дату приёма" in hr.post("/staff/invite", data={"full_name": "А Б", "hire_date": "вчера"}).text
+    assert (
+        "Укажите дату приёма"
+        in hr.post("/staff/invite", data={"full_name": "А Б", "hire_date": "вчера"}).text
+    )
     hr.post("/staff/invite", data={"full_name": "Иванов Иван", "hire_date": "01.12.2026"})
     r = hr.post("/staff/invite", data={"full_name": "иванов  иван", "hire_date": "01.12.2026"})
     assert "Такой сотрудник уже есть" in r.text and "Открыть профиль дубля" in r.text
@@ -93,8 +96,9 @@ def test_import_xlsx_and_wrong_files() -> None:
     hr = env.login(HR)
     wb = openpyxl.Workbook()
     ws = wb.active
-    ws.append(["ФИО", "Дата приёма", "График"])  # type: ignore[union-attr]
-    ws.append(["Козлов Дмитрий", "03.06.2023", "5/2"])  # type: ignore[union-attr]
+    assert ws is not None
+    ws.append(["ФИО", "Дата приёма", "График"])
+    ws.append(["Козлов Дмитрий", "03.06.2023", "5/2"])
     buf = io.BytesIO()
     wb.save(buf)
     token = start_import(hr, buf.getvalue(), "zup.xlsx")
@@ -102,7 +106,9 @@ def test_import_xlsx_and_wrong_files() -> None:
     assert env.deps.repo.employees(CO)[0].full_name == "Козлов Дмитрий"
     r = hr.post("/staff/import", files={"file": ("a.pdf", b"x", "application/pdf")})
     assert "файл не подошёл" in r.text
-    r = hr.post("/staff/import", files={"file": ("a.csv", "Должность;Оклад\nх;1\n".encode(), "text/csv")})
+    r = hr.post(
+        "/staff/import", files={"file": ("a.csv", "Должность;Оклад\nх;1\n".encode(), "text/csv")}
+    )
     assert "нет колонки «ФИО»" in r.text
 
 
@@ -177,7 +183,13 @@ def test_edit_data_validation() -> None:
     env = make_env()
     s = seed(env)
     hr = env.login(HR)
-    base = {"hire_date": "11.03.2024", "schedule": "2/2", "salary": "90000", "group": "Дизайн", "position": "дизайнер"}
+    base = {
+        "hire_date": "11.03.2024",
+        "schedule": "2/2",
+        "salary": "90000",
+        "group": "Дизайн",
+        "position": "дизайнер",
+    }
     r = hr.post(f"/staff/{s.olga.id}/edit", data={**base, "salary": "много"})
     assert "Оклад — число" in r.text
     r = hr.post(f"/staff/{s.olga.id}/edit", data={**base, "hire_date": ""})
@@ -193,7 +205,9 @@ def test_purge_employee_data_deferred_with_undo() -> None:
     hr = env.login(HR)
     r = hr.post(f"/staff/{s.olga.id}/purge", data={"reason": "", "understood": ""})
     assert "Укажите основание" in r.text and "Отметьте «понимаю»" in r.text
-    r = hr.post(f"/staff/{s.olga.id}/purge", data={"reason": "запрос сотрудника", "understood": "1"})
+    r = hr.post(
+        f"/staff/{s.olga.id}/purge", data={"reason": "запрос сотрудника", "understood": "1"}
+    )
     assert "через 10 секунд" in r.text
     assert env.deps.repo.employee(CO, s.olga.id).full_name == "Ольга Смирнова"  # type: ignore[union-attr]
     env.clock.advance(seconds=11)
@@ -231,7 +245,9 @@ def test_announcement_empty_validation_send_read_remind() -> None:
     assert "не длиннее 80" in r.text
     r = hr.post("/announcements/preview", data={"title": "График", "text": "x" * 901})
     assert "не длиннее 900" in r.text
-    r = hr.post("/announcements/preview", data={"title": "График", "text": "Праздники", "groups": ["Пусто"]})
+    r = hr.post(
+        "/announcements/preview", data={"title": "График", "text": "Праздники", "groups": ["Пусто"]}
+    )
     assert "Нет получателей" in r.text
     r = hr.post("/announcements/preview", data={"title": "График", "text": "Праздники"})
     assert "Отправить объявление?" in r.text and "Получат 2" in r.text
@@ -252,8 +268,13 @@ def test_announcement_to_group_and_draft() -> None:
     env = make_env()
     s = seed(env)
     hr = env.login(HR)
-    hr.post("/announcements/preview", data={"title": "Монтаж", "text": "Новый график", "groups": ["Монтаж"]})
-    hr.post("/announcements/send", data={"title": "Монтаж", "text": "Новый график", "groups": "Монтаж"})
+    hr.post(
+        "/announcements/preview",
+        data={"title": "Монтаж", "text": "Новый график", "groups": ["Монтаж"]},
+    )
+    hr.post(
+        "/announcements/send", data={"title": "Монтаж", "text": "Новый график", "groups": "Монтаж"}
+    )
     ann = env.deps.repo.announcements(CO)[0]
     assert ann.recipients == [s.igor.id]
     r = hr.post("/announcements/preview", data={"title": "Черновик", "text": "позже", "draft": "1"})

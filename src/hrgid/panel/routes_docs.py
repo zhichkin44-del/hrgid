@@ -3,7 +3,7 @@
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import HTMLResponse, Response
@@ -50,7 +50,7 @@ def docs_page(
     number: int = 0,
     form: dict[str, str] | None = None,
     errors: dict[str, str] | None = None,
-    extra: dict[str, object] | None = None,
+    extra: dict[str, Any] | None = None,
     status: int = 200,
 ) -> HTMLResponse:
     d = w.d

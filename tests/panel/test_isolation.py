@@ -112,7 +112,11 @@ def test_foreign_writes_change_nothing() -> None:
         ("post", f"/kb/{s.kb_id}/archive", {}),
         ("post", f"/kb/{s.kb_id}/restore", {}),
         ("post", f"/kb/review/{s.kb_id}", {"decision": "archive"}),
-        ("post", f"/docs/{s.doc_id}/1/order", {"order_no": "x", "order_date": "01.11.2026", "effective_from": "02.11.2026"}),
+        (
+            "post",
+            f"/docs/{s.doc_id}/1/order",
+            {"order_no": "x", "order_date": "01.11.2026", "effective_from": "02.11.2026"},
+        ),
         ("post", f"/docs/{s.doc_id}/rollback", {"to": "1", "reason": "x"}),
         ("post", f"/docs/{s.doc_id}/1/delete", {}),
         ("post", f"/check/{s.doc_id}/1/run", {}),
@@ -126,9 +130,11 @@ def test_foreign_writes_change_nothing() -> None:
         ("post", f"/announcements/{ann_id}/remind", {}),
         ("post", f"/rating/{s.t1.key}", {"decision": "ok"}),
     ]
-    for method, url, data in attempts:
+    for _method, url, data in attempts:
         r = other.post(url, data=data)
-        assert r.status_code in (403, 404, 409, 503) or "Нет прав" in r.text or leaks(r.text) == [], (
+        assert (
+            r.status_code in (403, 404, 409, 503) or "Нет прав" in r.text or leaks(r.text) == []
+        ), (
             url,
             r.status_code,
         )

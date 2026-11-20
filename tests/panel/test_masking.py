@@ -54,7 +54,10 @@ SAMPLES: list[tuple[str, list[str]]] = [
         "Петрова Мария, СНИЛС 123-456-789 01, почта maria@x.ru",
         ["Петрова", "123-456-789", "maria@x.ru"],
     ),
-    ("ИНН 770812345678 и телефон 89161234567 у Сидорова Петра", ["770812345678", "9161234567", "Сидорова"]),
+    (
+        "ИНН 770812345678 и телефон 89161234567 у Сидорова Петра",
+        ["770812345678", "9161234567", "Сидорова"],
+    ),
 ]
 
 
@@ -79,7 +82,9 @@ def masked_logging() -> None:
     install()
 
 
-def test_logger_masks_message_and_args(masked_logging: None, caplog: pytest.LogCaptureFixture) -> None:
+def test_logger_masks_message_and_args(
+    masked_logging: None, caplog: pytest.LogCaptureFixture
+) -> None:
     log = logging.getLogger("hrgid.panel.test")
     with caplog.at_level(logging.INFO, logger="hrgid"):
         log.info("вход %s с паспортом %s", "o.smirnova@studio.ru", "4512 345678")

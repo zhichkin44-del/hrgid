@@ -5,7 +5,7 @@ from __future__ import annotations
 import io
 import zipfile
 
-from .conftest import ADMIN, CO, HR, Env, make_env, msk
+from .conftest import ADMIN, CO, HR, make_env, msk
 from .seed import seed
 
 # ----- П7 -----------------------------------------------------------------------------
@@ -75,8 +75,12 @@ def test_limit_change_validation_and_effects() -> None:
     env = make_env()
     seed(env)
     adm = env.login(ADMIN)
-    assert "Сумма — число" in adm.post("/costs/limit", data={"limit": "много", "action": "queue"}).text
-    assert "не меньше 1 000" in adm.post("/costs/limit", data={"limit": "500", "action": "queue"}).text
+    assert (
+        "Сумма — число" in adm.post("/costs/limit", data={"limit": "много", "action": "queue"}).text
+    )
+    assert (
+        "не меньше 1 000" in adm.post("/costs/limit", data={"limit": "500", "action": "queue"}).text
+    )
     r = adm.post("/costs/limit", data={"limit": "15 000", "action": "refuse"})
     assert "Лимит изменён" in r.text
     t = env.deps.ops.tech(CO)
@@ -117,8 +121,13 @@ def test_settings_save_and_validation() -> None:
         "urgent_contact": "Анна: +7 900 111-22-33", "greeting": "Привет", "escalation": "Админу",
         "retention_days": "365", "utc_offset": "3",
     }  # fmt: skip
-    assert "Конец рабочего дня раньше начала" in adm.post("/settings", data={**ok, "hours_end": "08:00"}).text
-    assert "срочный контакт" in adm.post("/settings", data={**ok, "urgent_contact": " "}).text.lower()
+    assert (
+        "Конец рабочего дня раньше начала"
+        in adm.post("/settings", data={**ok, "hours_end": "08:00"}).text
+    )
+    assert (
+        "срочный контакт" in adm.post("/settings", data={**ok, "urgent_contact": " "}).text.lower()
+    )
     assert "от 1 до 72" in adm.post("/settings", data={**ok, "sla_hours": "0"}).text
     assert "от 30 дней" in adm.post("/settings", data={**ok, "retention_days": "3"}).text
     r = adm.post("/settings", data=ok)
@@ -225,11 +234,17 @@ def test_journal_export_csv_pdf_and_period_limit() -> None:
     s = seed(env)
     hr = env.login(HR)
     hr.post(f"/queue/{s.t1.key}/answer", data={"text": "ок"})
-    r = hr.post("/journal/export", data={"since": "01.11.2026", "until": "30.11.2026", "fmt": "csv"})
+    r = hr.post(
+        "/journal/export", data={"since": "01.11.2026", "until": "30.11.2026", "fmt": "csv"}
+    )
     assert r.headers["content-type"].startswith("text/csv") and "Ответил на обращение" in r.text
-    r = hr.post("/journal/export", data={"since": "01.11.2026", "until": "30.11.2026", "fmt": "pdf"})
+    r = hr.post(
+        "/journal/export", data={"since": "01.11.2026", "until": "30.11.2026", "fmt": "pdf"}
+    )
     assert r.status_code == 200 and "attachment" in r.headers["content-disposition"]
-    r = hr.post("/journal/export", data={"since": "01.01.2025", "until": "30.11.2026", "fmt": "csv"})
+    r = hr.post(
+        "/journal/export", data={"since": "01.01.2025", "until": "30.11.2026", "fmt": "csv"}
+    )
     assert "не больше 365 дней" in r.text
 
 

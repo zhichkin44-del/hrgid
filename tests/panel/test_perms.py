@@ -25,7 +25,21 @@ def test_perm_table_matches_registry() -> None:
     assert not can("stranger", "ticket.answer") and not can_section("", "queue")
 
 
-@pytest.mark.parametrize("url", ["/", "/queue", "/kb", "/docs", "/check", "/staff", "/announcements", "/analytics", "/costs", "/journal"])
+@pytest.mark.parametrize(
+    "url",
+    [
+        "/",
+        "/queue",
+        "/kb",
+        "/docs",
+        "/check",
+        "/staff",
+        "/announcements",
+        "/analytics",
+        "/costs",
+        "/journal",
+    ],
+)
 def test_sections_open_for_both_roles(url: str) -> None:
     env = make_env()
     seed(env)
@@ -51,7 +65,11 @@ def test_admin_only_actions_return_403_for_hr_and_change_nothing() -> None:
     d = s.doc_id
     attempts = [
         ("get", f"/docs/{d}/1/order", {}),
-        ("post", f"/docs/{d}/1/order", {"order_no": "9", "order_date": "01.11.2026", "effective_from": "02.11.2026"}),
+        (
+            "post",
+            f"/docs/{d}/1/order",
+            {"order_no": "9", "order_date": "01.11.2026", "effective_from": "02.11.2026"},
+        ),
         ("get", f"/docs/{d}/rollback?to=1", {}),
         ("post", f"/docs/{d}/rollback", {"to": "1", "reason": "x"}),
         ("get", f"/docs/{d}/1/delete", {}),
@@ -83,7 +101,11 @@ def test_hr_variants_of_screens_hide_buttons_with_caption() -> None:
     approve(env, s.doc_id, 1)
     hr = env.login(HR)
     docs = hr.get("/docs").text.split("<main")[1]
-    assert "Указать приказ" not in docs and "Откатить" not in docs and "доступно администратору" in docs
+    assert (
+        "Указать приказ" not in docs
+        and "Откатить" not in docs
+        and "доступно администратору" in docs
+    )
     env.login(HR).post(f"/check/{s.doc_id}/1/run")
     chk = hr.get(f"/check?doc={s.doc_id}&v=1").text
     assert "Принять с риском</a>" not in chk and "Принять с риском — доступно администратору" in chk
@@ -101,7 +123,7 @@ def test_every_route_requires_login() -> None:
         if not isinstance(route, APIRoute) or route.path.startswith(PUBLIC):
             continue
         url = re.sub(r"\{[^}]+\}", "1", route.path)
-        for method in route.methods - {"HEAD", "OPTIONS"}:
+        for method in (route.methods or set()) - {"HEAD", "OPTIONS"}:
             r = anon.request(method, url, data={}, follow_redirects=False)
             assert r.status_code == 303 and r.headers["location"].startswith("/login"), (
                 method,

@@ -25,7 +25,6 @@ from hrgid.bot.kb import SAME_QUESTION, KbService, similarity
 from hrgid.bot.models import Button, Employee, KbEntry, Out, Ticket
 from hrgid.bot.repo import Repo
 from hrgid.bot.store import DocStore
-from hrgid.docs.service import DocService
 from hrgid.panel import imports
 from hrgid.panel.journal import Journal
 from hrgid.panel.ops import OpsStore, topic_of

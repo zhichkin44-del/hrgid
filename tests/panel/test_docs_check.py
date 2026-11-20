@@ -26,14 +26,16 @@ def test_upload_parse_then_order_by_admin() -> None:
     env = make_env()
     hr = env.login(HR)
     text = upload(hr, RULES)
-    assert "прочитано" in text and "Правила работы студии" not in text or True
+    assert "прочитано" in text
     doc = env.deps.docs.documents(CO)[0]["doc_id"]
     v = env.deps.docs.version(CO, doc, 1)
     assert len(v.items) >= 6 and not v.applicable(env.clock.now.date())
     adm = env.login(ADMIN)
     r = adm.get(f"/docs/{doc}/1/order")
     assert "Приказ и дата начала" in r.text
-    r = adm.post(f"/docs/{doc}/1/order", data={"order_no": "", "order_date": "", "effective_from": ""})
+    r = adm.post(
+        f"/docs/{doc}/1/order", data={"order_no": "", "order_date": "", "effective_from": ""}
+    )
     assert "Укажите номер приказа" in r.text and "Укажите дату приказа" in r.text
     r = adm.post(
         f"/docs/{doc}/1/order",
@@ -65,7 +67,11 @@ def test_hr_has_no_order_rollback_delete() -> None:
     hr = env.login(HR)
     page = hr.get("/docs").text
     assert "доступно администратору" in page and "/order" not in page.split("<main")[1]
-    for url in (f"/docs/{s.doc_id}/1/order", f"/docs/{s.doc_id}/rollback?to=1", f"/docs/{s.doc_id}/1/delete"):
+    for url in (
+        f"/docs/{s.doc_id}/1/order",
+        f"/docs/{s.doc_id}/rollback?to=1",
+        f"/docs/{s.doc_id}/1/delete",
+    ):
         assert hr.get(url).status_code == 403, url
     r = hr.post(
         f"/docs/{s.doc_id}/1/order",
@@ -141,8 +147,9 @@ def test_check_finds_planted_violations_and_suggests_fix() -> None:
     s = seed(env)
     hr = env.login(HR)
     hr.post(f"/check/{s.doc_id}/1/run")
-    rep = env.deps.checker.report(CO, s.doc_id, 1)  # type: ignore[union-attr]
-    assert {i.number for i in rep.risks} == {"3.1"}  # выплата раз в месяц
+    assert env.deps.checker is not None
+    rep = env.deps.checker.report(CO, s.doc_id, 1)
+    assert rep is not None and {i.number for i in rep.risks} == {"3.1"}  # выплата раз в месяц
     page = hr.get(f"/check?doc={s.doc_id}&v=1").text
     assert "ст. 136" in page and "Предложенная формулировка" in page
     assert "Принять с риском — доступно администратору" in page
@@ -175,14 +182,22 @@ def test_accept_risk_admin_only_with_comment_and_understood() -> None:
     env.login(HR).post(f"/check/{s.doc_id}/1/run")
     hr = env.login(HR)
     assert hr.get(f"/check/{s.doc_id}/1/accept?item=3.1").status_code == 403
-    assert hr.post(f"/check/{s.doc_id}/1/accept", data={"item": "3.1", "comment": "x"}).status_code == 403
+    assert (
+        hr.post(f"/check/{s.doc_id}/1/accept", data={"item": "3.1", "comment": "x"}).status_code
+        == 403
+    )
     adm = env.login(ADMIN)
-    r = adm.post(f"/check/{s.doc_id}/1/accept", data={"item": "3.1", "comment": "", "understood": "1"})
+    r = adm.post(
+        f"/check/{s.doc_id}/1/accept", data={"item": "3.1", "comment": "", "understood": "1"}
+    )
     assert "Напишите причину" in r.text
-    r = adm.post(f"/check/{s.doc_id}/1/accept", data={"item": "3.1", "comment": "договор", "understood": ""})
+    r = adm.post(
+        f"/check/{s.doc_id}/1/accept", data={"item": "3.1", "comment": "договор", "understood": ""}
+    )
     assert "понимаю последствия" in r.text
     r = adm.post(
-        f"/check/{s.doc_id}/1/accept", data={"item": "3.1", "comment": "согласовано с юристом", "understood": "1"}
+        f"/check/{s.doc_id}/1/accept",
+        data={"item": "3.1", "comment": "согласовано с юристом", "understood": "1"},
     )
     assert "Риск принят" in r.text and "согласовано с юристом" in r.text
     entry = [e for e in env.deps.journal.entries(CO) if e.action == "tk.accept_risk"]

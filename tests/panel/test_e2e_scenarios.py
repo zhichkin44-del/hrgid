@@ -99,7 +99,7 @@ def upload_rules(env: Env, lines: list[str] = RULES) -> str:
         files={"file": ("rules.docx", docx_bytes(lines), "application/octet-stream")},
     )
     assert "прочитано" in r.text
-    return env.deps.docs.documents(CO)[0]["doc_id"]
+    return str(env.deps.docs.documents(CO)[0]["doc_id"])
 
 
 STAFF_CSV = (
@@ -135,7 +135,9 @@ def test_scenario_1_new_company_to_first_answer() -> None:
     doc = upload_rules(env)
     approve(env, doc, 1)
     r = adm.post(f"/check/{doc}/1/run")
-    assert "Проверка готова" in r.text and "ст. 136" in r.text  # нарочно внесённое нарушение найдено
+    assert (
+        "Проверка готова" in r.text and "ст. 136" in r.text
+    )  # нарочно внесённое нарушение найдено
     codes = import_staff(env)
     assert set(codes) == {"Козлов Дмитрий", "Лебедева Анастасия", "Никитин Сергей"}
     assert all(c.startswith("ЖС-") for c in codes.values())
@@ -146,7 +148,11 @@ def test_scenario_1_new_company_to_first_answer() -> None:
             "answered",
             "В студии отпуск — 31 календарный день.",
             "rules",
-            [Source(1, "Правила студии, п. 2.1", "2.1", "продолжительностью 31 календарный день", CO)],
+            [
+                Source(
+                    1, "Правила студии, п. 2.1", "2.1", "продолжительностью 31 календарный день", CO
+                )
+            ],
         ),
     )
     bot = Bot(env, pipe)
@@ -278,7 +284,7 @@ def test_scenario_4_law_change_marks_answers() -> None:
     doc = upload_rules(env)
     approve(env, doc, 1)
     env.login(HR).post(
-        f"/docs/upload", data={"doc_id": doc},
+        "/docs/upload", data={"doc_id": doc},
         files={"file": ("r.docx", docx_bytes([*RULES, "4. Разное", "4.1. Новый пункт."]), "x")},
     )  # fmt: skip
     approve(env, doc, 2, "2", "03.11.2026")
@@ -296,7 +302,10 @@ def test_scenario_5_budget_exhausted_action_and_warning() -> None:
     emp, _ = d.staff.invite(CO, "Козлов Дмитрий", "01.01.2024", env.clock.now)
     code = d.bot_auth.issue_code(CO, emp.id, env.clock.now)
     pipe = Pipe()
-    pipe.on("отпуск", FlowAnswer("answered", "28 дней.", "law", [Source(1, "ст. 115 ТК РФ", "115", "28", CO)]))
+    pipe.on(
+        "отпуск",
+        FlowAnswer("answered", "28 дней.", "law", [Source(1, "ст. 115 ТК РФ", "115", "28", CO)]),
+    )
     bot = Bot(env, pipe, gated=True)
     bot.login(7001, code)
     adm = env.login(ADMIN)
@@ -309,7 +318,10 @@ def test_scenario_5_budget_exhausted_action_and_warning() -> None:
     assert len(pipe.calls) == calls  # модель не вызывалась
     assert "28 дней" not in text_of(out) and "HR" in text_of(out)  # вопрос уходит к HR
     page = adm.get("/").text
-    assert "Бюджет месяца исчерпан" in page and "вопросы без готового ответа уходят в очередь HR" in page
+    assert (
+        "Бюджет месяца исчерпан" in page
+        and "вопросы без готового ответа уходят в очередь HR" in page
+    )
     assert 'href="/settings"' in page  # действие — в настройках
     # администратор выбирает другое действие при превышении
     r = adm.post("/costs/limit", data={"limit": "1000", "action": "refuse"})

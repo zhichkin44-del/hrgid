@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import pytest
 
 from .conftest import ADMIN, HR, Env, make_env
@@ -72,7 +74,7 @@ def test_every_page_opens(who: str) -> None:
     c = env.login(who)
     # проверка на ТК, чтобы открылись разборы пунктов
     env.login(ADMIN).post(f"/check/{s.doc_id}/1/run")
-    bad = []
+    bad: list[tuple[str, Any]] = []
     for url in GET_URLS:
         r = c.get(fill(url, s))
         if r.status_code not in (200, 403):

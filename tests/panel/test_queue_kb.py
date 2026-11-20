@@ -68,7 +68,7 @@ def test_rating_of_confidential_is_not_reachable() -> None:
 
 def test_queue_list_card_and_confidential_hidden() -> None:
     env = make_env()
-    s = seed(env)
+    seed(env)
     hr = env.login(HR)
     r = hr.get("/queue")
     assert "Можно ли перенести отпуск" in r.text
@@ -104,14 +104,17 @@ def test_send_window_and_save_to_kb_needs_basis() -> None:
     hr = env.login(HR)
     r = hr.post(f"/queue/{s.t1.key}/w/send", data={"text": "Можно по заявлению."})
     assert "Отправить ответ?" in r.text and "Можно по заявлению." in r.text
-    r = hr.post(
-        f"/queue/{s.t1.key}/answer", data={"text": "Можно.", "save_kb": "1", "basis": ""}
-    )
+    r = hr.post(f"/queue/{s.t1.key}/answer", data={"text": "Можно.", "save_kb": "1", "basis": ""})
     assert "Укажите основание" in r.text
     assert env.deps.repo.ticket(CO, s.t1.key).status == "queue"  # type: ignore[union-attr]
     r = hr.post(
         f"/queue/{s.t1.key}/answer",
-        data={"text": "Можно.", "save_kb": "1", "basis": "ст. 124 ТК РФ", "question": "Перенос отпуска"},
+        data={
+            "text": "Можно.",
+            "save_kb": "1",
+            "basis": "ст. 124 ТК РФ",
+            "question": "Перенос отпуска",
+        },
     )
     assert "Сохранён в базу" in r.text
     assert any(e.basis == "ст. 124 ТК РФ" for e in env.deps.repo.kb_entries(CO))
@@ -208,7 +211,12 @@ def test_kb_edit_keeps_history_and_archive_has_undo_10s() -> None:
     hr = env.login(HR)
     r = hr.post(
         f"/kb/{s.kb_id}/edit",
-        data={"question": "Сколько отпуск", "answer": "31 день.", "basis": "п. 2.1", "audience": "all"},
+        data={
+            "question": "Сколько отпуск",
+            "answer": "31 день.",
+            "basis": "п. 2.1",
+            "audience": "all",
+        },
     )
     assert "Ответ обновлён" in r.text
     r = hr.get(f"/kb/{s.kb_id}/edit")

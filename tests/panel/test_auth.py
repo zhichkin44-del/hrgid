@@ -48,7 +48,9 @@ def test_wrong_code_counts_attempts_then_blocks_15_minutes(env: Env) -> None:
     r = c.post("/login/code", data={"code": env.mailer.last_code(HR)})
     assert "hrgid_sid" in c.cookies
     log = env.deps.auth.login_log(CO)
-    assert [x["result"] for x in log if x["result"] in ("blocked", "bad_code")].count("bad_code") == 4
+    assert [x["result"] for x in log if x["result"] in ("blocked", "bad_code")].count(
+        "bad_code"
+    ) == 4
 
 
 def test_code_expires_in_10_minutes(env: Env) -> None:

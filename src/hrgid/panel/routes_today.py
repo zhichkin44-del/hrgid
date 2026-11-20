@@ -8,7 +8,7 @@ from fastapi.responses import HTMLResponse, Response
 
 from hrgid.bot.models import Ticket
 from hrgid.panel.services import PanelError
-from hrgid.panel.web_base import WEEKDAYS, MONTHS, Ctx, Web, human_span
+from hrgid.panel.web_base import MONTHS, WEEKDAYS, Ctx, Web, human_span
 
 
 @dataclass(frozen=True)
