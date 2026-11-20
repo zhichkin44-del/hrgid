@@ -71,7 +71,7 @@
 {% endcall %}{% endif %}
 {% if win == "assign" and sel %}{% call m.dlg("П2.3", "Назначить коллеге", "/queue?k=" ~ sel.key) %}
 <form method="post" action="/queue/{{ sel.key }}/assign"><input type="hidden" name="text" value="{{ form.get('text', '') }}">
-<p class="lead" style="margin:-4px 0 12px">Вопрос {{ sel.label }}: {{ sel.text[:80] }}</p><div class="field"><span>Кому</span>{% for u in mates %}<label class="opt{% if form.get("to") == u.email %} on{% endif %}{% if u.away %} off{% endif %}" style="display:flex;gap:10px;align-items:center;margin:6px 0;cursor:pointer"><input type="radio" name="to" value="{{ u.email }}"{% if u.away %} disabled{% endif %}{% if form.get("to") == u.email %} checked{% endif %}><span><b>{{ u.name }}</b><small style="display:block;color:var(--mu)">{{ "в отпуске — назначить нельзя" if u.away else "на связи" }}</small></span></label>{% endfor %}{% if errors.to %}<div class="err">{{ errors.to }}</div>{% endif %}</div>
+<p class="lead" style="margin:-4px 0 12px">Вопрос {{ sel.label }}: {{ sel.text[:80] }}</p><div class="field"><span>Кому</span>{% for u in mates %}<label class="optr"><input type="radio" name="to" value="{{ u.email }}"{% if u.away %} disabled{% endif %}{% if form.get("to") == u.email %} checked{% endif %}><span><b>{{ u.name }}</b><small style="display:block;color:var(--mu)">{{ "в отпуске — назначить нельзя" if u.away else "на связи" }}</small></span></label>{% endfor %}{% if errors.to %}<div class="err">{{ errors.to }}</div>{% endif %}</div>
 {{ m.field("comment", "Комментарий (необязательно)", form, errors, rows=3, maxlength=500) }}
 <div class="ft"><a class="btn ghost" href="/queue?k={{ sel.key }}">Отмена</a><button class="btn pri" type="submit">Назначить</button></div></form>
 {% endcall %}{% endif %}

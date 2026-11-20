@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% import "_m.html" as m %}
 {% block main %}
-{{ m.head(title, "") }}
+{{ m.head(head_title|default(title), subtitle|default("")) }}
 {% if kind == "error" %}
 <div class="state bad"><div class="ic">!</div><h2>Не удалось загрузить раздел</h2><p>Связь с сервисом прервалась. Данные целы.</p><a class="btn" href="{{ retry }}">Повторить</a> <a class="btn ghost" href="/">Вернуться на «Сегодня»</a></div>
 {% elif kind == "noaccess" %}

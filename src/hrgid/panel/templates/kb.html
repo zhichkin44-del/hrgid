@@ -12,7 +12,7 @@
 {% else %}<div class="state"><div class="ic">○</div><h2>База ответов пока пуста</h2><p>Добавьте первый ответ или сохраните ответ из очереди — следующий такой вопрос бот отдаст из базы.</p><a class="btn pri" href="/kb/new">Добавить ответ</a></div>{% endif %}
 {% else %}
 <div class="tbl"><div class="tr h" style="--cols:2.6fr 1fr 1fr .6fr 1.5fr"><span>Вопрос</span><span>Автор</span><span>Дата</span><span>Раз</span><span>Состояние</span></div>
-{% for e in rows %}<div class="tr" style="--cols:2.6fr 1fr 1fr .6fr 1.5fr"><span><a class="rowlink" href="{% if e.archived %}/kb?tab=archive{% else %}/kb/{{ e.id }}/edit{% endif %}"><b style="font-weight:500">{{ e.question[:90] }}</b></a></span><span data-l="Автор">{{ e.author or "—" }}</span><span data-l="Дата" class="num">{{ fmt_date(e.created_at) }}</span><span data-l="Использован" class="num">{{ e.uses }}</span><span>{% if e.archived %}<span class="pill">В архиве</span> <form method="post" action="/kb/{{ e.id }}/restore" style="display:inline"><button class="btn sm ghost" type="submit">Вернуть</button></form>{% elif e.needs_review %}<span class="pill bad">Проверить</span> <span class="mu" style="font-size:13px">{{ e.basis }}</span>{% else %}<span class="pill w">Актуален</span> <span class="mu" style="font-size:13px">{{ e.basis }}</span> <a class="mu" style="font-size:13px" href="/kb/{{ e.id }}/archive">в архив</a>{% endif %}</span></div>{% endfor %}
+{% for e in rows %}<div class="tr" style="--cols:2.6fr 1fr 1fr .6fr 1.5fr"><span><a class="rowlink" href="{% if e.archived %}/kb?tab=archive{% else %}/kb/{{ e.id }}/edit{% endif %}"><b style="font-weight:500">{{ e.question[:90] }}</b></a></span><span data-l="Автор">{{ e.author or "—" }}</span><span data-l="Дата" class="num">{{ fmt_date(e.created_at) }}</span><span data-l="Использован" class="num">{{ e.uses }}</span><span>{% if e.archived %}<span class="pill">В архиве</span> <form method="post" action="/kb/{{ e.id }}/restore" style="display:inline"><button class="btn sm ghost" type="submit">Вернуть</button></form>{% elif e.needs_review %}<span class="pill bad">Проверить</span> <span class="mu" style="font-size:13px">{{ e.basis }}</span>{% else %}<span class="pill w">Актуален</span> <span class="mu" style="font-size:13px">{{ e.basis }}</span>{% endif %}</span></div>{% endfor %}
 </div>
 {% endif %}
 <p class="cap" style="margin-top:10px"><a href="/kb/affected">Затронутые ответы: изменился закон или правило</a></p>
@@ -33,7 +33,7 @@
 <div class="row2">{{ m.field("basis", "Основание", form, errors) }}
 <label class="field"><span>Кому показывать</span><select name="audience"><option value="all">всем сотрудникам</option>{% for g in groups %}<option value="{{ g }}"{% if form.get("audience") == g %} selected{% endif %}>{{ g }}</option>{% endfor %}</select></label></div>
 {% if entry.history %}<div class="cap">История изменений</div><div class="lst">{% for h in entry.history %}<div class="it"><span>{{ h }}</span></div>{% endfor %}</div>{% endif %}
-<div class="ft"><a class="btn ghost" href="/kb">Отмена</a><button class="btn pri" type="submit">Сохранить правку</button></div></form>
+<div class="ft"><a class="btn ghost" href="/kb/{{ entry.id }}/archive">В архив</a><a class="btn ghost" href="/kb">Отмена</a><button class="btn pri" type="submit">Сохранить правку</button></div></form>
 {% endcall %}{% endif %}
 {% if win == "archive" and entry %}{% call m.dlg("П3.3", "Отправить ответ в архив?", "/kb", lead="Бот перестанет отвечать из этого ответа. Его можно вернуть из архива.") %}
 <div class="qt">{{ entry.question }}</div>

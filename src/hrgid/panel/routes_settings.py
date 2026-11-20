@@ -136,7 +136,7 @@ def register(app: FastAPI, w: Web) -> None:
     def _admin_only(c: Ctx) -> Response | None:
         if c.role != "admin":
             return w.page(
-                c, "state.html", "settings", 403, kind="noaccess", title="Настройки — только для администратора",
+                c, "state.html", "settings", 403, kind="noaccess", title="Только для администратора", head_title="Настройки", subtitle=f"Для всей компании «{c.settings.company_name}»",
                 text="Этот раздел только для администратора компании. Попросите его изменить нужное.",
                 ask_link="/costs/ask", section_title="Настройки",
             )  # fmt: skip
