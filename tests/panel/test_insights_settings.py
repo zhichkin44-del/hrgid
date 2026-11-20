@@ -28,7 +28,7 @@ def test_analytics_topics_growth_share_and_confidential_excluded() -> None:
     r = env.login(HR).get("/analytics")
     assert "Отпуск" in r.text and "Зарплата и выплаты" in r.text
     assert "притесняет" not in r.text  # конфиденциальное не попадает
-    assert "Частые вопросы без ответа в базе" in r.text and "Добавить в базу" in r.text
+    assert "Частые вопросы без ответа" in r.text and "Добавить в базу" in r.text
     topics = {t.topic: t for t in d.analytics.topics(CO, env.clock.now)}
     assert topics["Отпуск"].total >= 3 and topics["Отпуск"].up == 1
     assert topics["Зарплата и выплаты"].without_hr == 1  # no_answer не считается «без HR»
@@ -57,7 +57,7 @@ def test_costs_hr_sees_only_spend_and_limit() -> None:
     seed(env)
     r = env.login(HR).get("/costs")
     assert "Расход за месяц" in r.text
-    assert "Технические показатели скрыты" in r.text and "Скорость, p95" not in r.text
+    assert "Технические показатели" in r.text and "Медленные 5" not in r.text
     assert "Разбор запросов" not in r.text and "Сбои провайдера" not in r.text
     assert "Доступно администратору" in r.text
 
@@ -66,9 +66,9 @@ def test_costs_admin_sees_perf_traces_without_pd() -> None:
     env = make_env()
     seed(env)
     r = env.login(ADMIN).get("/costs")
-    assert "Скорость, p95" in r.text and "Разбор запросов" in r.text
+    assert "Медленные 5" in r.text and "Разбор запросов" in r.text
     assert "[ФИО_1]" in r.text  # метки вместо имён
-    assert "Качество по версиям" in r.text
+    assert "Качество ответов по версиям" in r.text
 
 
 def test_limit_change_validation_and_effects() -> None:

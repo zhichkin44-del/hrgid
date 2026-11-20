@@ -92,7 +92,7 @@ def check_page(
     cur = next((i for i in (rep.items if rep else []) if i.number == item), None)
     return w.page(
         c, "check.html", "check", status, docs=docs, doc_id=doc_id, vs=vs, ver=ver, number=number,
-        rep=rep, show_all=show_all, win=win, item=item, cur=cur, form=form or {},
+        rep=rep, show_all=show_all, shown_items=[i for n, i in enumerate(rep.items if rep else []) if show_all or i.verdict in ("risk", "unclear") or n < 8], win=win, item=item, cur=cur, form=form or {},
         errors=errors or {}, active=act.number if act else None, today=c.today,
         section_title="Проверка на ТК", has_checker=d.checker is not None,
         can_accept=c.role == "admin",

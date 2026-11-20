@@ -389,7 +389,7 @@ def register(app: FastAPI, w: Web) -> None:
     @app.get("/announcements/new", response_class=HTMLResponse)
     def ann_new(c: Annotated[Ctx, Depends(w.ctx)]) -> Response:
         draft = d.store.get("pdraft", c.company, c.user.email) or {}
-        return ann_page(w, c, win="new", form={k: str(v) for k, v in draft.items()})
+        return ann_page(w, c, win="", form={k: str(v) for k, v in draft.items()})
 
     def _ann_form(title: str, text: str, groups: list[str], asks: str) -> dict[str, str]:
         return {"title": title, "text": text, "groups": "|".join(groups), "asks": asks}
@@ -423,7 +423,7 @@ def register(app: FastAPI, w: Web) -> None:
         n = len(recipients(w, c, groups))
         err = _ann_check(title, text, n)
         if err:
-            return ann_page(w, c, win="new", form=form, errors=err)
+            return ann_page(w, c, win="", form=form, errors=err)
         return ann_page(w, c, win="confirm", form=form, extra={"n": n})
 
     @app.post("/announcements/send", response_class=HTMLResponse)
@@ -438,7 +438,7 @@ def register(app: FastAPI, w: Web) -> None:
             return ann_page(
                 w,
                 c,
-                win="new",
+                win="",
                 form=_ann_form(title, text, groups, str(raw.get("asks", ""))),
                 errors=err,
             )

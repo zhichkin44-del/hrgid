@@ -272,7 +272,7 @@ def test_scenario_4_law_change_marks_answers() -> None:
     r = hr.post("/kb/law-change", data={"article": "115"})
     assert "Помечено «проверить»: 1" in r.text
     page = hr.get("/kb").text
-    assert "1 ответ(ов) нужно проверить" in page and "Сколько дней отпуска" in page
+    assert "1 ответ(ов) нужно пересмотреть" in page and "Сколько дней отпуска" in page
     marked = {e.question for e in d.kbadmin.needs_review(CO)}
     assert marked == {"Сколько дней отпуска"}  # ст. 153 не тронута
     # затронутый ответ пересматривается и помета снимается

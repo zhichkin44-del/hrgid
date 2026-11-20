@@ -1,22 +1,24 @@
 {% extends "base.html" %}
 {% import "_m.html" as m %}
 {% block main %}
-{{ m.head("Настройки", "Только для администратора компании") }}
+{{ m.head("Настройки", "Для всей компании «" ~ company_name ~ "»") }}
 {% if requests %}<div class="notice"><span><b>Запросы от HR</b> <span class="mu">{% for r in requests %}{{ r.from }}: «{{ r.text }}»{% if not loop.last %}; {% endif %}{% endfor %}</span></span><a href="/costs/limit">Изменить лимит →</a></div>{% endif %}
-<form method="post" action="/settings" class="card pnl" hx-boost="false">
-<h2>Работа HR</h2>
+<form method="post" action="/settings" id="settingsform" hx-boost="false">
+<div class="bar-act" style="justify-content:flex-end;margin:-8px 0 12px"><button class="btn pri" type="submit">Сохранить</button></div>
+<div class="grid2 e"><div class="card pnl"><h2>Работа HR</h2>
 <div class="row3">{{ m.field("hours_start", "HR на связи с", form, errors, placeholder="10:00") }}{{ m.field("hours_end", "до", form, errors, placeholder="19:00") }}{{ m.field("utc_offset", "Часовой пояс, часов от UTC", form, errors) }}</div>
-<div class="row2">{{ m.field("sla_hours", "Срок ответа HR, рабочих часов", form, errors) }}{{ m.field("urgent_contact", "Срочный контакт вне часов", form, errors, placeholder="Анна, HR: +7 900 000-00-00") }}</div>
-{{ m.field("greeting", "Приветствие бота", form, errors, rows=3) }}
-{{ m.field("escalation", "Эскалация, если HR не ответил в срок", form, errors, rows=2) }}
-{{ m.field("retention_days", "Срок хранения переписки, дней", form, errors, hint="По умолчанию 365 дней") }}
-<div class="ft"><button class="btn pri" type="submit">Сохранить</button></div></form>
-<div class="grid2" style="margin-top:14px">
-<div class="card pnl"><h2>Нейросеть-помощник</h2><p style="margin-bottom:10px">Сейчас: <b>{{ providers[tech.provider] }}</b></p><a class="btn" href="/settings/model">Изменить модель</a></div>
-<div class="card pnl"><h2>Бюджет</h2><p style="margin-bottom:10px">Лимит {{ rub(tech.budget_rub) }} в месяц</p><a class="btn" href="/costs/limit">Изменить лимит</a></div></div>
-<div class="grid2" style="margin-top:14px">
-<div class="card pnl"><h2>Данные компании</h2><p style="margin-bottom:10px">Профили, переписка и обращения (кроме конфиденциальных), база ответов, версии документов, журнал.</p><a class="btn" href="/settings/export">Выгрузить данные</a></div>
-<div class="card pnl"><h2>Удаление данных компании</h2><p style="margin-bottom:10px">Безвозвратно. Сначала выгрузите данные.</p><a class="btn danger" href="/settings/delete">Удалить данные компании</a></div></div>
+<div class="row2">{{ m.field("sla_hours", "Срок ответа сотруднику, рабочих часов", form, errors) }}{{ m.field("urgent_contact", "Срочный контакт вне часов", form, errors, placeholder="Анна, HR: +7 900 000-00-00") }}</div>
+{{ m.field("escalation", "Если ответ просрочен — сообщить", form, errors, rows=2) }}
+{{ m.field("greeting", "Приветствие бота", form, errors, rows=3) }}</div>
+<div class="card pnl"><h2>Данные сотрудников</h2>
+{{ m.field("retention_days", "Срок хранения переписки, дней", form, errors, hint="По умолчанию 365 дней — 1 год") }}
+<p class="mu" style="font-size:14px;margin-bottom:12px">Выгрузить данные компании или удалить их целиком. Данные одного сотрудника HR удаляет в его профиле («Сотрудники»).</p>
+<div class="bar-act"><a class="btn ghost" href="/settings/export">Выгрузить данные</a><a class="btn danger" href="/settings/delete">Удалить данные компании…</a></div>
+<p class="cap" style="margin-top:8px">Удаление данных компании подтверждается двумя шагами и вводом названия; отменить его нельзя.</p></div></div></form>
+<div class="card pnl" style="margin-top:14px"><h2>Только для администратора <span class="pill">{{ user.name }}</span></h2>
+<div class="row3"><div class="field"><span>Нейросеть-помощник</span><div class="inp">{{ providers[tech.provider] }}{% if tech.provider != "claude" %} (Россия){% endif %}</div><a class="cap" href="/settings/model">Изменить модель</a></div><div class="field"><span>Бюджет на месяц</span><div class="inp num">{{ rub(tech.budget_rub) }}</div><a class="cap" href="/costs/limit">Изменить лимит</a></div><div class="field"><span>Если бюджет закончился</span><div class="inp">{{ "Отвечать из базы, остальное — в очередь HR" if tech.over_action == "queue" else "Отвечать из базы, на остальное — вежливый отказ" }}</div></div></div>
+<p class="cap">Сумму можно менять и в разделе «Расходы и качество». Другие варианты: YandexGPT, Claude. При выборе Claude данные уходят за границу в обезличенном виде — перед включением покажем предупреждение.</p></div>
+
 {% endblock %}
 {% block windows %}
 {% if win == "model" %}{% call m.dlg("П9.5", "Нейросеть-помощник", "/settings", lead="Российские модели — по умолчанию: данные остаются в России.") %}

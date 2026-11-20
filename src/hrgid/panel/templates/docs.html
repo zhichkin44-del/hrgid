@@ -1,21 +1,24 @@
 {% extends "base.html" %}
 {% import "_m.html" as m %}
 {% block main %}
-{{ m.head("Документы", "Версии правил компании: без приказа и даты начала версия не применяется", "/docs?w=upload", "Загрузить документ") }}
+{{ m.head("Документы", "Правила компании, по которым отвечает помощник. Без приказа и даты версия не применяется", "/docs?w=upload", "Загрузить документ") }}
+{% if not can_order and rows %}<p class="cap" style="margin-bottom:10px">Приказ, откат и удаление версий — доступно администратору.</p>{% endif %}
 {% if not rows %}
 <div class="state"><div class="ic">○</div><h2>Документов пока нет</h2><p>Загрузите правила компании (PDF или DOCX): по ним будет отвечать помощник и проверяться соответствие ТК.</p><a class="btn pri" href="/docs?w=upload">Загрузить документ</a></div>
 {% endif %}
-{% for r in rows %}
-<div class="card pnl" style="margin-bottom:14px"><h2>{{ r.title }}{% if r.versions|length > 1 %}<a href="/docs/{{ r.doc_id }}/compare">Сравнить версии →</a>{% endif %}</h2>
-<div class="tbl"><div class="tr h" style="--cols:.6fr 1.2fr 1.6fr 1fr 2.4fr"><span>Версия</span><span>Загружена</span><span>Приказ</span><span>Статус</span><span></span></div>
-{% for v in r.versions|reverse %}<div class="tr" style="--cols:.6fr 1.2fr 1.6fr 1fr 2.4fr">
-<span class="num"><b style="font-weight:500">{{ v.number }}</b></span>
-<span data-l="Загружена">{{ v.created_at[:10] }}<small>{{ v.author }}</small></span>
-<span data-l="Приказ">{% if v.order_no %}№ {{ v.order_no }} от {{ fmt_date(v.order_date) }}<small>действует с {{ fmt_date(v.effective_from) }}</small>{% else %}<span class="mu">не указан</span>{% endif %}</span>
-<span>{% if r.active == v.number %}<span class="pill w">действует</span>{% elif not v.order_no %}<span class="pill">проект</span>{% elif v.effective_from and v.effective_from > today %}<span class="pill">с {{ fmt_date(v.effective_from) }}</span>{% else %}<span class="pill">заменена</span>{% endif %}{% if r.report_risks.get(v.number) %} <span class="pill bad">рисков: {{ r.report_risks[v.number] }}</span>{% endif %}</span>
-<span><a class="btn sm ghost" href="/docs/{{ r.doc_id }}/{{ v.number }}">Открыть</a> <a class="btn sm ghost" href="/check?doc={{ r.doc_id }}&v={{ v.number }}">Проверка на ТК</a>
-{% if can_order %}<a class="btn sm ghost" href="/docs/{{ r.doc_id }}/{{ v.number }}/order">Указать приказ</a> {% if v.applicable(today) and r.active != v.number %}<a class="btn sm ghost" href="/docs/{{ r.doc_id }}/rollback?to={{ v.number }}">Откатить</a> {% endif %}<a class="btn sm ghost" href="/docs/{{ r.doc_id }}/{{ v.number }}/delete">Удалить</a>{% else %}<span class="cap">Приказ, откат и удаление — доступно администратору</span>{% endif %}</span></div>{% endfor %}
-</div></div>
+{% for r in rows %}{% set last = r.versions[-1] if r.versions else none %}{% set multi = r.versions|length > 1 or (last and not last.order_no) %}
+<div class="card pnl" style="margin-bottom:12px"><h2>{{ r.title }} {% if r.active %}<span class="pill w">действует версия {{ r.active }}</span>{% else %}<span class="pill bad">нет действующей версии</span>{% endif %}</h2>
+{% if not multi and last %}<div class="mu" style="font-size:14px">Приказ № {{ last.order_no }} от {{ fmt_date(last.order_date) }} · действует с {{ fmt_date(last.effective_from) }} · загружена {{ last.created_at[:10] }}</div>{% endif %}</div>
+{% if multi %}
+<div class="tbl" style="margin-bottom:22px"><div class="tr h" style="--cols:.5fr 1.6fr 1.5fr 1.1fr 1.4fr"><span>Версия</span><span>Состояние</span><span>Приказ</span><span>Действует с</span><span></span></div>
+{% for v in r.versions|reverse %}{% set prev = r.versions[loop.revindex0 - 1] if loop.revindex0 > 0 else none %}<div class="tr" style="--cols:.5fr 1.6fr 1.5fr 1.1fr 1.4fr"><span class="num" data-l="Версия">{{ v.number }}</span>
+<span>{% if r.active == v.number %}<span class="pill w">Применяется ботом</span><small>загружена {{ v.created_at[:10] }}</small>{% elif not v.order_no %}<span class="pill bad">Не применяется</span><small>загружена {{ v.created_at[:10] }} · проект</small>{% elif v.effective_from and v.effective_from > today %}<span class="pill">Ждёт даты</span><small>с {{ fmt_date(v.effective_from) }}</small>{% else %}<span class="pill">В архиве</span><small>загружена {{ v.created_at[:10] }}</small>{% endif %}{% if r.report_risks.get(v.number) %} <span class="pill bad">рисков: {{ r.report_risks[v.number] }}</span>{% endif %}</span>
+<span data-l="Приказ">{% if v.order_no %}№ {{ v.order_no }} от {{ fmt_date(v.order_date) }}{% else %}<span class="bad">не указан</span>{% endif %}</span><span data-l="Действует с" class="num">{{ fmt_date(v.effective_from) or "—" }}</span>
+<span style="display:flex;gap:6px;flex-wrap:wrap"><a class="btn sm ghost" href="/docs/{{ r.doc_id }}/{{ v.number }}">Открыть</a>{% if prev %}<a class="btn sm ghost" href="/docs/{{ r.doc_id }}/compare?a={{ prev.number }}&b={{ v.number }}">Сравнить с {{ prev.number }}</a>{% endif %}<a class="btn sm ghost" href="/check?doc={{ r.doc_id }}&v={{ v.number }}">Проверка на ТК</a>
+{% if can_order %}{% if not v.order_no %}<a class="btn sm" href="/docs/{{ r.doc_id }}/{{ v.number }}/order">Указать приказ</a>{% endif %}{% if v.applicable(today) and r.active != v.number %}<a class="btn sm ghost" href="/docs/{{ r.doc_id }}/rollback?to={{ v.number }}">Откатить</a>{% endif %}{% if r.active != v.number %}<a class="btn sm danger" href="/docs/{{ r.doc_id }}/{{ v.number }}/delete">Удалить</a>{% endif %}{% else %}<span class="cap">Приказ, откат и удаление — доступно администратору</span>{% endif %}</span></div>{% endfor %}</div>
+{% if last and not last.order_no %}<div class="card pnl" style="margin-bottom:22px"><h2>Версия {{ last.number }} станет рабочей после приказа</h2>
+{% if can_order %}<form method="post" action="/docs/{{ r.doc_id }}/{{ last.number }}/order"><div class="row3"><label class="field" style="margin:0"><span>Приказ №</span><input name="order_no" placeholder="в приказе, цифрой: 14"></label><label class="field" style="margin:0"><span>от</span><input name="order_date" placeholder="дд.мм.гггг"></label><label class="field" style="margin:0"><span>Действует с</span><input name="effective_from" placeholder="дд.мм.гггг"></label></div><div style="margin-top:12px"><button class="btn sm" type="submit">Сохранить приказ</button></div></form>{% else %}<p class="mu" style="font-size:14px">Приказ и дату начала указывает администратор. <span class="cap">Доступно администратору</span></p>{% endif %}</div>{% endif %}
+{% endif %}
 {% endfor %}
 {% endblock %}
 {% block windows %}

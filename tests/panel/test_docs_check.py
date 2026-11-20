@@ -139,7 +139,7 @@ def test_check_empty_and_unchecked() -> None:
     r = hr.get("/check")
     assert "ещё не проверена" in r.text
     r = hr.post(f"/check/{s.doc_id}/1/run")
-    assert "Проверка готова" in r.text and "риск нарушения" in r.text
+    assert "Проверка готова" in r.text and "Риск нарушения" in r.text
 
 
 def test_check_finds_planted_violations_and_suggests_fix() -> None:

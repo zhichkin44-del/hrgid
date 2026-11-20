@@ -1,11 +1,19 @@
 {% extends "base.html" %}
 {% import "_m.html" as m %}
-{% block head %}<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" defer></script>{% endblock %}
+{% block head %}<script src="/static/vendor/chart.umd.min.js" defer></script>{% endblock %}
 {% block main %}
-{{ m.head("Аналитика", "О чём спрашивают сотрудники. Конфиденциальные обращения сюда не попадают.") }}
+{% set top = topics[0] if topics else none %}
+{{ m.head("Аналитика", "Что спрашивают сотрудники · 6 недель", ("/analytics/topic?name=" ~ top.topic|urlencode) if top else "", ("Открыть тему «" ~ top.topic ~ "»") if top else "") }}
 {% if not has %}
 <div class="state"><div class="ic">○</div><h2>Данных пока нет</h2><p>Аналитика появится, когда сотрудники начнут задавать вопросы боту.</p><a class="btn pri" href="/staff">Пригласить сотрудников</a></div>
 {% else %}
+{% set wk = topics|sum(attribute="this_week") %}{% set tot = topics|sum(attribute="total") %}{% set nohr = topics|sum(attribute="without_hr") %}
+<div class="kpis" style="grid-template-columns:repeat(4,1fr)"><div class="card kpi"><label>Вопросов за неделю</label><div class="v num">{{ wk }}</div><div class="s">текущая неделя</div></div>
+<div class="card kpi"><label>Ответили без HR</label><div class="v num">{{ (100 * nohr / tot)|round|int if tot else 0 }}<small> %</small></div><div class="s">{{ nohr }} из {{ tot }}</div></div>
+<div class="card kpi"><label>Оценки 👍 / 👎</label><div class="v num">{{ topics|sum(attribute="up") }} / {{ topics|sum(attribute="down") }}</div><div class="s">всего</div></div>
+<div class="card kpi"><label>Без ответа в базе</label><div class="v num">{{ unanswered|length }}</div><div class="s">повторяются</div></div></div>
+<div class="tbl" style="margin-bottom:14px"><div class="tr h" style="--cols:1.4fr 1.2fr .6fr .8fr .8fr 1fr"><span>Тема</span><span>6 недель</span><span>Неделя</span><span>Рост</span><span>Без HR</span><span>👍 / 👎</span></div>
+{% for t in topics %}<div class="tr" style="--cols:1.4fr 1.2fr .6fr .8fr .8fr 1fr"><span><a class="rowlink" href="/analytics/topic?name={{ t.topic|urlencode }}"><b style="font-weight:500">{{ t.topic }}</b></a></span><span class="bars">{% for h in t.bars %}<i style="height:{{ h }}px"></i>{% endfor %}</span><span class="num" data-l="За неделю">{{ t.this_week }}</span><span class="num" data-l="Рост">{{ "+" if t.growth_pct > 0 }}{{ t.growth_pct }} %</span><span class="num" data-l="Без HR">{{ t.share_without_hr }} %</span><span class="num" data-l="👍 / 👎">{{ t.up }} / {{ t.down }}</span></div>{% endfor %}</div>
 <div class="card pnl" style="margin-bottom:14px"><h2>Вопросы по неделям</h2><div class="chartbox"><canvas id="weekly" aria-label="Вопросы по неделям"></canvas></div></div>
 <script id="weekly-data" type="application/json">{{ weekly|tojson }}</script>
 <script>
@@ -16,11 +24,10 @@ document.addEventListener("DOMContentLoaded", function () {
     options: {maintainAspectRatio: false, plugins: {legend: {display: false}}, scales: {y: {beginAtZero: true, ticks: {precision: 0, color: "#8a8a8a"}, grid: {color: "#1f1f1f"}}, x: {ticks: {color: "#8a8a8a"}, grid: {display: false}}}}});
 });
 </script>
-<div class="tbl"><div class="tr h" style="--cols:1.8fr .7fr .8fr 1fr .8fr .8fr 1fr"><span>Тема</span><span>Всего</span><span>На неделе</span><span>Рост к прошлой</span><span>Без HR</span><span>👍 / 👎</span><span></span></div>
-{% for t in topics %}<div class="tr" style="--cols:1.8fr .7fr .8fr 1fr .8fr .8fr 1fr"><span><b style="font-weight:500">{{ t.topic }}</b></span><span class="num" data-l="Всего">{{ t.total }}</span><span class="num" data-l="На неделе">{{ t.this_week }}</span><span class="num" data-l="Рост">{{ "+" if t.growth > 0 }}{{ t.growth }}</span><span class="num" data-l="Без HR">{{ t.share_without_hr }}%</span><span class="num" data-l="Оценки">{{ t.up }} / {{ t.down }}</span><span><a class="btn sm ghost" href="/analytics/topic?name={{ t.topic|urlencode }}">Открыть тему</a></span></div>{% endfor %}</div>
-<div class="card pnl" style="margin-top:14px"><h2>Частые вопросы без ответа в базе</h2><div class="lst">
-{% for key, text, n in unanswered %}<div class="it"><span>{{ text[:90] }}<small>спросили {{ n }} раз</small></span><a class="btn sm" href="/kb/new?from={{ key }}">Добавить в базу</a></div>{% else %}<div class="it"><span>Все частые вопросы уже есть в базе</span></div>{% endfor %}</div></div>
+<div class="card pnl"><h2>Частые вопросы без ответа</h2><div class="lst">
+{% for key, text, n in unanswered %}<div class="it"><span>{{ text[:90] }}<small>{{ n }} раз</small></span><span class="r"><a class="btn sm" href="/kb/new?from={{ key }}">Добавить в базу</a></span></div>{% else %}<div class="it"><span>Все частые вопросы уже есть в базе</span></div>{% endfor %}</div></div>
 {% endif %}
+
 {% endblock %}
 {% block windows %}
 {% if win == "topic" %}{% call m.dlg("П7.1", "Тема «" ~ detail.topic ~ "»", "/analytics", lead="Вопросов: " ~ detail.count ~ ". Тексты без личных данных.") %}

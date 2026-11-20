@@ -255,7 +255,7 @@ def test_law_change_marks_affected_and_review_flow() -> None:
     r = hr.post("/kb/law-change", data={"article": "115"})
     assert "Помечено «проверить»: 1" in r.text
     assert env.deps.kbadmin.needs_review(CO)[0].id == s.kb_id
-    assert "нужно проверить" in hr.get("/kb").text
+    assert "нужно пересмотреть" in hr.get("/kb").text
     r = hr.get("/kb/review")
     assert "Пересмотр ответа 1 из 1" in r.text
     r = hr.post(f"/kb/review/{s.kb_id}", data={"decision": "keep"})

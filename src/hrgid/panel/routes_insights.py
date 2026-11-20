@@ -7,7 +7,7 @@ from fastapi.responses import HTMLResponse, Response
 
 from hrgid.panel.ops import MIN_LIMIT, OVER_ACTIONS, percentile
 from hrgid.panel.services import K_REQ
-from hrgid.panel.web_base import Ctx, Web
+from hrgid.panel.web_base import MONTHS_NOM, Ctx, Web
 
 
 def analytics_page(w: Web, c: Ctx, *, win: str = "", topic: str = "") -> HTMLResponse:
@@ -54,6 +54,7 @@ def costs_page(
         recent=recent, quality=d.quality() if admin else [], win=win, form=form or {},
         errors=errors or {}, over_actions=OVER_ACTIONS, admin=admin, has=bool(qs),
         section_title="Расходы и качество",
+        month_name=f"{MONTHS_NOM[c.local(c.now).month - 1]} {c.local(c.now).year}",
     )  # fmt: skip
 
 

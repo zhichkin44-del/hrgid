@@ -1,25 +1,31 @@
 {% extends "base.html" %}
 {% import "_m.html" as m %}
 {% block main %}
-{{ m.head("Расходы и качество", "Сколько стоит помощник в этом месяце", "/costs/limit" if admin else "/costs/ask", "Изменить лимит" if admin else "Попросить изменить лимит") }}
+{% set none_yet = not has %}
+{{ m.head("Расходы и качество", (month_name ~ " · данные появятся после первой недели работы") if none_yet else month_name, "/costs/limit" if admin else "/costs/ask", "Изменить лимит" if admin else "Попросить изменить лимит") }}
 {% if b.exhausted %}<div class="notice bad"><span><b>Бюджет месяца исчерпан.</b> <span class="mu">{{ over_actions[b.action] }}.</span></span></div>{% endif %}
-<div class="kpis">
-<div class="card kpi"><label>Расход за месяц</label><div class="v num">{{ rub(b.spent) }}</div><div class="s">{{ b.pct }}% лимита</div></div>
-<div class="card kpi"><label>Лимит</label><div class="v num">{{ rub(b.limit) }}</div><div class="s">при превышении: {{ "очередь HR" if b.action == "queue" else "отказ с контактом" }}</div></div>
-<div class="card kpi"><label>Модель</label><div class="v" style="font-size:20px">{{ {"gigachat": "GigaChat", "yandex": "YandexGPT", "claude": "Claude"}[tech.provider] }}</div><div class="s">меняет администратор</div></div>
-</div>
-<div class="card pnl" style="margin-bottom:14px"><h2>Расход</h2><div class="meter" role="progressbar" aria-valuenow="{{ b.pct }}" aria-valuemin="0" aria-valuemax="100"><i style="width:{{ b.pct }}%"></i></div></div>
+<div class="kpis" style="grid-template-columns:repeat(3,1fr)">
+<div class="card kpi"><label>Расход за месяц</label>{% if b.spent %}<div class="v num">{{ "{:,.0f}".format(b.spent).replace(",", " ") }}<small> ₽</small></div><div class="s">{{ b.pct }} % лимита</div>{% else %}<div class="v"><span class="dash">—</span><small> ₽</small></div><div class="s">Данные появятся после первой недели работы</div>{% endif %}</div>
+<div class="card kpi"><label>Лимит на месяц</label><div class="v num">{{ "{:,.0f}".format(b.limit).replace(",", " ") }}<small> ₽</small></div><div class="s">при превышении — {{ "очередь HR" if b.action == "queue" else "вежливый отказ с контактом HR" }}</div></div>
+<div class="card kpi"><label>Стоимость одного ответа</label>{% if perf.n and b.spent %}<div class="v num">{{ "%.2f"|format(b.spent / perf.n) }}<small> ₽</small></div><div class="s">по {{ perf.n }} вопросам</div>{% else %}<div class="v"><span class="dash">—</span><small> ₽</small></div><div class="s">Данные появятся после первой недели работы</div>{% endif %}</div></div>
+<div class="meter" role="progressbar" aria-valuenow="{{ b.pct }}" aria-valuemin="0" aria-valuemax="100" style="margin-bottom:12px"><i style="width:{{ b.pct }}%"></i></div>
 {% if not admin %}
-<div class="state"><div class="ic">○</div><h2>Технические показатели скрыты</h2><p>Скорость, сбои и разбор запросов видит администратор. Лимит изменяет только он — вы можете попросить.</p><a class="btn pri" href="/costs/ask">Попросить администратора</a><p class="cap" style="margin-top:8px">Доступно администратору</p></div>
-{% elif not has %}
-<div class="state"><div class="ic">○</div><h2>Данных пока нет</h2><p>Скорость, сбои и разбор запросов появятся после первых ответов помощника.</p></div>
+<div class="card pnl" style="margin-bottom:12px"><h2>Технические показатели <span class="pill">Доступно администратору</span></h2><p class="mu" style="font-size:14px;margin-bottom:10px">Скорость, сбои и разбор запросов видит администратор. Лимит изменяет только он — вы можете попросить.</p><a class="btn pri" href="/costs/ask">Попросить администратора</a></div>
 {% else %}
-<div class="kpis"><div class="card kpi"><label>Вопросов</label><div class="v num">{{ perf.n }}</div><div class="s">из кэша: {{ perf.cache }}</div></div><div class="card kpi"><label>Скорость, p50</label><div class="v num">{{ perf.p50 }} мс</div></div><div class="card kpi"><label>Скорость, p95</label><div class="v num">{{ perf.p95 }} мс</div></div><div class="card kpi{% if perf.errors %} bad{% endif %}"><label>Сбои провайдера</label><div class="v num">{{ perf.errors }}</div></div></div>
-<div class="card pnl" style="margin-bottom:14px"><h2>Качество по версиям набора вопросов</h2><div class="lst">{% for q in quality %}<div class="it"><span>{{ q.version }}<small>{{ q.date }}</small></span><span class="r">{{ q.result }}</span></div>{% else %}<div class="it"><span>Данных нет до первого прогона набора</span></div>{% endfor %}</div></div>
-<div class="card pnl"><h2>Разбор запросов</h2><p class="cap">Запросы без личных данных: вместо имён и номеров — метки.</p><div class="tbl">
+<div class="card pnl" style="margin-bottom:12px"><h2>Для администратора <span class="pill">только администратор</span></h2>
+<div class="kpis" style="grid-template-columns:repeat(4,1fr);margin:0">
+<div class="kpi" style="padding:0"><label>Обычный ответ, секунд</label>{% if has %}<div class="v num">{{ "%.1f"|format(perf.p50 / 1000) }}</div>{% else %}<div class="v"><span class="dash">—</span></div><div class="s">Данные появятся после первой недели работы</div>{% endif %}</div>
+<div class="kpi" style="padding:0"><label>Медленные 5 % ответов, секунд</label>{% if has %}<div class="v num">{{ "%.1f"|format(perf.p95 / 1000) }}</div>{% else %}<div class="v"><span class="dash">—</span></div><div class="s">Данные появятся после первой недели работы</div>{% endif %}</div>
+<div class="kpi" style="padding:0"><label>Сбои сервиса, %</label>{% if has %}<div class="v num">{{ (100 * perf.errors / perf.n)|round(1) }}</div>{% else %}<div class="v"><span class="dash">—</span></div><div class="s">Данные появятся после первой недели работы</div>{% endif %}</div>
+<div class="kpi" style="padding:0"><label>Разбор запросов</label><div class="s">без личных данных</div><div class="s"><a href="#trace" style="color:var(--tx)">Открыть разбор →</a></div></div></div></div>
+<div class="card pnl" style="margin-bottom:12px"><h2>Качество ответов по версиям проверочного набора</h2><div class="tbl" style="border:0;background:none"><div class="tr h" style="--cols:1.4fr 1fr 1fr 1fr 1fr;padding-left:0"><span>Версия проверок</span><span>Нужная статья найдена</span><span>Правильная статья в ответе</span><span>Верные отказы</span><span>Расчёт до рубля</span></div>
+{% for q in quality %}<div class="tr" style="--cols:1.4fr 1fr 1fr 1fr 1fr;padding-left:0"><span>{{ q.version }}<small>{{ q.date }}</small></span><span data-l="Статья найдена">{{ q.get("found", "—") }}</span><span data-l="Статья в ответе">{{ q.get("cited", "—") }}</span><span data-l="Отказы">{{ q.get("refusals", "—") }}</span><span data-l="Расчёт">{{ q.get("calc", "—") }}</span></div>
+{% else %}<div class="tr" style="--cols:1.4fr 1fr 1fr 1fr 1fr;padding-left:0"><span>Версия 1</span><span data-l="Статья найдена"><span class="dash">—</span></span><span data-l="Статья в ответе"><span class="dash">—</span></span><span data-l="Отказы"><span class="dash">—</span></span><span data-l="Расчёт"><span class="dash">—</span></span></div>{% endfor %}</div><p class="cap">Нагрузочная проверка: 100 одновременных пользователей; дата проверки указывается в строке версии.</p></div>
+{% if has %}<div class="card pnl" id="trace"><h2>Разбор запросов</h2><p class="cap">Запросы без личных данных: вместо имён и номеров — метки.</p><div class="tbl">
 <div class="tr h" style="--cols:1fr 3fr .8fr .8fr"><span>Когда</span><span>Запрос</span><span>Время</span><span>Стоимость</span></div>
-{% for q in recent %}<div class="tr" style="--cols:1fr 3fr .8fr .8fr"><span class="num">{{ q.at[:16].replace("T", " ") }}</span><span>{{ q.masked_question[:120] }}<small>{{ q.route }} · {{ q.status }}</small></span><span class="num">{{ q.latency_ms }} мс</span><span class="num">{{ "%.2f"|format(q.cost_rub) }} ₽</span></div>{% endfor %}</div></div>
+{% for q in recent %}<div class="tr" style="--cols:1fr 3fr .8fr .8fr"><span class="num">{{ q.at[:16].replace("T", " ") }}</span><span>{{ q.masked_question[:120] }}<small>{{ q.route }} · {{ q.status }}</small></span><span class="num">{{ q.latency_ms }} мс</span><span class="num">{{ "%.2f"|format(q.cost_rub) }} ₽</span></div>{% endfor %}</div></div>{% endif %}
 {% endif %}
+
 {% endblock %}
 {% block windows %}
 {% if win == "limit" %}{% call m.dlg("П8.1", "Изменить лимит", "/costs") %}

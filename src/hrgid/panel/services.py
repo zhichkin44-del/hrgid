@@ -601,10 +601,22 @@ class TopicRow:
     without_hr: int
     up: int
     down: int
+    weeks: tuple[int, ...] = ()  # 6 недель, от старой к новой (мини-график)
 
     @property
     def growth(self) -> int:
         return self.this_week - self.prev_week
+
+    @property
+    def growth_pct(self) -> int:
+        return (
+            round(100 * (self.this_week - self.prev_week) / self.prev_week) if self.prev_week else 0
+        )
+
+    @property
+    def bars(self) -> list[int]:
+        top = max(self.weeks) if self.weeks else 0
+        return [max(4, round(30 * w / top)) if top else 4 for w in self.weeks]
 
     @property
     def share_without_hr(self) -> int:
@@ -639,14 +651,21 @@ class Analytics:
             v = votes.setdefault(topic_of(t.text), [0, 0])
             v[0 if t.rating == "up" else 1] += 1
         acc: dict[str, list[int]] = {}
+        wk: dict[str, list[int]] = {}
         for at, topic, no_hr in self._events(company):
             d = hours.to_local(at, s).date()
+            idx = (wk0 - (d - timedelta(days=d.weekday()))).days // 7
+            if 0 <= idx < 6:
+                wk.setdefault(topic, [0] * 6)[5 - idx] += 1
             a = acc.setdefault(topic, [0, 0, 0, 0])
             a[0] += 1
             a[1] += d >= wk0
             a[2] += wk0 - timedelta(days=7) <= d < wk0
             a[3] += no_hr
-        rows = [TopicRow(t, a[0], a[1], a[2], a[3], *votes.get(t, [0, 0])) for t, a in acc.items()]
+        rows = [
+            TopicRow(t, a[0], a[1], a[2], a[3], *votes.get(t, [0, 0]), tuple(wk.get(t, [0] * 6)))
+            for t, a in acc.items()
+        ]
         return sorted(rows, key=lambda r: -r.total)
 
     def weekly(self, company: str, now: datetime, weeks: int = 8) -> list[tuple[str, int]]:
