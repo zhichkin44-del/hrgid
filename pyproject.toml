@@ -32,6 +32,7 @@ dependencies = [
   "reportlab>=4",
   "openpyxl>=3.1",
   "segno>=1.6",
+  "mcp>=1.27,<2",
 ]
 
 [project.optional-dependencies]

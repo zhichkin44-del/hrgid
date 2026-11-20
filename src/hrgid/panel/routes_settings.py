@@ -10,6 +10,7 @@ from typing import Annotated
 from fastapi import Depends, FastAPI, Form, HTTPException, Query
 from fastapi.responses import HTMLResponse, Response
 
+from hrgid.mcp.tokens import McpTokens
 from hrgid.panel.journal import LABELS, Entry
 from hrgid.panel.ops import OVER_ACTIONS, PROVIDER_NAMES
 from hrgid.panel.services import K_REQ, PanelError
@@ -54,6 +55,7 @@ def settings_page(
     return w.page(
         c, "settings.html", "settings", status, win=win, form={**base, **(form or {})},
         errors=errors or {}, extra=extra or {}, tech=tech, providers=PROVIDER_NAMES,
+        mcp_tokens=McpTokens(d.store, d.clock).list(c.company) if win in ("tokens", "token_new") else [],
         requests=list(reversed(requests))[:5], over_actions=OVER_ACTIONS, section_title="Настройки",
     )  # fmt: skip
 
@@ -256,6 +258,35 @@ def register(app: FastAPI, w: Web) -> None:
         d.journal.add(c.company, c.now, c.user.email, "settings.model", PROVIDER_NAMES[provider])
         w.flash(c, f"Модель изменена: {PROVIDER_NAMES[provider]}.")
         return w.see_other("/settings")
+
+    # --- токен для ИИ-агентов (П9.6): MCP-сервер, SPEC-09 §10 --------------------------------------
+    @app.get("/settings/tokens", response_class=HTMLResponse)
+    def tokens_form(c: Annotated[Ctx, Depends(w.ctx)]) -> Response:
+        return _admin_only(c) or settings_page(w, c, win="tokens")
+
+    @app.post("/settings/tokens", response_class=HTMLResponse)
+    def tokens_issue(
+        c: Annotated[Ctx, Depends(w.ctx)], label: Annotated[str, Form()] = ""
+    ) -> Response:
+        if (deny := _admin_only(c)) is not None:
+            return deny
+        if len(label.strip()) > 60:
+            return settings_page(
+                w, c, win="tokens", form={"label": label},
+                errors={"label": "Название — не длиннее 60 знаков."},
+            )  # fmt: skip
+        token, rec = McpTokens(d.store, d.clock).issue(c.company, label, c.user.email)
+        d.journal.add(c.company, c.now, c.user.email, "mcp.issue", rec["label"])
+        return settings_page(w, c, win="token_new", extra={"token": token, "rec": rec})
+
+    @app.post("/settings/tokens/{token_id}/revoke", response_class=HTMLResponse)
+    def tokens_revoke(token_id: str, c: Annotated[Ctx, Depends(w.ctx)]) -> Response:
+        if (deny := _admin_only(c)) is not None:
+            return deny
+        if McpTokens(d.store, d.clock).revoke(c.company, token_id, c.user.email):
+            d.journal.add(c.company, c.now, c.user.email, "mcp.revoke", token_id)
+            w.flash(c, "Токен отозван: ИИ-агент с ним больше не получит данных.")
+        return w.see_other("/settings/tokens")
 
     # --- выгрузка (П9.2) --------------------------------------------------------------------------
     @app.get("/settings/export", response_class=HTMLResponse)
