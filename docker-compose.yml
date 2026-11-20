@@ -1,0 +1,97 @@
+# HRgid: `docker compose up` из чистого клона. Секреты и ключи — в .env (см. .env.example);
+# без ключей запускается всё, кроме ответов модели (HRGID_PROVIDER по умолчанию fake).
+name: hrgid
+
+x-app: &app
+  build: .
+  image: hrgid:local
+  restart: unless-stopped
+  env_file:
+    - path: .env
+      required: false
+  environment: &env
+    DATABASE_URL: postgresql://hrgid:${POSTGRES_PASSWORD:-hrgid}@postgres:5432/hrgid
+    REDIS_URL: redis://redis:6379/0
+    HRGID_PROVIDER: ${HRGID_PROVIDER:-fake}
+    HRGID_COMPANY: ${HRGID_COMPANY:-studio}
+    HRGID_COMPANY_NAME: ${HRGID_COMPANY_NAME:-Студия Жичкина}
+    HRGID_ADMIN_EMAIL: ${HRGID_ADMIN_EMAIL:-admin@localhost.test}
+  volumes:
+    - state:/var/lib/hrgid
+  depends_on:
+    init:
+      condition: service_completed_successfully
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: hrgid
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hrgid}
+      POSTGRES_DB: hrgid
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hrgid -d hrgid"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # Разовая инициализация: схема, закон -> индекс (первый старт дольше, нужна сеть), компания.
+  init:
+    <<: *app
+    restart: "no"
+    command: ["python", "-m", "hrgid.ops.launch", "init"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  api:
+    <<: *app
+    command: ["python", "-m", "hrgid.ops.launch", "api"]
+    environment:
+      <<: *env
+      HRGID_BOT_USERNAME: ${HRGID_BOT_USERNAME:-hrgid_bot}
+      HRGID_SECURE_COOKIE: ${HRGID_SECURE_COOKIE:-0}
+    ports:
+      - "${HRGID_API_PORT:-8000}:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://127.0.0.1:8000/healthz', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+
+  worker:
+    <<: *app
+    command: ["python", "-m", "hrgid.ops.launch", "worker"]
+    depends_on:
+      init:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+
+  bot:
+    <<: *app
+    command: ["python", "-m", "hrgid.ops.launch", "bot"]
+
+  mcp:
+    <<: *app
+    command: ["python", "-m", "hrgid.ops.launch", "mcp"]
+
+volumes:
+  pgdata:
+  state:

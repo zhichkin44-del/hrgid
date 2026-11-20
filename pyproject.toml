@@ -8,6 +8,7 @@ version = "0.1.0"
 description = "HRgid — ИИ-помощник HR: ответы по Трудовому кодексу РФ и правилам компании со ссылкой на статью"
 requires-python = ">=3.12"
 dependencies = [
+  "redis>=5",
   "fastapi>=0.115",
   "uvicorn>=0.30",
   "pydantic>=2.8",
@@ -45,6 +46,7 @@ testpaths = ["tests"]
 pythonpath = ["src"]
 addopts = "-q"
 markers = [
+  "compose: нужен Docker (docker compose config)",
   "slow: требует моделей и локальной БД",
   "db: нужен PostgreSQL (libpq); на этой Windows блокируется Smart App Control — гоняется в CI",
   "natasha: нужна загрузка моделей natasha — гоняется в CI",

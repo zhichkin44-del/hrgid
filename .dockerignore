@@ -1,0 +1,16 @@
+.git
+.github
+.venv
+.pgdata*
+.env
+**/__pycache__
+.mypy_cache
+.ruff_cache
+.pytest_cache
+htmlcov
+models_cache
+reports
+tests
+docs
+data/raw/*.html
+*.md
