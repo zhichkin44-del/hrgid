@@ -149,6 +149,9 @@ def _grade(item: Item, norms: list[Norm], raw: str) -> ItemCheck:
     return ItemCheck(item.number, item.text, verdict, explanation, article, suggestion, refs)
 
 
+grade_item = _grade  # публичное имя для MCP-инструмента check_policy_clause
+
+
 class TkChecker:
     def __init__(self, llm: LLMClient, norms: NormSource, svc: DocService, k: int = 4) -> None:
         self.llm, self.norms, self.svc, self.k = llm, norms, svc, k

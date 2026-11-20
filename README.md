@@ -32,3 +32,42 @@ python scripts/run_panel.py        # http://127.0.0.1:8090, коды входа 
 
 Вход: `admin@studio.test` (администратор) или `hr@studio.test` (HR). Тесты панели: `pytest tests/panel`
 (браузерные сценарии — маркер `browser`, нужен Chrome или `playwright install chromium`).
+
+## MCP-сервер (этап 7)
+
+ИИ-агенты (Claude Code, Claude Desktop) получают те же знания, что и бот, только на чтение:
+`search_law` (ТК РФ со ссылкой на статью), `search_policy` (действующие правила вашей компании),
+`calc` (расчёты R1–R9; у каждого своя схема входа), `check_policy_clause` (оценка пункта правил:
+«соответствует / лучше закона / риск» со статьёй). Данные других компаний недоступны, ПДн в ответах
+маскируются ([ФИО_1], [ТЕЛЕФОН_1] …), текст пункта уходит в модель замаскированным.
+
+1. Администратор открывает панель: «Настройки» → «Токен для ИИ-агентов…» → «Выдать токен».
+   Токен (`hrg_…`) показывается один раз, хранится хэшем, отзывается там же — действует сразу.
+2. Подключение к Claude Code одной строкой:
+
+```
+claude mcp add hrgid -e HRGID_MCP_TOKEN=hrg_ВАШ_ТОКЕН -e DATABASE_URL=postgresql://... -- python -m hrgid.mcp
+```
+
+3. Claude Desktop (`claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "hrgid": {
+      "command": "python",
+      "args": ["-m", "hrgid.mcp"],
+      "env": {
+        "HRGID_MCP_TOKEN": "hrg_ВАШ_ТОКЕН",
+        "DATABASE_URL": "postgresql://...",
+        "ANTHROPIC_API_KEY": "нужен только для check_policy_clause"
+      }
+    }
+  }
+}
+```
+
+Удалённый доступ (streamable HTTP): `python -m hrgid.mcp --http --port 8765`, адрес `/mcp`,
+токен в заголовке `Authorization: Bearer hrg_…` (без токена или с отозванным — 401).
+Модель проверки пункта — `HRGID_PROVIDER` (claude, gigachat, yandex); без ключа остальные три
+инструмента работают. Тесты: `pytest tests/mcpsrv tests/panel/test_mcp_tokens.py`.
