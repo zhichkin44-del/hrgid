@@ -72,3 +72,11 @@ def test_busy_indicator_and_mobile_menu_in_every_page() -> None:
     env = make_env()
     r = env.login(HR).get("/queue")
     assert 'id="busy"' in r.text and "menu-btn" in r.text and 'hx-boost="true"' in r.text
+
+
+def test_window_query_param_w_opens_window() -> None:
+    env = make_env()
+    c = env.login(HR)
+    assert "Загрузить документ" in c.get("/docs?w=upload").text.split("П4.1")[1]
+    assert "П6.2" in c.get("/staff?w=import1").text
+    assert "П10.1" in c.get("/journal?w=filters").text

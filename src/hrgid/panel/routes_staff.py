@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import Annotated, Any
 
-from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.responses import HTMLResponse, Response
 
 from hrgid.bot.models import Announcement, Button, Employee, Out
@@ -105,7 +105,9 @@ def register(app: FastAPI, w: Web) -> None:
 
     # ===== список ====================================================================================
     @app.get("/staff", response_class=HTMLResponse)
-    def staff(c: Annotated[Ctx, Depends(w.ctx)], w_: str = "") -> Response:
+    def staff(
+        c: Annotated[Ctx, Depends(w.ctx)], w_: Annotated[str, Query(alias="w")] = ""
+    ) -> Response:
         win = {"invite": "invite", "import1": "import1", "codes": "codes", "groups": "groups"}.get(
             w_, ""
         )

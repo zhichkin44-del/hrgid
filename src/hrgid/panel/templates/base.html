@@ -14,7 +14,7 @@
 <nav class="nav" :class="{open:menu}" aria-label="Разделы">
 <div class="brand"><i>HR</i>HRgid</div><div class="co">{{ company_name }}</div>
 {% for key, url, label, cnt in nav %}<a href="{{ url }}"{% if key == section %} class="on"{% endif %}><span>{{ label }}</span>{% if cnt[0] %}<em{% if cnt[1] %} class="bad"{% endif %}>{{ cnt[0] }}</em>{% endif %}</a>{% endfor %}
-<div class="who"><b>{{ user.name }}</b>{{ role_names[user.role] }}<br><a class="cap" href="/logout">Выйти</a></div>
+<div class="who"><a href="/logout" title="Выйти из панели" style="all:unset;cursor:pointer;display:block"><b>{{ user.name }}</b>{{ role_names[user.role] }}</a></div>
 </nav>
 <main class="main">{% block main %}{% endblock %}</main>
 </div>

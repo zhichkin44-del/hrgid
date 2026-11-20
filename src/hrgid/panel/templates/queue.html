@@ -57,7 +57,7 @@
 <input type="hidden" name="text" value="{{ form.text }}"><div class="draft" style="font-size:14px">{{ form.text }}</div>
 {% if not sel.confidential %}
 <label class="chk" style="margin:10px 0"><input type="checkbox" name="save_kb" value="1" class="sr" x-model="kb"><i>✓</i><span>Сохранить ответ в базу — следующий такой вопрос отвечается из базы</span></label>
-<div x-show="kb" {% if not form.get("save_kb") %}x-cloak style="display:none"{% endif %}>
+<div x-show="kb" x-transition.opacity>
 {{ m.field("question", "Вопрос в общем виде", form, errors, maxlength=300) }}
 {{ m.field("basis", "Основание (статья ТК или пункт правил)", form, errors, placeholder="ст. 124 ТК РФ") }}
 </div>

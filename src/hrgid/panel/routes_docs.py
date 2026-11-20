@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Annotated, Any
 
-from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Query, UploadFile
 from fastapi.responses import HTMLResponse, Response
 
 from hrgid.docs.parse import MAX_BYTES, DocError
@@ -104,7 +104,9 @@ def register(app: FastAPI, w: Web) -> None:
 
     # ===== П4 ====================================================================================
     @app.get("/docs", response_class=HTMLResponse)
-    def docs(c: Annotated[Ctx, Depends(w.ctx)], w_: str = "") -> Response:
+    def docs(
+        c: Annotated[Ctx, Depends(w.ctx)], w_: Annotated[str, Query(alias="w")] = ""
+    ) -> Response:
         return docs_page(w, c, win="upload" if w_ == "upload" else "")
 
     @app.post("/docs/upload", response_class=HTMLResponse)

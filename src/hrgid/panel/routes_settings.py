@@ -7,7 +7,7 @@ from datetime import date, time, timedelta
 from pathlib import Path
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, Form, HTTPException
+from fastapi import Depends, FastAPI, Form, HTTPException, Query
 from fastapi.responses import HTMLResponse, Response
 
 from hrgid.panel.journal import LABELS, Entry
@@ -317,7 +317,7 @@ def register(app: FastAPI, w: Web) -> None:
         kind: str = "",
         since: str = "",
         until: str = "",
-        w_: str = "",
+        w_: Annotated[str, Query(alias="w")] = "",
     ) -> Response:
         if tab == "logins" and c.role != "admin":
             return journal_page(w, c, tab="actions", win="logins_deny")

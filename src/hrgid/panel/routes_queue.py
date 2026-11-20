@@ -4,7 +4,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Annotated, Literal, cast
 
-from fastapi import Depends, FastAPI, Form
+from fastapi import Depends, FastAPI, Form, Query
 from fastapi.responses import HTMLResponse, Response
 
 from hrgid.bot.desk import DeskError, KbParams
@@ -119,7 +119,7 @@ def register(app: FastAPI, w: Web) -> None:
         c: Annotated[Ctx, Depends(w.ctx)],
         tab: str = "all",
         k: str = "",
-        w_: str = "",
+        w_: Annotated[str, Query(alias="w")] = "",
         q: str = "",
     ) -> Response:
         win = ""

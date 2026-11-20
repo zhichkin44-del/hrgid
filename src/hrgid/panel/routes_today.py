@@ -8,7 +8,7 @@ from fastapi.responses import HTMLResponse, Response
 
 from hrgid.bot.models import Ticket
 from hrgid.panel.services import PanelError
-from hrgid.panel.web_base import MONTHS, WEEKDAYS, Ctx, Web, human_span
+from hrgid.panel.web_base import MONTHS, MONTHS_PREP, WEEKDAYS, Ctx, Web, human_span
 
 
 @dataclass(frozen=True)
@@ -64,7 +64,7 @@ def today_page(
     return w.page(
         c, "today.html", "today", win=win, views=views, waits=waits, mine=mine, overdue=overdue,
         downs=downs, oldest=oldest, budget=budget, risks=risks, is_new=is_new,
-        date_line=date_line, hours_line=hours_line, sla=c.settings.sla_hours,
+        date_line=date_line, month_prep=MONTHS_PREP[local.month - 1], hours_line=hours_line, sla=c.settings.sla_hours,
         rating_ticket=rating_ticket, errors=errors or {}, empty=not views and not risks and not downs,
         section_title="Сегодня",
     )  # fmt: skip
