@@ -85,7 +85,9 @@ def queue_page(
     if sel is not None:
         emp = d.repo.employee(c.company, sel.employee_id)
         if not sel.confidential and emp is not None:
-            hist = [t for t in d.desk.employee_tickets(emp) if t.key != sel.key][:5]
+            hist = [
+                t for t in d.desk.employee_tickets(emp) if t.key != sel.key and not t.confidential
+            ][:5]
         sug = suggest(w, c, sel)
     form = dict(form or {})
     if sel is not None and "text" not in form:

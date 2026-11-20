@@ -79,6 +79,8 @@ def check_page(
     docs = d.docs.documents(c.company)
     if not doc_id and docs:
         doc_id = docs[0]["doc_id"]
+    if doc_id and doc_id not in {x["doc_id"] for x in docs}:
+        raise HTTPException(404, "Документ не найден")
     vs = d.docs.versions(c.company, doc_id) if doc_id else []
     if vs and not number:
         number = vs[-1].number
