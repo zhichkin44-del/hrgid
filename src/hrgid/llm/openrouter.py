@@ -146,6 +146,9 @@ class OpenRouterClient:
             "messages": to_openai_messages(req.system, req.messages),
             "max_tokens": req.max_tokens,
             "temperature": 0.1,
+            # Haiku 5.5 на OpenRouter по умолчанию «размышляет»: размышление съедает max_tokens,
+            # и ответ приходит пустым (замер 21.11.2026: 31 пустой ответ из 104). Отключаем.
+            "reasoning": {"enabled": False},
         }
         if req.tools:
             body["tools"] = [

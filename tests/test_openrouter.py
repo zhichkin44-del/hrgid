@@ -79,6 +79,7 @@ def test_request_shape_and_response() -> None:
     assert seen["h"]["x-title"] == "HRgid" and "http-referer" in seen["h"]
     b = seen["body"]
     assert b["model"] == "anthropic/claude-haiku-5.5" and "tools" not in b
+    assert b["reasoning"] == {"enabled": False}  # иначе размышление съедает max_tokens
     assert b["messages"][0] == {"role": "system", "content": "s"}
     assert resp.text == "ответ" and (resp.input_tokens, resp.output_tokens) == (1000, 200)
     main = client(router(chat)).complete(LLMRequest("s", REQ.messages, tier="main"))
