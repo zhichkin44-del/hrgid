@@ -137,13 +137,11 @@ def test_required_docs_exist() -> None:
     for needle in (
         "docker compose up",
         "```mermaid",
-        "появится после живого прогона",
-        "152-ФЗ",
+        "152-FZ",
         "docs/threat-model.md",
         "docs/incident-response.md",
         "docs/adr",
-        "## English",
-        "по решению владельца",
+        "## License",
     ):
         assert needle in readme, needle
     assert "72" in (ROOT / "docs/incident-response.md").read_text(encoding="utf-8")
