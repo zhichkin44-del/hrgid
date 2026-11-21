@@ -4,7 +4,7 @@
     python -m hrgid.mcp --http --port 8765                  # streamable HTTP, токен в Authorization
 
 Нужны DATABASE_URL (иначе встроенный pgserver) и, для check_policy_clause, ключ модели
-(HRGID_PROVIDER, по умолчанию claude). Компания определяется токеном из панели (П9).
+(HRGID_LLM_PROVIDER, по умолчанию claude). Компания определяется токеном из панели (П9).
 """
 
 from __future__ import annotations
@@ -26,7 +26,7 @@ from hrgid.mcp.tokens import McpTokens
 def build_gateway_from_env() -> McpGateway:
     from hrgid.db import connect, database_url, init_schema
     from hrgid.docs.tkcheck import HybridNormSource
-    from hrgid.flow.build import make_client, make_searcher
+    from hrgid.flow.build import make_client, make_searcher, provider_from_env
     from hrgid.llm.resilient import ResilientLLM
 
     conn = connect(database_url())
@@ -36,7 +36,7 @@ def build_gateway_from_env() -> McpGateway:
     searcher = make_searcher(conn, os.environ.get("HRGID_RERANKER", "mmarco-minilm"))
     clause = None
     try:
-        llm = ResilientLLM(make_client(os.environ.get("HRGID_PROVIDER", "claude")))
+        llm = ResilientLLM(make_client(provider_from_env("claude")))
         clause = LlmClauseChecker(llm, HybridNormSource(conn, searcher.embedder, searcher.reranker))
     except Exception:  # нет ключа модели: поиск и расчёты работают, проверка пункта — нет
         clause = None

@@ -35,7 +35,7 @@ NO_MODEL_ANSWER = json.dumps({"no_answer": True, "answer": "", "claims": []})
 
 
 def no_model_client() -> FakeLLM:
-    """Запуск без ключей (HRGID_PROVIDER=fake): маршрут «закон», на любой вопрос — «ответа нет»."""
+    """Запуск без ключей (HRGID_LLM_PROVIDER=fake): маршрут «закон», на вопрос — «ответа нет»."""
 
     def handler(req: LLMRequest) -> LLMResponse | str:
         return json.dumps({"route": "law"}) if req.purpose == "route" else NO_MODEL_ANSWER

@@ -161,7 +161,7 @@ def build_engine_from_env() -> BotEngine:
     from hrgid.bot.repo import Repo
     from hrgid.bot.store import PgDocStore
     from hrgid.db import connect, database_url, init_schema
-    from hrgid.flow.build import make_client, make_searcher
+    from hrgid.flow.build import make_client, make_searcher, provider_from_env
     from hrgid.flow.graph import FlowConfig, Pipeline
     from hrgid.llm.resilient import ResilientLLM
 
@@ -171,7 +171,7 @@ def build_engine_from_env() -> BotEngine:
     store.init_schema()
     repo = Repo(store)
     kb = KbService(repo)
-    llm = ResilientLLM(make_client(os.environ.get("HRGID_PROVIDER") or "claude"))
+    llm = ResilientLLM(make_client(provider_from_env("claude")))
     reranker = os.environ.get("HRGID_RERANKER") or "mmarco-minilm"
     searcher = KbSearcher(make_searcher(conn, reranker), kb)
     threshold = os.environ.get("HRGID_NO_ANSWER_THRESHOLD")

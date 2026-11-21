@@ -21,12 +21,14 @@ from hrgid.flow.trace import TraceRecord, TraceSink
 
 K_TECH, K_QLOG = "ptech", "qlog"
 
-Provider = Literal["gigachat", "yandex", "claude"]
+Provider = Literal["gigachat", "yandex", "claude", "openrouter"]
+FOREIGN = ("claude", "openrouter")  # передача за границу: только через предупреждение (П9.5)
 OverAction = Literal["queue", "refuse"]
 PROVIDER_NAMES: dict[str, str] = {
     "gigachat": "GigaChat",
     "yandex": "YandexGPT",
     "claude": "Claude",
+    "openrouter": "OpenRouter",
 }
 OVER_ACTIONS: dict[str, str] = {
     "queue": "Новые вопросы уходят в очередь HR, база ответов и правила работают",

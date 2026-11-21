@@ -68,8 +68,8 @@ docker compose up            # или: make up
 | Веб-чат | `http://localhost:8000/c/<токен>`; токен: `docker compose exec api cat /var/lib/hrgid/web_invite` |
 | Проверка | `curl http://localhost:8000/healthz` |
 
-Настройка — `cp .env.example .env` и значения (все необязательны): `HRGID_PROVIDER` (`gigachat`,
-`yandex`, `claude`) и ключ выбранного провайдера, `TELEGRAM_BOT_TOKEN`, `HRGID_COMPANY`,
+Настройка — `cp .env.example .env` и значения (все необязательны): `HRGID_LLM_PROVIDER` (`openrouter`,
+`gigachat`, `yandex`, `claude`; старое имя `HRGID_PROVIDER` тоже работает) и ключ выбранного провайдера, `TELEGRAM_BOT_TOKEN`, `HRGID_COMPANY`,
 `HRGID_ADMIN_EMAIL`. Сервис `bot` без токена ждёт и пишет причину в журнал, не падая. Секреты-«перцы» (`HRGID_PANEL_PEPPER`, `HRGID_CODE_PEPPER`) без значений создаются случайными
 и хранятся в томе `state`. Устройство образов и причины решений — [ADR-0007](docs/adr/0007-compose-one-image.md).
 
@@ -119,8 +119,26 @@ claude mcp add hrgid -e HRGID_MCP_TOKEN=hrg_ВАШ_ТОКЕН -e DATABASE_URL=po
 
 Удалённый доступ (streamable HTTP): `python -m hrgid.mcp --http --port 8765`, адрес `/mcp`,
 токен в заголовке `Authorization: Bearer hrg_…` (без токена или с отозванным — 401).
-Модель проверки пункта — `HRGID_PROVIDER` (claude, gigachat, yandex); без ключа остальные три
+Модель проверки пункта — `HRGID_LLM_PROVIDER` (openrouter, claude, gigachat, yandex); без ключа остальные три
 инструмента работают. Тесты: `pytest tests/mcpsrv tests/panel/test_mcp_tokens.py`.
+
+## Модель через OpenRouter
+
+Один ключ — доступ к моделям Claude через шлюз OpenRouter. Владелец сам добавляет в `.env`:
+
+```
+HRGID_LLM_PROVIDER=openrouter
+OPENROUTER_API_KEY=sk-or-...   # ключ кладёт владелец, в репозиторий не попадает
+HRGID_USD_RUB=95               # курс для расчёта стоимости в ₽ (необязательно)
+```
+
+По умолчанию для **всех ролей** (маршрутизация, ответ, проверка цитат) используется бюджетная модель
+`anthropic/claude-haiku-5.5` (самая новая Haiku в списке openrouter.ai/api/v1/models на 21.11.2026);
+Sonnet по умолчанию не используется. Цены берутся из открытого списка моделей OpenRouter, при его
+недоступности — из запасной таблицы. Повторы и запасная модель работают как у остальных провайдеров.
+OpenRouter — трансграничная передача данных (США), как и Claude: в панели (П9.5) включается
+с предупреждением и отметкой «Сотрудники уведомлены». Прогон набора: `make record PROVIDER=openrouter`
+или `python scripts/eval_flow.py --provider openrouter --record`.
 
 ## Тесты и качество
 
@@ -129,7 +147,7 @@ make lint        # ruff + mypy --strict
 make test        # быстрые тесты (pytest -m "not slow")
 pytest -m browser -rs      # браузерные e2e панели (Playwright; playwright install chromium)
 make gate        # ворота качества: набор на записанных ответах (БД, e5, закон)
-make record      # локально, ключом владельца: записать ответы модели (PROVIDER=claude|gigachat|yandex)
+make record      # локально, ключом владельца: записать ответы модели (PROVIDER=openrouter|claude|gigachat|yandex)
 ```
 
 Как устроены ворота (`.github/workflows/ci.yml`, ADR-0003): CI не вызывает модель, а воспроизводит
@@ -170,7 +188,7 @@ make record      # локально, ключом владельца: запис
 - Только Трудовой кодекс РФ, 255-ФЗ и производственный календарь, правила и документы компании;
   иное законодательство и судебная практика не входят.
 - Это справка со ссылкой, а не юридическое заключение; при отсутствии основания — отказ и передача HR.
-- Модель по умолчанию российская (GigaChat/YandexGPT); Claude включается администратором с
+- Модель по умолчанию российская (GigaChat/YandexGPT); Claude и OpenRouter включаются администратором с
   предупреждением о трансграничной передаче (данные уходят замаскированными).
 - Реальной отправки почты нет: код входа в панель кладётся файлом в том (режим самостоятельной установки).
 - Живой записи ответов и нагрузочного прогона пока нет: таблица качества пуста.

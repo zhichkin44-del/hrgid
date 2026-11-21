@@ -12,7 +12,7 @@ from fastapi.responses import HTMLResponse, Response
 
 from hrgid.mcp.tokens import McpTokens
 from hrgid.panel.journal import LABELS, Entry
-from hrgid.panel.ops import OVER_ACTIONS, PROVIDER_NAMES
+from hrgid.panel.ops import FOREIGN, OVER_ACTIONS, PROVIDER_NAMES
 from hrgid.panel.services import K_REQ, PanelError
 from hrgid.panel.web_base import COOKIE, Ctx, Web
 
@@ -213,8 +213,8 @@ def register(app: FastAPI, w: Web) -> None:
         d.ops.save_tech(c.company, t)
         d.journal.add(c.company, c.now, c.user.email, "settings.save", "")
         if provider in PROVIDER_NAMES and provider != t.provider:
-            if provider == "claude":  # за границу — только через предупреждение (П9.5)
-                return settings_page(w, c, win="claude", form={"provider": provider})
+            if provider in FOREIGN:  # за границу — только через предупреждение (П9.5)
+                return settings_page(w, c, win="foreign", form={"provider": provider})
             d.ops.save_tech(
                 c.company, t.model_copy(update={"provider": provider, "claude_ack": False})
             )
@@ -244,15 +244,15 @@ def register(app: FastAPI, w: Web) -> None:
             return settings_page(
                 w, c, win="model", errors={"provider": "Выберите модель из списка."}
             )
-        if provider == "claude" and not confirm_claude:
-            return settings_page(w, c, win="claude", form={"provider": provider})
-        if provider == "claude" and not ack:
+        if provider in FOREIGN and not confirm_claude:
+            return settings_page(w, c, win="foreign", form={"provider": provider})
+        if provider in FOREIGN and not ack:
             return settings_page(
-                w, c, win="claude", form={"provider": provider},
-                errors={"ack": "Без отметки «Сотрудники уведомлены» включить Claude нельзя."},
+                w, c, win="foreign", form={"provider": provider},
+                errors={"ack": "Без отметки «Сотрудники уведомлены» включить эту модель нельзя."},
             )  # fmt: skip
         t = d.ops.tech(c.company).model_copy(
-            update={"provider": provider, "claude_ack": provider == "claude"}
+            update={"provider": provider, "claude_ack": provider in FOREIGN}
         )
         d.ops.save_tech(c.company, t)
         d.journal.add(c.company, c.now, c.user.email, "settings.model", PROVIDER_NAMES[provider])

@@ -2,7 +2,8 @@
 
 Воспроизведение записей (CI):  python scripts/eval_flow.py --provider claude
 Живая запись (ключ владельца): python scripts/eval_flow.py --provider claude --record
-  ANTHROPIC_API_KEY (claude), GIGACHAT_CREDENTIALS (gigachat), YANDEX_API_KEY + YANDEX_FOLDER_ID.
+  OPENROUTER_API_KEY (openrouter), ANTHROPIC_API_KEY (claude), GIGACHAT_CREDENTIALS (gigachat),
+  YANDEX_API_KEY + YANDEX_FOLDER_ID (yandex).
 Отчёт: reports/stage2-<провайдер>-<дата>.md; порог «ответа нет» — из ADR-0006 (--threshold).
 """
 
