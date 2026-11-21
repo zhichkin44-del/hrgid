@@ -241,8 +241,8 @@ tests/              pytest suites; tests/recordings holds recorded model answers
 
 ## License
 
-No license has been chosen yet. The owner has not decided on the license, so the code is not licensed for
-reuse until that decision is made.
+Source-available, all rights reserved: the code is published for viewing and evaluation only.
+Commercial or production use requires written permission. See [LICENSE](LICENSE).
 
 ## Русская версия
 
