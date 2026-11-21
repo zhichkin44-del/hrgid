@@ -1,4 +1,4 @@
-"""Локальные переранжировщики (кросс-модели) на CPU."""
+"""Local rerankers (cross-models) on CPU."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ CANDIDATES = {
 
 
 class CrossEncoderReranker:
-    """Сырая оценка кросс-модели (логит): пригодна для порога «ответа нет»."""
+    """Raw cross-model score (logit): suitable for the "no answer" threshold."""
 
     def __init__(self, model_name: str, max_length: int = 384) -> None:
         from sentence_transformers import CrossEncoder

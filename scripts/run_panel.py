@@ -1,11 +1,11 @@
-"""Запуск панели HR для владельца: http://127.0.0.1:8090
+"""Runs the HR panel for the owner: http://127.0.0.1:8090
 
     python scripts/run_panel.py
 
-Компания «Студия Жичкина» уже наполнена: черновик правил (data/companies/studio/rules-draft.md),
-сотрудники-роли, 12 обращений в очереди, база ответов, объявления, проверка на ТК. Модель — Fake,
-ключей не нужно. Вход: почта + одноразовый код; код печатается в этой консоли.
-Входы: admin@studio.test (администратор), hr@studio.test (HR).
+The company "Студия Жичкина" is already populated: rules draft (data/companies/studio/rules-draft.md),
+employee roles, 12 requests in the queue, answer base, announcements, Labor Code check. Model - Fake,
+no keys needed. Sign-in: email + one-time code; the code is printed in this console.
+Logins: admin@studio.test (administrator), hr@studio.test (HR).
 """
 
 from __future__ import annotations

@@ -1,7 +1,7 @@
-"""Движок диалогов бота (SPEC-09 §4, SCREENS §17): сообщения и кнопки -> список ответов.
+"""Bot dialogue engine (SPEC-09 §4, SCREENS §17): messages and buttons -> list of responses.
 
-Чистая логика без aiogram: ввод — (telegram_id, текст/данные кнопки, время), вывод — список Out.
-Адаптер Telegram (hrgid.bot.app) только доставляет. Время передаётся снаружи.
+Pure logic without aiogram: input is (telegram_id, text/button data, time), output is a list of Out.
+The Telegram adapter (hrgid.bot.app) only delivers. Time is passed in from outside.
 """
 
 from __future__ import annotations
@@ -92,7 +92,7 @@ class BotEngine:
         self.sessions: dict[int, Session] = {}
         self._companies: set[str] = set()
 
-    # --- вход ---
+    # --- sign-in ---
     def _sess(self, tg: int) -> Session:
         return self.sessions.setdefault(tg, Session())
 
@@ -136,7 +136,8 @@ class BotEngine:
         return self._callback(tg, sess, emp, data, now)
 
     def tick(self, now: datetime) -> list[Out]:
-        """Фоновая проверка: таймаут расчётов (15 мин), окончательное удаление конфиденциальных."""
+        """Background check: calculation timeout (15 min), final deletion of confidential
+        requests."""
         outs: list[Out] = []
         for company in sorted(self._companies):
             self.desk.finalize_company(company, now)
@@ -164,7 +165,7 @@ class BotEngine:
             n += int(ok)
         return n
 
-    # --- помощники ---
+    # --- helpers ---
     def _settings(self, emp: Employee) -> Any:
         return self.repo.settings(emp.company_id)
 
@@ -192,7 +193,7 @@ class BotEngine:
             )
         ]
 
-    # --- гость: код и согласие ---
+    # --- guest: code and consent ---
     def _guest_message(
         self, tg: int, sess: Session, text: str, now: datetime, hint: str
     ) -> list[Out]:
@@ -205,7 +206,7 @@ class BotEngine:
             name = s.company_name if s else "компании"
             return [Out(chat_id=tg, text=texts.greeting(name))]
         if sess.pending or sess.refused:
-            return []  # без согласия бот не отвечает (Б1.4)
+            return []  # without consent the bot does not answer (Б1.4)
         if not looks_like_code(text):
             return [Out(chat_id=tg, text=texts.ENTER_CODE)]
         res = self.auth.check_code(tg, text, now)
@@ -243,7 +244,8 @@ class BotEngine:
             st = self.repo.settings(emp.company_id)
             return [Out(chat_id=tg, text=texts.closed_access(st.company_name, st.hr_name))]
         self._companies.add(emp.company_id)
-        if emp.consent_at is not None:  # уже давал согласие: вход, возможно с нового Telegram
+        # already gave consent: sign-in, possibly from a new Telegram account
+        if emp.consent_at is not None:
             emp2, old = self.auth.bind(emp, res.code, tg, now, consent=False)
             sess.last = now
             if old is not None:
@@ -331,7 +333,7 @@ class BotEngine:
             )
         ]
 
-    # --- команды и меню ---
+    # --- commands and menu ---
     def _command(
         self, tg: int, sess: Session, emp: Employee, text: str, now: datetime
     ) -> list[Out]:
@@ -377,7 +379,7 @@ class BotEngine:
     def _calc_picker(self, tg: int) -> list[Out]:
         return [Out(chat_id=tg, text=calcdialog.PICKER_TEXT, rows=calcdialog.picker_rows())]
 
-    # --- режимы ввода ---
+    # --- input modes ---
     def _mode_input(
         self, tg: int, sess: Session, emp: Employee, text: str, now: datetime
     ) -> list[Out]:
@@ -405,7 +407,7 @@ class BotEngine:
         sess.mode = ""
         return self._question(tg, sess, emp, text, now)
 
-    # --- вопрос -> поток этапа 2 ---
+    # --- question -> stage 2 flow ---
     def _question(
         self, tg: int, sess: Session, emp: Employee, text: str, now: datetime
     ) -> list[Out]:
@@ -453,7 +455,7 @@ class BotEngine:
 
     def _remember(self, sess: Session, text: str) -> None:
         sess.history.append(text)
-        del sess.history[:-6]  # диалог учитывает 6 последних сообщений (§4.4)
+        del sess.history[:-6]  # the dialogue takes the last 6 messages into account (§4.4)
 
     def _offer_hr(self, tg: int, body: str, now: datetime, emp: Employee) -> Out:
         s = self.repo.settings(emp.company_id)
@@ -491,7 +493,8 @@ class BotEngine:
             refs = "; ".join(dict.fromkeys(src.ref for src in ans.sources))
             body += f"\n\nИсточник: {refs}"
         today = hours.to_local(now, s).date()
-        if emp.disclaimer_date != today:  # «не юридическая консультация» — в первом ответе дня
+        # "not legal advice" is shown in the first response of the day
+        if emp.disclaimer_date != today:
             body += f"\n\n{texts.DISCLAIMER}"
             emp = emp.model_copy(update={"disclaimer_date": today})
             self.repo.save_employee(emp)
@@ -513,7 +516,7 @@ class BotEngine:
         sess.data[f"route:{aid}"] = ans.route
         return Out(chat_id=tg, text=body, rows=rows)
 
-    # --- расчёты ---
+    # --- calculations ---
     def _calc_start(
         self, tg: int, sess: Session, emp: Employee, code: str, now: datetime
     ) -> list[Out]:
@@ -546,7 +549,7 @@ class BotEngine:
             sess.last_summary = reply.summary
         return [Out(chat_id=tg, text=reply.text, rows=reply.rows)]
 
-    # --- правила компании ---
+    # --- company rules ---
     def _rules_menu(self, tg: int, emp: Employee) -> list[Out]:
         topics = self.rules.topics(emp.company_id)
         if not topics:
@@ -573,7 +576,7 @@ class BotEngine:
             )
         ]
 
-    # --- обращения к HR ---
+    # --- requests to HR ---
     def _hr_menu(self, tg: int, emp: Employee, now: datetime) -> list[Out]:
         s = self.repo.settings(emp.company_id)
         if hours.is_open(now, s):
@@ -641,7 +644,7 @@ class BotEngine:
 
     def _mine(self, emp: Employee, key: str) -> Ticket | None:
         t = self.repo.ticket(emp.company_id, key)
-        if t is None or t.employee_id != emp.id:  # чужое обращение недоступно
+        if t is None or t.employee_id != emp.id:  # another person's request is not available
             return None
         return t
 
@@ -705,7 +708,7 @@ class BotEngine:
         label = {"closed": "закрыто", "withdrawn": "отозвано"}.get(t.status, t.status)
         return [Out(chat_id=tg, text=f"Обращение {t.label} — {label}.", rows=[MENU_ROW])]
 
-    # --- кнопки ---
+    # --- buttons ---
     def _callback(
         self, tg: int, sess: Session, emp: Employee, data: str, now: datetime
     ) -> list[Out]:

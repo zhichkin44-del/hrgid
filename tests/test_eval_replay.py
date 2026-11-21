@@ -1,7 +1,7 @@
-"""Прогон основного набора на записанных ответах (CI). Нужны БД, e5 и переранжировщик: slow.
+"""Run of the main set on recorded answers (CI). Needs the DB, e5 and the reranker: slow.
 
-Нет записей для текущих промптов — MissingRecording, тест красный (намеренно, ADR-0003).
-Пока нет первой живой записи, лежит tests/recordings/PENDING и тест пропускается.
+No recordings for the current prompts: MissingRecording, the test is red (intentionally, ADR-0003).
+Until the first live recording exists, tests/recordings/PENDING lies there and the test is skipped.
 """
 
 from __future__ import annotations
@@ -33,7 +33,7 @@ def test_replay_main_set_meets_stage2_thresholds() -> None:
     chunks, _ = load_chunks(ROOT / "data" / "raw")
     conn.execute("TRUNCATE chunks RESTART IDENTITY")
     store_chunks(conn, chunks, E5Embedder())
-    llm = make_llm("openrouter", eval_file, record=False)  # записи живого прогона на Haiku
+    llm = make_llm("openrouter", eval_file, record=False)  # recordings of a live run on Haiku
     pipe = make_pipeline(llm, make_searcher(conn, next(iter(CANDIDATES))), None)
     s = summarize(run_eval(pipe, load_rows(eval_file)))
     assert all(verdict(s).values()), s

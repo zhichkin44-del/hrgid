@@ -1,4 +1,5 @@
-"""Оглавление ТК РФ: статья → (раздел, глава) по порядку ссылок на странице оглавления."""
+"""Table of contents of the Labor Code RF: article -> (section, chapter), in the order of the links
+on the contents page."""
 
 from __future__ import annotations
 

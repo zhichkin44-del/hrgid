@@ -1,4 +1,5 @@
-"""База ответов HR (SPEC-09 §8 П3, §5 п.2): сохранение ответа и поиск вместе с документами."""
+"""HR answer base (SPEC-09 §8 П3, §5 item 2): saving an answer and searching it together with
+documents."""
 
 from __future__ import annotations
 
@@ -13,12 +14,12 @@ from hrgid.search import SearchHit
 from hrgid.textnorm import normalize
 
 _WORD = re.compile(r"[a-zа-я0-9]+")
-SAME_QUESTION = 0.6  # доля общих основ слов: «тот же вопрос»
+SAME_QUESTION = 0.6  # share of common word stems: "same question"
 RELATED = 0.35
 
 
 class KbError(ValueError):
-    """Ошибка полей «Сохранить в базу»: field — какое поле подсветить."""
+    """Field error for "Save to base": field is the field to highlight."""
 
     def __init__(self, field: str, message: str) -> None:
         super().__init__(message)
@@ -83,7 +84,8 @@ class KbService:
         return sorted((r for r in res if r[0] > 0), key=lambda r: -r[0])
 
     def find_same(self, company_id: str, question: str, group: str = "") -> KbEntry | None:
-        """Тот же вопрос уже решён HR (сценарий 2): ответ отдаётся из базы."""
+        """The same question has already been resolved by HR (scenario 2): the answer is given from
+        the base."""
         ranked = self.ranked(company_id, question, group)
         if not ranked or ranked[0][0] < SAME_QUESTION:
             return None
@@ -93,7 +95,8 @@ class KbService:
 
 
 class KbSearcher:
-    """Searcher потока этапа 2: документы + база ответов HR того же tenant (§5 п.2)."""
+    """Searcher of the stage 2 flow: documents + the HR answer base of the same tenant (§5 item
+    2)."""
 
     def __init__(self, base: Searcher, kb: KbService) -> None:
         self.base = base
@@ -107,7 +110,7 @@ class KbSearcher:
                 if sim >= RELATED:
                     extra.append(
                         SearchHit(
-                            id=-e.id,  # отрицательные id — записи базы ответов
+                            id=-e.id,  # negative ids are answer base records
                             tenant_id=company,
                             article="База ответов HR",
                             part="",

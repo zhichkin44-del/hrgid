@@ -1,6 +1,6 @@
-"""Ворота качества краснеют на нарочно ухудшенном промпте (этап 8, §16).
+"""The quality gate turns red on a deliberately degraded prompt (stage 8, §16).
 
-Всё на Fake-модели: записываем «хорошие» ответы, затем меняем промпт или сами записи.
+Everything runs on a Fake model: we record "good" answers, then change the prompt or the recordings themselves.
 """
 
 from __future__ import annotations
@@ -29,7 +29,7 @@ NO_ANSWER = json.dumps({"no_answer": True, "answer": "", "claims": []})
 
 
 def lenient(summary: dict[str, tuple[int, int]]) -> dict[str, bool]:
-    """Пороги для крошечного набора: всё должно пройти."""
+    """Thresholds for a tiny set: everything must pass."""
     return {k: ok == n for k, (ok, n) in summary.items()}
 
 
@@ -84,7 +84,7 @@ def test_gate_turns_red_on_deliberately_degraded_prompt(
 
 
 def test_gate_turns_red_on_degraded_recordings(tmp_path: Path) -> None:
-    """Записи сняты с ухудшенной модели: ключи на месте, но качество ниже порога."""
+    """The recordings are taken from the degraded model: the keys are in place, but the quality is below the threshold."""
     inner = fake(wrong_article=True)
     res = evaluate_gate(pipe(tmp_path, record=True, inner=inner), ROWS, check=lenient)
     assert res.status == "fail" and "law" in res.message

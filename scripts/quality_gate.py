@@ -1,7 +1,7 @@
-"""Ворота качества CI: основной набор на записанных ответах (ADR-0003). Нужны БД, e5, закон.
+"""CI quality gate: main set on recorded answers (ADR-0003). Requires the DB, e5 and the law.
 
-Коды выхода: 0 — пройдено или пропущено (нет первой живой записи, предупреждение в журнал CI),
-1 — ворота красные (пороги не достигнуты или нет записи для изменённого промпта).
+Exit codes: 0 - passed or skipped (no first live recording; a warning goes to the CI log),
+1 - gate is red (thresholds not met, or no recording for a changed prompt).
 """
 
 from __future__ import annotations
@@ -36,7 +36,7 @@ def main() -> int:
     chunks, _ = load_chunks(ROOT / "data" / "raw")
     conn.execute("TRUNCATE chunks RESTART IDENTITY")
     store_chunks(conn, chunks, E5Embedder())
-    provider = os.environ.get("HRGID_LLM_PROVIDER") or "openrouter"  # решение владельца: Haiku
+    provider = os.environ.get("HRGID_LLM_PROVIDER") or "openrouter"  # owner's decision: Haiku
     llm = make_llm(provider, eval_file, record=False)
     pipe = make_pipeline(llm, make_searcher(conn, next(iter(CANDIDATES))), None)
     res = evaluate_gate(pipe, load_rows(eval_file))

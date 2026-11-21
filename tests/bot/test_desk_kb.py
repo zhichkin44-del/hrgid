@@ -34,9 +34,9 @@ def test_confidential_hides_name_everywhere(repo: Repo, desk: HrDesk) -> None:
     assert "Ольга" not in out.text and "конфиденциально" in out.text
     v = desk.view(t, NOW)
     assert v.employee_name is None and v.confidential
-    # после раскрытия — имя видно
+    # after the reveal, the name is visible
     assert desk.view(desk.reveal(t), NOW).employee_name == "Ольга Смирнова"
-    # аналитика: текст конфиденциальных не попадает
+    # analytics: the text of confidential requests does not get in
     desk.create(e, "обычный вопрос", NOW)
     rows = {r["key"]: r for r in desk.analytics_rows(COMPANY)}
     assert rows["K1"]["text"] == "" and rows["101"]["text"] == "обычный вопрос"
@@ -70,7 +70,7 @@ def test_answer_requires_text_and_kb_fields(repo: Repo, desk: HrDesk) -> None:
     with pytest.raises(KbError) as ei:
         desk.answer(COMPANY, t.key, "Анна", "ответ", NOW, save_to_kb=KbParams("в", "о", " "))
     assert ei.value.field == "basis"
-    assert desk.get(COMPANY, t.key).status == "queue"  # ничего не отправлено
+    assert desk.get(COMPANY, t.key).status == "queue"  # nothing sent
 
 
 def test_answer_to_unlinked_employee_marks_delivery_failed(repo: Repo, desk: HrDesk) -> None:
@@ -115,7 +115,7 @@ def test_delete_with_undo_window(repo: Repo, desk: HrDesk) -> None:
     e = _linked(repo)
     t = desk.create(e, "жалоба", NOW, confidential=True)
     t = desk.request_delete(t, NOW)
-    assert desk.list_tickets(COMPANY, "conf", NOW) == []  # HR уже не видит
+    assert desk.list_tickets(COMPANY, "conf", NOW) == []  # HR no longer sees it
     back = desk.undo_delete(t, NOW + timedelta(seconds=5))
     assert back is not None and back.status == "queue"
     t = desk.request_delete(back, NOW)
@@ -137,7 +137,7 @@ def test_purge_employee_data(repo: Repo, desk: HrDesk) -> None:
 def test_announcements_and_unread(repo: Repo, desk: HrDesk) -> None:
     a = _linked(repo)
     b = make_employee(repo, "e2", "Иван Петров", telegram_id=5002, consent_at=NOW)
-    make_employee(repo, "e3", "Не вошёл")  # без Telegram — не получает
+    make_employee(repo, "e3", "Не вошёл")  # without Telegram, does not receive
     ann = desk.publish_announcement(
         COMPANY, "График отпусков на 2027 год", "Пишите даты", "Анна", NOW, asks_dates=True
     )
@@ -155,5 +155,5 @@ def test_tenant_isolation(repo: Repo, desk: HrDesk) -> None:
     desk.create(other, "вопрос компании 2", NOW)
     assert [t.text for t in repo.tickets("other")] == ["вопрос компании 2"]
     assert [t.text for t in repo.tickets(COMPANY)] == ["вопрос компании 1"]
-    assert repo.ticket("other", "101") is not None  # нумерация у каждой компании своя
+    assert repo.ticket("other", "101") is not None  # numbering is separate for each company
     assert [v.text for v in desk.list_tickets("other", "all", NOW)] == ["вопрос компании 2"]

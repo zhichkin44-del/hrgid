@@ -1,4 +1,4 @@
-"""R4 сверхурочные, R5 работа в выходной."""
+"""R4 overtime, R5 work on a day off."""
 
 from __future__ import annotations
 
@@ -28,7 +28,8 @@ def overtime_pay(
     hours_before: Decimal = Decimal(0),
     time_off: bool = False,
 ) -> CalcResult:
-    """R4. hours_before — сверхурочные часы с начала года (лимит 120 ч для множителя 1,5)."""
+    """R4. hours_before - overtime hours since the start of the year (limit 120 h for the 1.5
+    multiplier)."""
     rate = _rate(monthly_salary, norm_hours)
     if not days:
         raise CalcError("Не указано ни одного дня сверхурочной работы")
@@ -80,7 +81,7 @@ def weekend_work_pay(
     variant: Literal["double", "rest_day"] = "double",
     salaried_within_norm: bool = False,
 ) -> CalcResult:
-    """R5. double — не менее двойной; rest_day — одинарная оплата + день отдыха."""
+    """R5. double - at least double pay; rest_day - single pay + a day of rest."""
     if variant not in ("double", "rest_day"):
         raise CalcError("Вариант: двойная оплата или одинарная с днём отдыха")
     if not is_day_off(day):

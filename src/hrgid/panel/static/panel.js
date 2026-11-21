@@ -1,4 +1,4 @@
-/* Окна: закрытие по Esc и по щелчку на затемнение (как в раскладке, SCREENS.md §0 п.2). */
+/* Dialogs: close on Esc and on a click on the overlay (as in the layout, SCREENS.md §0 item 2). */
 (function () {
   function closeWindow() {
     var x = document.querySelector(".ov .dlg .x");

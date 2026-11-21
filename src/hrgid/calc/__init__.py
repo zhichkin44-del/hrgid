@@ -1,4 +1,5 @@
-"""Детерминированные расчёты R1-R9 (ТК РФ, 255-ФЗ). Модели не вызываются."""
+"""Deterministic calculations R1-R9 (Labor Code of the RF, Federal Law 255-FZ). Models are not
+called."""
 
 from hrgid.calc.common import CalcError, CalcResult
 from hrgid.calc.overtime import overtime_pay, weekend_work_pay

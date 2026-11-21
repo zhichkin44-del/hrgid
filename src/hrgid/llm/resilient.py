@@ -1,4 +1,4 @@
-"""Устойчивость (§5 п.6): повторы с паузой, запасная модель, счётчик ошибок по провайдерам."""
+"""Resilience (§5 item 6): retries with a pause, a fallback model, an error counter per provider."""
 
 from __future__ import annotations
 

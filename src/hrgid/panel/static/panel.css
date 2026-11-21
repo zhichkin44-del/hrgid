@@ -1,4 +1,4 @@
-/* Дополнения к утверждённой вёрстке: только то, чего нет в style.css (формы на сервере). */
+/* Additions to the approved markup: only what is missing from style.css (server-side forms). */
 .sr{position:absolute;opacity:0;width:0;height:0}
 .chk{cursor:pointer;display:flex;gap:10px;align-items:flex-start}
 .chk input:checked + i{background:var(--ac);border-color:var(--ac);color:var(--ac-ink)}

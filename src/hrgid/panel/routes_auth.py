@@ -1,4 +1,4 @@
-"""П0: вход по почте и одноразовому коду, выход, истёкшая сессия."""
+"""П0: sign-in by email and one-time code, sign-out, expired session."""
 
 from typing import Annotated
 
@@ -9,7 +9,7 @@ from hrgid.panel.mailer import mask_email
 from hrgid.panel.security import MAX_FAILS
 from hrgid.panel.web_base import COOKIE, Ctx, Web
 
-EMAIL_COOKIE = "hrgid_le"  # почта на время входа: в адресной строке не храним
+EMAIL_COOKIE = "hrgid_le"  # email for the duration of sign-in; we do not keep it in the address bar
 
 
 def register(app: FastAPI, w: Web) -> None:
@@ -101,7 +101,7 @@ def register(app: FastAPI, w: Web) -> None:
 
     @app.get("/logout", response_class=HTMLResponse)
     def logout_ask(request: Request, c: Annotated[Ctx, Depends(w.ctx)]) -> HTMLResponse:
-        """П0.5 «Выйти из панели?»: окно поверх «Сегодня»."""
+        """П0.5 "Sign out of the panel?": a window over "Today"."""
         from hrgid.panel.routes_today import today_page
 
         return today_page(w, c, win="logout")

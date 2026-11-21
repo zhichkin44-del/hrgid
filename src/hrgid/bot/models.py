@@ -1,4 +1,4 @@
-"""Модели данных бота и очереди HR (SPEC-09 §4, §9). Все сущности несут company_id (tenant)."""
+"""Bot and HR queue data models (SPEC-09 §4, §9). All entities carry company_id (tenant)."""
 
 from __future__ import annotations
 
@@ -21,30 +21,31 @@ class Button(BaseModel):
 
 
 class Out(BaseModel):
-    """Исходящее сообщение. Доставляет адаптер Telegram; для HR и пушей лежит в outbox."""
+    """Outgoing message. Delivered by the Telegram adapter; for HR and push notifications it stays
+    in the outbox."""
 
     chat_id: int
     text: str
     rows: list[list[Button]] = Field(default_factory=list)
-    menu: bool = False  # приложить клавиатуру меню (5 кнопок)
-    edit: bool = False  # заменить сообщение, из которого пришла кнопка
+    menu: bool = False  # attach the menu keyboard (5 buttons)
+    edit: bool = False  # replace the message the button came from
     company_id: str = ""
-    meta: dict[str, str] = Field(default_factory=dict)  # ticket=<key> и т.п. для отметки сбоя
+    meta: dict[str, str] = Field(default_factory=dict)  # ticket=<key> etc., for marking a failure
 
 
 class CompanySettings(BaseModel):
-    """Настройки компании (раздел П9; здесь — значения по умолчанию из SPEC-09 §4.6)."""
+    """Company settings (section П9; here, the default values from SPEC-09 §4.6)."""
 
     company_id: str
     company_name: str = "Компания"
     hr_name: str = "HR"
-    hr_chat_id: int | None = None  # отдельный чат HR для уведомлений
+    hr_chat_id: int | None = None  # separate HR chat for notifications
     hours_start: time = time(10, 0)
     hours_end: time = time(19, 0)
-    utc_offset: int = 3  # часы; «мск»
+    utc_offset: int = 3  # hours; "MSK"
     tz_label: str = "мск"
     work_weekdays: list[int] = Field(default_factory=lambda: [0, 1, 2, 3, 4])
-    sla_hours: int = 4  # рабочих часов
+    sla_hours: int = 4  # working hours
     urgent_contact: str = ""
     code_prefix: str = "HR"
     dialog_timeout_min: int = 15
@@ -60,8 +61,8 @@ class Employee(BaseModel):
     status: EmployeeStatus = "active"
     telegram_id: int | None = None
     consent_at: datetime | None = None
-    disclaimer_date: date | None = None  # когда показывали «не юридическая консультация»
-    # профиль из импорта (§4.4)
+    disclaimer_date: date | None = None  # when the "not legal advice" notice was shown
+    # profile from the import (§4.4)
     hire_date: date | None = None
     schedule: str = ""
     salary: Decimal | None = None
@@ -70,12 +71,13 @@ class Employee(BaseModel):
     unused_vacation_days: Decimal | None = None
     used_vacation_days: Decimal = Decimal(0)
     insurance_years: Decimal | None = None
-    overtime_ytd: Decimal = Decimal(0)  # сверхурочные часы с начала года (лимит 120 ч, ст. 152)
+    # overtime hours since the start of the year (limit 120 h, Art. 152)
+    overtime_ytd: Decimal = Decimal(0)
 
     @property
     def first_name(self) -> str:
         parts = self.full_name.split()
-        if len(parts) >= 3:  # «Фамилия Имя Отчество» из выгрузки
+        if len(parts) >= 3:  # "Last First Middle" from the export
             return parts[1]
         return parts[0] if parts else ""
 
@@ -104,7 +106,7 @@ class TicketMessage(BaseModel):
 
 
 class Ticket(BaseModel):
-    key: str  # «131» или «K4» (конфиденциальные — своя нумерация)
+    key: str  # "131" or "K4" (confidential ones have their own numbering)
     company_id: str
     employee_id: str
     kind: TicketKind = "question"
@@ -133,16 +135,16 @@ class KbEntry(BaseModel):
     company_id: str
     question: str
     answer: str
-    basis: str  # статья ТК или пункт правил (обязательно)
-    audience: str = "all"  # all или название группы
+    basis: str  # Labor Code article or rule item (required)
+    audience: str = "all"  # all, or a group name
     author: str = ""
     created_at: datetime
     source_ticket: str = ""
-    archived: bool = False  # П3.3: в архиве бот не берёт ответ
-    needs_review: bool = False  # «проверить»: изменился закон или правило (сценарий 4)
+    archived: bool = False  # П3.3: in the archive the bot does not take the answer
+    needs_review: bool = False  # "check": the law or the rule has changed (scenario 4)
     review_note: str = ""
-    uses: int = 0  # сколько раз ответ отдан из базы
-    history: list[str] = Field(default_factory=list)  # история изменений (П3.2)
+    uses: int = 0  # how many times the answer was given from the base
+    history: list[str] = Field(default_factory=list)  # change history (П3.2)
 
 
 class Announcement(BaseModel):
@@ -153,9 +155,9 @@ class Announcement(BaseModel):
     author: str = ""
     created_at: datetime
     asks_dates: bool = False
-    reads: dict[str, datetime] = Field(default_factory=dict)  # employee_id -> когда прочитал
-    groups: list[str] = Field(default_factory=list)  # пусто = всем
-    recipients: list[str] = Field(default_factory=list)  # кому ушло (employee_id)
+    reads: dict[str, datetime] = Field(default_factory=dict)  # employee_id -> when read
+    groups: list[str] = Field(default_factory=list)  # empty = everyone
+    recipients: list[str] = Field(default_factory=list)  # to whom it was sent (employee_id)
     reminded_at: datetime | None = None
 
 

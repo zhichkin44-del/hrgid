@@ -33,7 +33,7 @@ def test_name_any_case_same_label() -> None:
     m = Masker(name_finder=_names)
     out, mp = m.mask("Уволить Иванова Ивана? Иванов Иван просит отпуск")
     assert "Иванов" not in out
-    assert out.count("[ФИО_") == 2 and len(mp.items) == 2  # разные падежи — разные метки
+    assert out.count("[ФИО_") == 2 and len(mp.items) == 2  # different cases: different labels
 
 
 def test_repeated_value_one_label() -> None:
@@ -50,7 +50,7 @@ def test_foreign_or_modified_label_not_revealed() -> None:
     text, unknown = mp.unmask("Ответ для [ФИО_1], копия [ФИО_2], [ПАСПОРТ_1]")
     assert text == "Ответ для Иванов Иван, копия [скрыто], [скрыто]"
     assert unknown == ["[ФИО_2]", "[ПАСПОРТ_1]"]
-    # метка из другого запроса не раскрывается чужой таблицей
+    # a label from another request is not revealed by a foreign table
     t2, u2 = MaskMap().unmask("[ФИО_1]")
     assert t2 == "[скрыто]" and u2 == ["[ФИО_1]"]
 

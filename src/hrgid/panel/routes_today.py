@@ -1,4 +1,4 @@
-"""П1 «Сегодня»: очередь и сроки, риски в правилах, оценки 👎, расход бюджета."""
+"""П1 "Today": the queue and deadlines, risks in the rules, 👎 ratings, budget spending."""
 
 from dataclasses import dataclass
 from typing import Annotated
@@ -20,7 +20,7 @@ class RiskLine:
 
 
 def risk_lines(w: Web, c: Ctx) -> list[RiskLine]:
-    """Новые риски в правилах: по последней версии каждого документа."""
+    """New risks in the rules: by the latest version of each document."""
     out: list[RiskLine] = []
     if w.d.checker is None:
         return out

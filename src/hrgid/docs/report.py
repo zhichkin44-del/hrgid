@@ -1,4 +1,5 @@
-"""Отчёт о проверке на ТК: HTML и PDF (reportlab). Если PDF собрать нельзя — HTML и пометка."""
+"""Labor Code compliance check report: HTML and PDF (reportlab). If a PDF cannot be built, HTML with
+a note."""
 
 from __future__ import annotations
 
@@ -86,7 +87,8 @@ def to_pdf(rep: CheckReport, title: str, path: Path, version_note: str = "") -> 
 def export_report(
     rep: CheckReport, title: str, out_dir: Path, version_note: str = ""
 ) -> tuple[Path, str]:
-    """-> (файл, формат). PDF; при невозможности — HTML (формат «html», в панели пометка)."""
+    """-> (file, format). PDF; if that is not possible, HTML (format "html", with a note in the
+    panel)."""
     out_dir.mkdir(parents=True, exist_ok=True)
     stem = f"tk-{rep.doc_id}-v{rep.version}"
     try:

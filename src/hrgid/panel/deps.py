@@ -1,4 +1,4 @@
-"""Сборка зависимостей панели: хранилище, сервисы этапов 2–5, сервисы панели."""
+"""Panel dependency assembly: storage, services of stages 2-5, panel services."""
 
 from __future__ import annotations
 
@@ -49,7 +49,7 @@ class PanelDeps:
     clock: Callable[[], datetime]
     bot_username: str = "hrgid_bot"
     secure_cookie: bool = False
-    # качество по версиям набора (П8, админ): [{version, date, hit, ...}]
+    # quality by set version (П8, admin): [{version, date, hit, ...}]
     quality: Callable[[], list[dict[str, str]]] = field(default=lambda: [])
     extras: dict[str, Any] = field(default_factory=dict)
 

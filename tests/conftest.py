@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import hrgid  # noqa: F401  # первым: подготавливает libpq на Windows
+import hrgid  # noqa: F401  # first: prepares libpq on Windows
 
 from collections.abc import Iterator  # isort: skip
 from pathlib import Path

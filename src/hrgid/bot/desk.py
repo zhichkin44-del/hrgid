@@ -1,7 +1,9 @@
-"""Очередь HR (SPEC-09 §4.6–4.7, §8 П2): обращения, статусы, назначение, SLA, ответы.
+"""HR queue (SPEC-09 §4.6-4.7, §8 P2): requests, statuses, assignment, SLA, replies.
 
-Без веб-панели (она в этапе 6): панель вызывает те же методы. Всё, что нужно доставить в
-Telegram (уведомление HR, ответ сотруднику, объявление), кладётся в outbox; бот доставляет.
+Without the web panel (it comes in stage 6): the panel calls the same methods. Everything that must
+be delivered to
+Telegram (HR notification, reply to the employee, announcement) goes into the outbox; the bot
+delivers it.
 """
 
 from __future__ import annotations
@@ -43,7 +45,8 @@ class KbParams:
 
 @dataclass(frozen=True)
 class HrView:
-    """Карточка обращения для HR: у конфиденциального имя скрыто, пока автор не раскрыл."""
+    """HR request card: for a confidential request the name stays hidden until the author reveals
+    it."""
 
     key: str
     label: str
@@ -62,7 +65,7 @@ class HrDesk:
         self.repo = repo
         self.kb = kb
 
-    # --- создание ----------------------------------------------------------
+    # --- creation ---
     def create(
         self,
         emp: Employee,
@@ -114,7 +117,7 @@ class HrDesk:
             now,
         )
 
-    # --- действия сотрудника -----------------------------------------------
+    # --- employee actions ---
     def append(self, t: Ticket, text: str, now: datetime) -> Ticket:
         text = text.strip()[:2000]
         if not text:
@@ -144,7 +147,7 @@ class HrDesk:
         return t
 
     def reveal(self, t: Ticket) -> Ticket:
-        """Сотрудник раскрыл имя HR; обратно не отменяется (Б7.1)."""
+        """The employee revealed the HR name; this cannot be undone (Б7.1)."""
         t = t.model_copy(update={"revealed": True})
         self.repo.save_ticket(t)
         return t
@@ -168,7 +171,7 @@ class HrDesk:
         return t
 
     def finalize_company(self, company_id: str, now: datetime) -> int:
-        """Окончательно удалить конфиденциальные обращения, у которых вышли секунды на возврат."""
+        """Permanently deletes confidential requests whose time window for return has expired."""
         n = 0
         for t in self.repo.tickets(company_id):
             if t.status == "deleted_pending" and t.delete_deadline and now > t.delete_deadline:
@@ -178,7 +181,7 @@ class HrDesk:
                 n += 1
         return n
 
-    # --- действия HR ---------------------------------------------------------
+    # --- HR actions ---
     def get(self, company_id: str, key: str) -> Ticket:
         t = self.repo.ticket(company_id, key)
         if t is None:
@@ -203,7 +206,7 @@ class HrDesk:
         *,
         save_to_kb: KbParams | None = None,
     ) -> tuple[Ticket, KbEntry | None]:
-        """Ответ HR -> в чат сотрудника (через outbox); при желании — «сохранить в базу»."""
+        """HR reply goes to the employee's chat (via the outbox); optionally, "save to the base"."""
         t = self.get(company_id, key)
         text = text.strip()
         if not text:
@@ -213,7 +216,7 @@ class HrDesk:
         if save_to_kb is not None and t.confidential:
             raise DeskError("Конфиденциальные обращения не попадают в базу ответов")
         entry: KbEntry | None = None
-        if save_to_kb is not None:  # ошибка полей — до отправки ответа
+        if save_to_kb is not None:  # field error, checked before the reply is sent
             entry = self.kb.add(
                 company_id,
                 question=save_to_kb.question,
@@ -268,7 +271,7 @@ class HrDesk:
         if t is not None:
             self.repo.save_ticket(t.model_copy(update={"delivery_failed": True}))
 
-    # --- списки и карточки -------------------------------------------------------
+    # --- lists and cards ---
     def is_overdue(self, t: Ticket, now: datetime) -> bool:
         return t.status == "queue" and now > t.due_at
 
@@ -308,7 +311,7 @@ class HrDesk:
         )
 
     def analytics_rows(self, company_id: str) -> list[dict[str, str]]:
-        """Строки для аналитики: у конфиденциальных нет текста и автора (§4.7)."""
+        """Rows for analytics: confidential ones have no text and no author (§4.7)."""
         rows: list[dict[str, str]] = []
         for t in self.repo.tickets(company_id):
             if t.status in ("deleted", "deleted_pending"):
@@ -332,9 +335,10 @@ class HrDesk:
         ]
         return sorted(mine, key=lambda t: t.created_at, reverse=True)
 
-    # --- данные сотрудника (Б10, П6.12) ------------------------------------------------
+    # --- employee data (Б10, П6.12) ---
     def purge_employee(self, company_id: str, employee_id: str) -> None:
-        """Удалить ПДн сотрудника: профиль, привязку, тексты обращений; запись о факте остаётся."""
+        """Deletes the employee's personal data: profile, link, request texts; the record of the
+        fact remains."""
         emp = self.repo.employee(company_id, employee_id)
         if emp is None:
             return
@@ -352,7 +356,7 @@ class HrDesk:
             )
         )
 
-    # --- объявления (Б9, П11) --------------------------------------------------------
+    # --- announcements (Б9, П11) ---
     def publish_announcement(
         self,
         company_id: str,
@@ -406,7 +410,7 @@ class HrDesk:
         return True
 
     def unread(self, company_id: str, ann_id: str) -> list[str]:
-        """Кто не прочитал (П11.4): ФИО активных сотрудников."""
+        """Who has not read it (П11.4): full names of active employees."""
         a = self.repo.announcement(company_id, ann_id)
         if a is None:
             return []

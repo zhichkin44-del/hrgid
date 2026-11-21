@@ -1,7 +1,7 @@
-"""Кэш ответов (§9): только маршруты «закон» и «правила компании», без данных профиля.
+"""Answer cache (§9): only the "law" and "company rules" routes, without profile data.
 
-Ключ = company_id + группа сотрудника + версия документов + хэш замаскированного вопроса.
-Реализация в памяти; Redis подключается тем же интерфейсом.
+Key = company_id + employee group + document version + hash of the masked question.
+In-memory implementation; Redis plugs in through the same interface.
 """
 
 from __future__ import annotations

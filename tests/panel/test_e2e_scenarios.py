@@ -1,7 +1,7 @@
-"""Шесть сквозных сценариев SPEC-09 §17: панель + бот на общем хранилище (Fake-модель).
+"""Six end-to-end SPEC-09 §17 scenarios: panel + bot on shared storage (Fake model).
 
-Playwright-вариант этих же шагов — tests/panel/test_browser_e2e.py (маркер browser, в CI);
-здесь панель проверяется через FastAPI TestClient: HTML-ответы и их фрагменты.
+The Playwright version of the same steps is tests/panel/test_browser_e2e.py (marker browser, in CI);
+here the panel is checked through the FastAPI TestClient: HTML responses and their fragments.
 """
 
 from __future__ import annotations
@@ -23,7 +23,7 @@ from .seed import RULES, docx_bytes
 
 
 class Pipe:
-    """Поток этапа 2 заменён скриптом: слово вопроса -> готовый ответ."""
+    """The stage 2 flow is replaced by a script: a question word -> a ready answer."""
 
     def __init__(self) -> None:
         self.script: list[tuple[str, FlowAnswer]] = []
@@ -111,7 +111,7 @@ STAFF_CSV = (
 
 
 def import_staff(env: Env) -> dict[str, str]:
-    """Импорт 3 сотрудников, массовая выдача кодов CSV -> {ФИО: код}."""
+    """Imports 3 employees, mass issue of codes CSV -> {full name: code}."""
     adm = env.login(ADMIN)
     r = adm.post("/staff/import", files={"file": ("zup.csv", STAFF_CSV, "text/csv")})
     token = re.search(r"/staff/import/(\w+)/map", str(r.url)).group(1)  # type: ignore[union-attr]
@@ -123,21 +123,21 @@ def import_staff(env: Env) -> dict[str, str]:
 
 
 # ---------------------------------------------------------------------------------------
-# 1. Новая компания: администратор → документ → проверка на ТК → импорт 3 сотрудников →
-#    вопрос в Telegram → ответ
+# 1. New company: administrator -> document -> Labor Code check -> import 3 employees ->
+#    question in Telegram -> answer
 # ---------------------------------------------------------------------------------------
 
 
 def test_scenario_1_new_company_to_first_answer() -> None:
     env = make_env()
     adm = env.login(ADMIN)
-    assert "Начало работы" in adm.get("/").text  # новая компания: четыре шага
+    assert "Начало работы" in adm.get("/").text  # new company: four steps
     doc = upload_rules(env)
     approve(env, doc, 1)
     r = adm.post(f"/check/{doc}/1/run")
     assert (
         "Проверка готова" in r.text and "ст. 136" in r.text
-    )  # нарочно внесённое нарушение найдено
+    )  # a deliberately introduced violation is found
     codes = import_staff(env)
     assert set(codes) == {"Козлов Дмитрий", "Лебедева Анастасия", "Никитин Сергей"}
     assert all(c.startswith("ЖС-") for c in codes.values())
@@ -161,7 +161,7 @@ def test_scenario_1_new_company_to_first_answer() -> None:
     assert "31 календарный день" in text_of(out) and "Правила студии, п. 2.1" in text_of(out)
     rules = bot.tap(7001, bot.say(7001, "Правила компании"), "Правила студии")
     assert "31 календарный день" in text_of(rules) and "приказ № 1" in text_of(rules)
-    # в панели сотрудник стал «Подключён», согласие записано
+    # in the panel the employee became "Connected", consent is recorded
     assert "Подключён" in adm.get("/staff").text
     kozlov = [e for e in env.deps.repo.employees(CO) if e.full_name == "Козлов Дмитрий"][0]
     assert kozlov.consent_at is not None and kozlov.telegram_id == 7001
@@ -169,8 +169,8 @@ def test_scenario_1_new_company_to_first_answer() -> None:
 
 
 # ---------------------------------------------------------------------------------------
-# 2. Вопрос без ответа → П1 → П2 ответ HR → сотрудник получает → «в базу» → тот же вопрос
-#    другого сотрудника отвечается из базы
+# 2. Question with no answer -> П1 -> П2 HR reply -> employee receives it -> "to the base" -> the same question
+#    from another employee is answered from the base
 # ---------------------------------------------------------------------------------------
 
 
@@ -210,8 +210,8 @@ def test_scenario_2_unanswered_to_hr_answer_to_kb() -> None:
     )
     assert "Ответ отправлен" in r.text and "Сохранён в базу" in r.text
     got = bot.push(7001)
-    assert any(answer in o.text and f"№{key}" in o.text for o in got)  # сотрудник получил
-    # другой сотрудник спрашивает то же — отвечает база, модель не вызывалась
+    assert any(answer in o.text and f"№{key}" in o.text for o in got)  # the employee received it
+    # another employee asks the same: the base answers, the model was not called
     calls = len(pipe.calls)
     out = bot.say(7002, "Можно ли мне работать из другого города?")
     assert "Ответ HR из базы" in text_of(out) and answer in text_of(out)
@@ -222,7 +222,7 @@ def test_scenario_2_unanswered_to_hr_answer_to_kb() -> None:
 
 
 # ---------------------------------------------------------------------------------------
-# 3. Риск в правилах → «исправить» → новая версия → перепроверка → бот использует новую версию
+# 3. Risk in the rules -> "fix" -> new version -> re-check -> the bot uses the new version
 # ---------------------------------------------------------------------------------------
 
 
@@ -233,7 +233,7 @@ def test_scenario_3_risk_fix_new_version_bot_uses_it() -> None:
     hr = env.login(HR)
     hr.post(f"/check/{doc}/1/run")
     today = hr.get("/").text
-    assert "с риском нарушения" in today  # П1: риск виден
+    assert "с риском нарушения" in today  # П1: the risk is visible
     emp, _ = env.deps.staff.invite(CO, "Козлов Дмитрий", "01.01.2024", env.clock.now)
     code = env.deps.bot_auth.issue_code(CO, emp.id, env.clock.now)
     bot = Bot(env, Pipe())
@@ -243,8 +243,8 @@ def test_scenario_3_risk_fix_new_version_bot_uses_it() -> None:
     assert "один раз в месяц" in text_of(v1) and "Версия 1" in text_of(v1)
     fixed = "Заработная плата выплачивается два раза в месяц: 25 числа и 10 числа."
     r = hr.post(f"/check/{doc}/1/fix", data={"item": "3.1", "text": fixed})
-    assert "Создана версия 2" in r.text and "рисков — 0" in r.text  # перепроверка чистая
-    # проект без приказа бот не применяет
+    assert "Создана версия 2" in r.text and "рисков — 0" in r.text  # clean re-check
+    # a draft without an order is not applied by the bot
     v_draft = bot.tap(7001, bot.say(7001, "/rules"), "Правила студии")
     assert "один раз в месяц" in text_of(v_draft)
     approve(env, doc, 2, "2", "02.11.2026")
@@ -256,7 +256,7 @@ def test_scenario_3_risk_fix_new_version_bot_uses_it() -> None:
 
 
 # ---------------------------------------------------------------------------------------
-# 4. Изменение статьи закона → ответы, опирающиеся на неё, помечены «проверить»
+# 4. Change of a law article -> answers based on it are marked "check"
 # ---------------------------------------------------------------------------------------
 
 
@@ -274,11 +274,11 @@ def test_scenario_4_law_change_marks_answers() -> None:
     page = hr.get("/kb").text
     assert "1 ответ(ов) нужно пересмотреть" in page and "Сколько дней отпуска" in page
     marked = {e.question for e in d.kbadmin.needs_review(CO)}
-    assert marked == {"Сколько дней отпуска"}  # ст. 153 не тронута
-    # затронутый ответ пересматривается и помета снимается
+    assert marked == {"Сколько дней отпуска"}  # Art. 153 is untouched
+    # the affected answer is reviewed and the mark is removed
     r = hr.post(f"/kb/review/{d.kbadmin.needs_review(CO)[0].id}", data={"decision": "keep"})
     assert "Пересмотр завершён" in r.text and not d.kbadmin.needs_review(CO)
-    # то же при смене версии правил: ответы с пунктами правил получают пометку
+    # the same on a rules version change: answers with rules items get a mark
     d.kb.add(CO, question="Сколько отпуск в студии", answer="31 день.", basis="п. 2.1 Правил",
              author="Анна", now=env.clock.now)  # fmt: skip
     doc = upload_rules(env)
@@ -292,7 +292,7 @@ def test_scenario_4_law_change_marks_answers() -> None:
 
 
 # ---------------------------------------------------------------------------------------
-# 5. Бюджет исчерпан → действие из П9 → предупреждение в П1
+# 5. Budget exhausted -> action from П9 -> warning in П1
 # ---------------------------------------------------------------------------------------
 
 
@@ -310,39 +310,39 @@ def test_scenario_5_budget_exhausted_action_and_warning() -> None:
     bot.login(7001, code)
     adm = env.login(ADMIN)
     assert "Бюджет месяца исчерпан" not in adm.get("/").text
-    assert "28 дней" in text_of(bot.say(7001, "Сколько дней отпуска?"))  # пока бюджет есть
+    assert "28 дней" in text_of(bot.say(7001, "Сколько дней отпуска?"))  # while there is budget
     assert adm.post("/costs/limit", data={"limit": "1000", "action": "queue"})
     d.ops.log_question(CO, masked_question="расход", cost_rub=1000.0, now=env.clock.now)
     calls = len(pipe.calls)
     out = bot.say(7001, "Сколько дней отпуска?")
-    assert len(pipe.calls) == calls  # модель не вызывалась
-    assert "28 дней" not in text_of(out) and "HR" in text_of(out)  # вопрос уходит к HR
+    assert len(pipe.calls) == calls  # the model was not called
+    assert "28 дней" not in text_of(out) and "HR" in text_of(out)  # the question goes to HR
     page = adm.get("/").text
     assert (
         "Бюджет месяца исчерпан" in page
         and "вопросы без готового ответа уходят в очередь HR" in page
     )
-    assert 'href="/settings"' in page  # действие — в настройках
-    # администратор выбирает другое действие при превышении
+    assert 'href="/settings"' in page  # the action is in the settings
+    # the administrator chooses another action when the limit is exceeded
     r = adm.post("/costs/limit", data={"limit": "1000", "action": "refuse"})
     assert "Лимит изменён" in r.text
     assert "вежливо отказывает" in adm.get("/").text
     out2 = bot.say(7001, "Сколько дней отпуска теперь?")
     assert text_of(out2) != text_of(out) and len(pipe.calls) == calls
-    # HR видит предупреждение и просит администратора, а не меняет лимит сам
+    # HR sees the warning and asks the administrator rather than changing the limit itself
     page_hr = env.login(HR).get("/").text
     assert "Бюджет месяца исчерпан" in page_hr and "Попросить администратора" in page_hr
-    # ответы из базы продолжают работать при исчерпанном бюджете
+    # answers from the base keep working when the budget is exhausted
     d.kb.add(CO, question="Как оформить командировку", answer="Заявление за 3 дня.", basis="п. 5.1",
              author="Анна", now=env.clock.now)  # fmt: skip
     assert "Заявление за 3 дня" in text_of(bot.say(7001, "Как оформить командировку?"))
-    # новый месяц — расход обнулился
+    # new month: spending reset to zero
     env.clock.advance(days=14)
     assert not d.ops.budget(CO, env.clock.now).exhausted
 
 
 # ---------------------------------------------------------------------------------------
-# 6. Увольнение сотрудника → отключение → бот не отвечает, история хранится по сроку
+# 6. Dismissal -> deactivation -> the bot does not answer, history is kept per the retention period
 # ---------------------------------------------------------------------------------------
 
 
@@ -365,17 +365,17 @@ def test_scenario_6_dismissal_disable_keeps_history() -> None:
     assert "Доступ отключён" in r.text
     calls = len(pipe.calls)
     out = bot.say(7003, "Сколько дней отпуска?")
-    assert len(pipe.calls) == calls  # бот не отвечает по существу
+    assert len(pipe.calls) == calls  # the bot does not answer substantively
     assert "доступ" in text_of(out).lower()
     n_tickets = len(d.repo.tickets(CO))
     bot.say(7003, "Хочу создать обращение")
     assert len(d.repo.tickets(CO)) == n_tickets
-    # история хранится по сроку: обращение и профиль на месте, код не работает
+    # history is kept per the retention period: the request and profile stay in place, the code does not work
     assert any("справку о доходах" in t.text for t in d.repo.tickets(CO))
     assert d.repo.employee(CO, emp.id) is not None
     assert hr.get("/staff").text.count("Доступ отключён") >= 1
-    assert d.ops.tech(CO).retention_days == 365  # срок хранения по умолчанию — 1 год
-    # новый код отключённому не выдаётся
+    assert d.ops.tech(CO).retention_days == 365  # default retention period is 1 year
+    # a new code is not issued to a deactivated employee
     r = hr.post(f"/staff/{emp.id}/newcode", data={})
     assert "отключённым доступом" in r.text
     assert env.clock.now.date() >= date(2026, 11, 18)

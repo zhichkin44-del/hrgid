@@ -1,4 +1,4 @@
-"""Сервер MCP на официальном SDK (mcp): stdio и streamable HTTP. Все инструменты — только чтение."""
+"""MCP server on the official SDK (mcp): stdio and streamable HTTP. All tools are read-only."""
 
 from __future__ import annotations
 
@@ -18,9 +18,10 @@ TokenFor = Callable[["Server[Any, Any]"], str | None]
 
 
 def build_server(gw: McpGateway, token_for: TokenFor) -> Server[Any, Any]:
-    """token_for достаёт токен текущего вызова: из окружения (stdio) или из заголовка (HTTP).
+    """token_for fetches the token of the current call: from the environment (stdio) or from the
+    header (HTTP).
 
-    Токен проверяется на каждом вызове: отзыв действует сразу, без перезапуска сервера.
+    The token is checked on every call: a revocation takes effect at once, without a server restart.
     """
     server: Server[Any, Any] = Server("hrgid")
 
@@ -40,7 +41,7 @@ def build_server(gw: McpGateway, token_for: TokenFor) -> Server[Any, Any]:
 
     @server.call_tool()  # type: ignore[untyped-decorator]
     async def _call(name: str, arguments: dict[str, Any]) -> list[types.TextContent]:
-        out = gw.call(token_for(server), name, arguments)  # исключение -> isError у клиента
+        out = gw.call(token_for(server), name, arguments)  # exception -> isError for the client
         return [types.TextContent(type="text", text=json.dumps(out, ensure_ascii=False, indent=1))]
 
     return server

@@ -1,9 +1,9 @@
-"""Адаптер YandexGPT (Foundation Models API, https://yandex.cloud/ru/docs/foundation-models/).
+"""YandexGPT adapter (Foundation Models API, https://yandex.cloud/ru/docs/foundation-models/).
 
-POST llm.api.cloud.yandex.net/foundationModels/v1/completion, заголовки
-Authorization: Api-Key <ключ> и x-folder-id. Модель задаётся modelUri gpt://<каталог>/<модель>/latest.
-Инструменты — поле tools, ответ с toolCallList. Ключи — YANDEX_API_KEY, YANDEX_FOLDER_ID;
-без них не вызывается.
+POST llm.api.cloud.yandex.net/foundationModels/v1/completion, headers
+Authorization: Api-Key <key> and x-folder-id. The model is set by modelUri gpt://<folder>/<model>/latest.
+Tools: the tools field, the answer with toolCallList. Keys: YANDEX_API_KEY, YANDEX_FOLDER_ID;
+without them, it is not called.
 """
 
 from __future__ import annotations

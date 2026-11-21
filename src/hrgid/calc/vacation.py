@@ -1,4 +1,4 @@
-"""R1 отпускные, R2 компенсация при увольнении, R3 накопленные дни отпуска."""
+"""R1 vacation pay, R2 compensation on dismissal, R3 accumulated vacation days."""
 
 from __future__ import annotations
 
@@ -14,14 +14,15 @@ from hrgid.calc.rules import dparam, param, rule
 def _divisor(
     reference: date, hire_date: date | None, excluded: Mapping[tuple[int, int], int]
 ) -> Decimal:
-    """Сумма «календарных дней» расчётного периода: 29,3 за полный месяц, пропорция за неполный."""
+    """Sum of "calendar days" in the settlement period: 29.3 for a full month, pro rata for a
+    partial one."""
     avg_days = dparam("R1", "avg_days_per_month")
     total = Decimal(0)
     for k in range(1, 13):
         first = add_months(reference.replace(day=1), -k)
         dim = _cal.monthrange(first.year, first.month)[1]
         if hire_date is not None and hire_date > first.replace(day=dim):
-            continue  # месяц до приёма на работу
+            continue  # the month before hiring
         lost = excluded.get((first.year, first.month), 0)
         if lost < 0 or lost > dim:
             raise CalcError(f"Исключаемых дней в {first:%m.%Y}: {lost}, в месяце {dim}")
@@ -48,7 +49,7 @@ def _pay(
     if earnings <= 0:
         raise CalcError("Заработок за расчётный период должен быть больше нуля")
     exact = _divisor(reference, hire_date, excluded or {})
-    divisor = exact.quantize(Decimal("0.0001"))  # для показа; считаем по точному значению
+    divisor = exact.quantize(Decimal("0.0001"))  # for display; calculated on the exact value
     avg = money(earnings / exact)
     gross = money(avg * days)
     rate = dparam("R1", "ndfl_rate")
@@ -82,7 +83,7 @@ def vacation_pay(
     hire_date: date | None = None,
     excluded_days: Mapping[tuple[int, int], int] | None = None,
 ) -> CalcResult:
-    """R1. earnings — начисленный заработок за 12 месяцев до месяца начала отпуска."""
+    """R1. earnings - accrued earnings for 12 months before the month the vacation starts."""
     if not 1 <= vacation_days <= int(param("R1", "max_vacation_days")):
         raise CalcError("Дней отпуска должно быть от 1 до 56")
     r = _pay(
@@ -106,7 +107,7 @@ def leave_compensation(
     hire_date: date | None = None,
     excluded_days: Mapping[tuple[int, int], int] | None = None,
 ) -> CalcResult:
-    """R2. Компенсация за все неиспользованные дни отпуска."""
+    """R2. Compensation for all unused vacation days."""
     if unused_days < 0:
         raise CalcError("Неиспользованных дней не может быть меньше нуля")
     return _pay(
@@ -122,7 +123,8 @@ def accrued_vacation(
     used_days: Decimal = Decimal(0),
     excluded_days: int = 0,
 ) -> CalcResult:
-    """R3. Остаток месяца >= 15 дней считается полным месяцем, меньше — отбрасывается."""
+    """R3. A remainder of the month of 15 days or more counts as a full month; fewer is
+    discarded."""
     if on_date < hire_date:
         raise CalcError("Дата расчёта не может быть раньше даты приёма на работу")
     annual = annual_days if annual_days is not None else dparam("R3", "annual_days")

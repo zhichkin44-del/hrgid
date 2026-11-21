@@ -1,4 +1,4 @@
-"""Права по реестру SCREENS.md §1: матрица «раздел × роль» и закрытость всех маршрутов без входа."""
+"""Rights per the SCREENS.md §1 registry: the "section x role" matrix and the closedness of all routes without sign-in."""
 
 from __future__ import annotations
 
@@ -53,7 +53,7 @@ def test_settings_only_admin_everything_else_open() -> None:
     hr, adm = env.login(HR), env.login(ADMIN)
     assert hr.get("/settings").status_code == 403 and adm.get("/settings").status_code == 200
     nav = hr.get("/").text
-    assert 'href="/settings"' in nav  # пункт есть, внутри — «нет прав» (П9.6)
+    assert 'href="/settings"' in nav  # the item exists, inside it "no rights" (П9.6)
 
 
 def test_admin_only_actions_return_403_for_hr_and_change_nothing() -> None:
@@ -131,7 +131,7 @@ def test_every_route_requires_login() -> None:
                 r.status_code,
             )
             checked += 1
-    assert checked > 80  # обошли весь список маршрутов
+    assert checked > 80  # went through the whole list of routes
 
 
 def test_public_routes_are_only_login_pages() -> None:

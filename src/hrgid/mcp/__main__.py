@@ -1,10 +1,11 @@
-"""Запуск MCP-сервера HRgid.
+"""Starts the HRgid MCP server.
 
     HRGID_MCP_TOKEN=hrg_... python -m hrgid.mcp            # stdio (Claude Code, Claude Desktop)
-    python -m hrgid.mcp --http --port 8765                  # streamable HTTP, токен в Authorization
+    # streamable HTTP, token in Authorization
+    python -m hrgid.mcp --http --port 8765
 
-Нужны DATABASE_URL (иначе встроенный pgserver) и, для check_policy_clause, ключ модели
-(HRGID_LLM_PROVIDER, по умолчанию claude). Компания определяется токеном из панели (П9).
+Requires DATABASE_URL (otherwise the bundled pgserver) and, for check_policy_clause, a model key
+(HRGID_LLM_PROVIDER, default claude). The company is determined by the token from the panel (П9).
 """
 
 from __future__ import annotations
@@ -14,7 +15,7 @@ import asyncio
 import os
 from typing import Any
 
-import hrgid  # noqa: F401  # первым: подготавливает libpq на Windows
+import hrgid  # noqa: F401  # first: prepares libpq on Windows
 
 from hrgid.bot.store import PgDocStore  # isort: skip
 from hrgid.mcp.clause import LlmClauseChecker
@@ -38,13 +39,14 @@ def build_gateway_from_env() -> McpGateway:
     try:
         llm = ResilientLLM(make_client(provider_from_env("claude")))
         clause = LlmClauseChecker(llm, HybridNormSource(conn, searcher.embedder, searcher.reranker))
-    except Exception:  # нет ключа модели: поиск и расчёты работают, проверка пункта — нет
+    except Exception:  # no model key: search and calculations work, the item check does not
         clause = None
     return McpGateway(McpTokens(store), searcher, clause=clause)
 
 
 def http_app(gw: McpGateway) -> Any:
-    """ASGI-приложение: /mcp за проверкой Bearer-токена (401 сразу, до MCP-протокола)."""
+    """ASGI application: /mcp behind the Bearer token check (401 immediately, before the MCP
+    protocol)."""
     from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
     from starlette.applications import Starlette
     from starlette.responses import JSONResponse

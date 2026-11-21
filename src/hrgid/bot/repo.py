@@ -1,4 +1,4 @@
-"""Типизированный слой над DocStore: сущности бота и очереди HR."""
+"""Typed layer over DocStore: bot and HR queue entities."""
 
 from __future__ import annotations
 
@@ -39,7 +39,7 @@ class Repo:
     def _all(self, model: type[M], kind: str, company_id: str) -> list[M]:
         return [model.model_validate(d) for d in self.store.all(kind, company_id)]
 
-    # --- настройки ---------------------------------------------------------
+    # --- settings ---
     def settings(self, company_id: str) -> CompanySettings:
         return self._get(CompanySettings, "settings", company_id, "main") or CompanySettings(
             company_id=company_id
@@ -48,7 +48,7 @@ class Repo:
     def save_settings(self, s: CompanySettings) -> None:
         self.store.put("settings", s.company_id, "main", _dump(s))
 
-    # --- сотрудники --------------------------------------------------------
+    # --- employees ---
     def save_employee(self, e: Employee) -> None:
         self.store.put("employee", e.company_id, e.id, _dump(e))
 
@@ -63,7 +63,7 @@ class Repo:
             return Employee.model_validate(d)
         return None
 
-    # --- коды --------------------------------------------------------------
+    # --- codes ---
     def save_code(self, c: InviteCode) -> None:
         self.store.put("code", c.company_id, c.id, _dump(c))
 
@@ -84,7 +84,7 @@ class Repo:
     def save_throttle(self, t: Throttle) -> None:
         self.store.put("throttle", "", str(t.telegram_id), _dump(t))
 
-    # --- обращения ---------------------------------------------------------
+    # --- requests ---
     def next_ticket_key(self, company_id: str, confidential: bool) -> str:
         if confidential:
             return f"K{self.store.next_seq(company_id, 'conf_ticket', 1)}"
@@ -99,7 +99,7 @@ class Repo:
     def tickets(self, company_id: str) -> list[Ticket]:
         return self._all(Ticket, "ticket", company_id)
 
-    # --- база ответов ------------------------------------------------------
+    # --- answer base ---
     def next_kb_id(self, company_id: str) -> int:
         return self.store.next_seq(company_id, "kb", 1)
 
@@ -109,7 +109,7 @@ class Repo:
     def kb_entries(self, company_id: str) -> list[KbEntry]:
         return self._all(KbEntry, "kb", company_id)
 
-    # --- объявления, оценки ------------------------------------------------
+    # --- announcements, ratings ---
     def save_announcement(self, a: Announcement) -> None:
         self.store.put("announcement", a.company_id, a.id, _dump(a))
 
@@ -125,7 +125,7 @@ class Repo:
     def feedback(self, company_id: str) -> list[Feedback]:
         return self._all(Feedback, "feedback", company_id)
 
-    # --- outbox: сообщения, которые доставляет бот (уведомления HR, ответы HR, объявления) ----
+    # --- outbox: messages the bot delivers (HR notifications, HR replies, announcements) ---
     def enqueue(self, out: Out, now: datetime) -> str:
         n = self.store.next_seq("", "outbox", 1)
         key = f"{n:010d}"

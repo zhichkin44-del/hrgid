@@ -1,7 +1,7 @@
-"""Хранение фрагментов и поиск: вектор, полнотекст (русский), слияние RRF, переранжирование.
+"""Storage of fragments and search: vector, full-text (Russian), RRF merge, reranking.
 
-Каждый запрос фильтруется по tenant_id: пустой список компаний — пустой результат;
-текст закона (tenant «law») виден всем компаниям.
+Each request is filtered by tenant_id: an empty company list gives an empty result;
+the text of the law (tenant "law") is visible to all companies.
 """
 
 from __future__ import annotations
@@ -42,7 +42,8 @@ class Reranker(Protocol):
 
 
 def visible_tenants(tenants: Sequence[str]) -> list[str]:
-    """Список компаний + закон. Пустой список — нет контекста компании, значит ничего не видно."""
+    """List of companies + the law. An empty list means no company context, so nothing is
+    visible."""
     if not tenants:
         return []
     return sorted({*tenants, LAW_TENANT})
@@ -114,7 +115,8 @@ _WORD = re.compile(r"\w+", re.UNICODE)
 
 
 def or_query(question: str) -> str:
-    """Слова вопроса через «или» (русский словарь сам отбросит стоп-слова и приведёт к основам)."""
+    """Question words joined by "or" (the Russian text-search dictionary drops stop words and
+    reduces words to stems)."""
     words = [w for w in _WORD.findall(question.lower()) if len(w) > 1]
     return " | ".join(dict.fromkeys(words))
 

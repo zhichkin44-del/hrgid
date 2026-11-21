@@ -1,4 +1,4 @@
-"""R6 пособие по временной нетрудоспособности (255-ФЗ)."""
+"""R6 sick-leave benefit (Federal Law 255-FZ)."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ def sick_pay(
     *,
     excluded_days: int = 0,
 ) -> CalcResult:
-    """earnings_by_year — заработок за два календарных года, предшествующих году болезни."""
+    """earnings_by_year - earnings for the two calendar years preceding the year of illness."""
     if end < start:
         raise CalcError("Дата окончания болезни раньше даты начала")
     if insurance_years < 0:

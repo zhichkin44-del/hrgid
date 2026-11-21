@@ -1,4 +1,4 @@
-"""Стенд тестов панели: два тенанта, часы, письма в памяти, Fake-модель проверки на ТК."""
+"""Panel test stand: two tenants, clock, emails in memory, Fake model for the Labor Code check."""
 
 from __future__ import annotations
 
@@ -39,7 +39,7 @@ NOW = msk(2026, 11, 18, 15, 40)
 
 
 def _helpers() -> ModuleType:
-    """Помощники тестов этапа 5 (источник норм по ключевым словам, Fake-модель)."""
+    """Helpers of the stage 5 tests (source of norms by keywords, Fake model)."""
     path = Path(__file__).resolve().parents[1] / "docs" / "helpers.py"
     spec = importlib.util.spec_from_file_location("stage5_helpers", path)
     assert spec and spec.loader

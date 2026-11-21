@@ -1,4 +1,4 @@
-"""10 контрольных расчётов (data/evals/calc.jsonl) — эталоны посчитаны вручную, до рубля."""
+"""10 control calculations (data/evals/calc.jsonl): reference values computed by hand, to the ruble."""
 
 import json
 from datetime import date

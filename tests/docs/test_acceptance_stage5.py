@@ -1,6 +1,6 @@
-"""Приёмка этапа 5 (SPEC-09 §16, строка 5), механика на Fake-модели с записями.
+"""Acceptance of stage 5 (SPEC-09 §16, line 5), mechanics on a Fake model with recordings.
 
-Живые цифры (настоящая модель + индекс закона) — после ключа API и этапа 1 в CI.
+Live figures (the real model + law index) come after the API key and stage 1 in CI.
 """
 
 from __future__ import annotations
@@ -28,7 +28,7 @@ def test_all_three_planted_violations_found_with_right_articles(tmp_path: Path) 
     svc, chk, doc = _run(VIOLATIONS, tmp_path)
     rep = chk.check_version(COMPANY, doc, 1, "admin")
     found = {i.number: i.article for i in rep.risks}
-    assert found == EXPECTED  # 3 из 3, без ложных срабатываний
+    assert found == EXPECTED  # 3 of 3, no false positives
     assert len(rep.items) == len(svc.version(COMPANY, doc, 1).checkable)
 
 
@@ -40,7 +40,7 @@ def test_draft_rules_have_no_risks_and_vacation_is_better_than_law(tmp_path: Pat
 
 
 def test_dump_second_checker_input(tmp_path: Path) -> None:
-    """Готовит материал для второго проверяющего: риск + текст статьи, на которую он ссылается."""
+    """Prepares material for a second reviewer: the risk + the text of the article it refers to."""
     _, chk, doc = _run(VIOLATIONS, tmp_path)
     rep = chk.check_version(COMPANY, doc, 1, "admin")
     norms = {n.ref: n.text for n in KeywordNormSource().norms}

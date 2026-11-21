@@ -1,4 +1,5 @@
-"""Загрузка ТК РФ из data/raw: разбор всех статей в фрагменты с главой и редакцией."""
+"""Loads the Labor Code RF from data/raw: parses all articles into fragments with chapter and
+edition."""
 
 from __future__ import annotations
 

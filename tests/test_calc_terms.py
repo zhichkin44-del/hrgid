@@ -13,7 +13,7 @@ def test_r7_basic() -> None:
 
 
 def test_r7_weekend_hint() -> None:
-    r = last_working_day(date(2026, 11, 21))  # 5 декабря — суббота
+    r = last_working_day(date(2026, 11, 21))  # 5 December is a Saturday
     assert r.value == date(2026, 12, 5)
     assert r.details["next_working_day"] == date(2026, 12, 7)
 
@@ -42,7 +42,7 @@ def test_r8_final() -> None:
 
 
 def test_r8_salary_shift_before_weekend() -> None:
-    # период до 31.10.2026, 15 дней -> 15.11 (воскресенье) -> накануне, пятница 13.11
+    # period up to 31.10.2026, 15 days -> 15.11 (Sunday) -> the day before, Friday 13.11
     r = payment_deadline("salary", date(2026, 10, 31))
     assert r.value == date(2026, 11, 13)
 
@@ -87,9 +87,9 @@ def test_r9_senior_up_to_six() -> None:
 
 def test_r9_short_contract() -> None:
     with pytest.raises(CalcError):
-        probation_end(date(2026, 11, 18), 1, contract_months=1)  # до двух месяцев — нельзя
+        probation_end(date(2026, 11, 18), 1, contract_months=1)  # up to two months: not allowed
     with pytest.raises(CalcError):
-        probation_end(date(2026, 11, 18), 1, contract_months=5)  # 2-6 мес. — только 2 недели
+        probation_end(date(2026, 11, 18), 1, contract_months=5)  # 2-6 months: only 2 weeks
     r = probation_end(date(2026, 11, 18), 0, contract_months=5, weeks=2)
     assert r.value == date(2026, 12, 1)
 

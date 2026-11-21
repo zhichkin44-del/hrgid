@@ -1,7 +1,7 @@
-"""Поток ответа на LangGraph (§5): маршрут -> поиск -> ответ с id -> проверка цитат -> отказ.
+"""Answer flow on LangGraph (§5): route -> search -> answer with ids -> citation check -> refusal.
 
-Граф: route -> (cache) -> search -> answer -> verify -> (одна перестройка) -> отказ.
-Расчёты идут отдельной веткой через tool calling; считает Python (hrgid.calc).
+Graph: route -> (cache) -> search -> answer -> verify -> (one rebuild) -> refusal.
+Calculations go down a separate branch via tool calling; Python computes them (hrgid.calc).
 """
 
 from __future__ import annotations
@@ -83,7 +83,7 @@ class AskRequest:
 
 @dataclass(frozen=True)
 class FlowConfig:
-    no_answer_threshold: float | None = None  # ADR-0006: подбирается на настроечной части
+    no_answer_threshold: float | None = None  # ADR-0006: chosen on the tuning part
     max_chars: int = 900
     rebuilds: int = 1
     history_limit: int = 6
@@ -128,7 +128,8 @@ def parse_route(text: str) -> str:
 
 
 def quote_in_fragment(quote: str, fragment_text: str) -> bool:
-    """Цитата (после нормализации) есть во фрагменте; многоточие разделяет куски по порядку."""
+    """The quote (after normalization) is present in the fragment; an ellipsis separates the pieces
+    in order."""
     frag = normalize(fragment_text)
     pieces = [normalize(p) for p in re.split(r"…|\.\.\.", quote)]
     pieces = [p for p in pieces if p]
@@ -171,7 +172,7 @@ class Pipeline:
             m = self._tl.meter = UsageMeter()
         return m
 
-    # --- вызовы моделей -------------------------------------------------
+    # --- model calls ---
     def _call(self, tier: Tier, req: LLMRequest) -> LLMResponse:
         client = self.cheap_llm if tier == "cheap" else self.main_llm
         resp = client.complete(req)
@@ -182,7 +183,7 @@ class Pipeline:
         req = LLMRequest(system, (Message("user", user),), tier, (), max_tokens, purpose)
         return self._call(tier, req).text
 
-    # --- узлы -------------------------------------------------------------
+    # --- nodes ---
     def _n_route(self, s: _State) -> _State:
         text = self._llm(
             "cheap", prompts.ROUTE_SYSTEM, prompts.route_user(s["question"], s["history"]),
@@ -231,7 +232,7 @@ class Pipeline:
         return "end" if "result" in s else "verify"
 
     def _check(self, cand: dict[str, Any], hits: list[SearchHit]) -> tuple[list[Source], str]:
-        """Вернуть (источники, причина отказа). Причина пуста — проверка пройдена."""
+        """Returns (sources, refusal reason). An empty reason means the check passed."""
         text = cand.get("answer")
         claims = cand.get("claims")
         if not isinstance(text, str) or not text.strip():
@@ -336,7 +337,7 @@ class Pipeline:
             g.add_edge(n, END)
         return g.compile()
 
-    # --- вход ---------------------------------------------------------------
+    # --- input ---
     def ask(self, req: AskRequest) -> FlowAnswer:
         t0 = time.perf_counter()
         self._tl.meter = UsageMeter()

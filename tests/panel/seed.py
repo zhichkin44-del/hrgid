@@ -1,4 +1,4 @@
-"""Наполнение стенда: сотрудники, обращения, база ответов, документ с проверкой, расход."""
+"""Populating the stand: employees, requests, answer base, a document with a check, spending."""
 
 from __future__ import annotations
 

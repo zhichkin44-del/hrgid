@@ -1,8 +1,8 @@
-"""Вход в панель: почта + одноразовый код, сессии с истечением, журнал входов (SPEC-09 §8).
+"""Panel sign-in: email + one-time code, sessions that expire, sign-in log (SPEC-09 §8).
 
-Правила (SCREENS.md, П0): код — 6 цифр, действует 10 минут, повторно — через 60 секунд,
-5 неверных попыток подряд — блок на 15 минут; сессия закрывается через 8 часов без действий.
-Код и токен сессии хранятся хэшем.
+Rules (SCREENS.md, П0): the code is 6 digits, valid for 10 minutes, can be resent after 60 seconds;
+5 wrong attempts in a row lead to a 15-minute block; a session closes after 8 hours without activity.
+The code and the session token are stored as a hash.
 """
 
 from __future__ import annotations
@@ -40,7 +40,7 @@ class PanelUser:
     name: str
     role: Role
     active: bool = True
-    away: bool = False  # в отпуске: назначать обращения нельзя (П2.3)
+    away: bool = False  # on leave: requests cannot be assigned (П2.3)
 
 
 @dataclass(frozen=True)
@@ -95,7 +95,7 @@ class PanelAuth:
         self.mailer = mailer
         self._pepper = pepper if pepper is not None else os.environ.get("HRGID_PANEL_PEPPER", "")
 
-    # --- пользователи ------------------------------------------------------
+    # --- users ---
     def add_user(
         self, company_id: str, email: str, name: str, role: Role, *, away: bool = False
     ) -> PanelUser:
@@ -117,7 +117,7 @@ class PanelAuth:
         d = self.store.get(K_USER, company_id, norm_email(email))
         return _user(d) if d else None
 
-    # --- журнал входов -----------------------------------------------------
+    # --- sign-in log ---
     def _log(self, company: str, now: datetime, email: str, result: str, ip: str) -> None:
         n = self.store.next_seq(company, "plog")
         self.store.put(
@@ -131,7 +131,7 @@ class PanelAuth:
         rows = [{k: str(v) for k, v in r.items()} for r in self.store.all(K_LOGLOG, company)]
         return sorted(rows, key=lambda r: r["n"], reverse=True)
 
-    # --- код ---------------------------------------------------------------
+    # --- code ---
     def _hash(self, value: str) -> str:
         return hmac.new(self._pepper.encode(), value.encode(), hashlib.sha256).hexdigest()
 
@@ -195,7 +195,7 @@ class PanelAuth:
             self.store.put(K_LOGIN, co, email, {**st, "fails": fails})
             self._log(co, now, email, "bad_code", ip)
             return VerifyResult("bad", left=MAX_FAILS - fails)
-        self.store.put(K_LOGIN, co, email, {})  # код одноразовый
+        self.store.put(K_LOGIN, co, email, {})  # one-time code
         token = secrets.token_urlsafe(32)
         sid = self._hash("sid:" + token)
         self.store.put(
@@ -213,11 +213,11 @@ class PanelAuth:
         self._log(co, now, email, "ok", ip)
         return VerifyResult("ok", token=token)
 
-    # --- сессии ------------------------------------------------------------
+    # --- sessions ---
     def session(
         self, token: str, now: datetime
     ) -> tuple[Session, PanelUser] | Literal["expired"] | None:
-        """Сессия по токену: None — нет такой; 'expired' — закрыта по бездействию."""
+        """Session by token: None means no such session; 'expired' means it was closed for inactivity."""
         if not token:
             return None
         sid = self._hash("sid:" + token)

@@ -1,4 +1,4 @@
-"""Панель подключена к потоку ответа: трассы -> лог вопросов (аналитика, расход), бюджет -> защита."""
+"""The panel is connected to the answer flow: traces -> question log (analytics, spending), budget -> protection."""
 
 from __future__ import annotations
 
@@ -78,7 +78,7 @@ def test_budget_gate_blocks_model_when_exhausted() -> None:
 
 @pytest.mark.db
 def test_panel_state_and_traces_in_postgres(pg_url: str) -> None:
-    """Хранилище панели и таблица traces — в PostgreSQL (libpq; здесь блокируется, гоняется в CI)."""
+    """Panel storage and the traces table are in PostgreSQL (libpq; blocked here, runs in CI)."""
     from hrgid.db import connect
 
     conn = connect(pg_url)

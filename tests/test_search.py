@@ -93,7 +93,7 @@ def test_empty_tenant_list_returns_nothing(conn: psycopg.Connection[Any]) -> Non
 
 
 class ReverseReranker:
-    """Подставной переранжировщик: оценка тем выше, чем длиннее текст."""
+    """A stub reranker: the score is higher the longer the text is."""
 
     def score(self, query: str, texts: list[str]) -> list[float]:
         return [float(len(t)) for t in texts]

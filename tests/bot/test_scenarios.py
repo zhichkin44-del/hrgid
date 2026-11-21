@@ -1,4 +1,4 @@
-"""e2e сценарии SPEC-09 §4.1–4.8 на движке бота (SCREENS Б1–Б11)."""
+"""e2e scenarios SPEC-09 §4.1-4.8 on the bot engine (SCREENS Б1-Б11)."""
 
 from __future__ import annotations
 
@@ -31,7 +31,7 @@ def login(h: Harness, tg: int = OLGA_TG, emp: Employee | None = None) -> Chat:
     return c
 
 
-# --- 4.1 вход ---------------------------------------------------------------------------------
+# --- 4.1 sign-in ---
 
 
 def test_4_1_login_consent_and_menu(h: Harness) -> None:
@@ -47,7 +47,7 @@ def test_4_1_login_consent_and_menu(h: Harness) -> None:
     assert c.buttons == ["Согласен", "Не согласен", "Читать полностью"]
     n = len(c.inbox)
     c.say("Сколько дней отпуска?")
-    assert len(c.inbox) == n  # без согласия бот не отвечает
+    assert len(c.inbox) == n  # without consent the bot does not answer
     assert h.repo.employee_by_telegram(OLGA_TG) is None
     c.tap("Читать полностью")
     assert "Оператор" in c.text and "Claude" in c.text
@@ -57,7 +57,7 @@ def test_4_1_login_consent_and_menu(h: Harness) -> None:
     assert saved is not None and saved.consent_at == NOW
     c.say("/start")
     assert "Чем помочь, Ольга?" in c.text and c.last.menu
-    # код одноразовый
+    # one-time code
     other = h.chat(5002)
     other.say(code)
     assert "Код не найден" in other.text
@@ -93,13 +93,13 @@ def test_4_1_five_wrong_codes_block_for_15_minutes(h: Harness) -> None:
     assert "5-я ошибка подряд" in c.text and "15 минут" in c.text
     assert "Не пришёл код" in c.buttons
     c.say(code)
-    assert "закрыт до 15:55" in c.text  # верный код в блоке не принимается
+    assert "закрыт до 15:55" in c.text  # a correct code is not accepted while blocked
     h.advance(minutes=16)
     c.say(code)
     assert "Код принят" in c.text
 
 
-# --- 4.2 меню и команды -----------------------------------------------------------------------
+# --- 4.2 menu and commands ---
 
 
 def test_4_2_menu_and_commands(h: Harness) -> None:
@@ -136,7 +136,7 @@ def test_4_2_delete_my_data_request_goes_to_hr(h: Harness) -> None:
     assert [t.kind for t in h.repo.tickets(COMPANY)] == ["delete_request"]
 
 
-# --- 4.3 ответ с источником -------------------------------------------------------------------------
+# --- 4.3 answer with a source ---
 
 
 def test_4_3_answer_with_source_quotes_and_rating(h: Harness) -> None:
@@ -145,7 +145,7 @@ def test_4_3_answer_with_source_quotes_and_rating(h: Harness) -> None:
     c.say("Сколько дней отпуска мне положено в год?")
     assert c.text.startswith("28 дней по закону, в Студии — 31.")
     assert "Источник: ст. 115 ТК РФ; Правила Студии, п. 4.1" in c.text
-    assert "не юридическая консультация" in c.text  # в первом ответе дня
+    assert "не юридическая консультация" in c.text  # in the first answer of the day
     assert c.buttons == ["Показать цитаты", "👍", "👎", "Спросить HR"]
     c.tap("Показать цитаты")
     assert c.last.edit and "«Ежегодный основной оплачиваемый отпуск" in c.text
@@ -155,7 +155,7 @@ def test_4_3_answer_with_source_quotes_and_rating(h: Harness) -> None:
     assert "оценка записана" in c.text
     assert [f.vote for f in h.repo.feedback(COMPANY)] == ["up"]
     c.say("А сколько дней отпуска на испытательном?")
-    assert "не юридическая консультация" not in c.text  # один раз в день
+    assert "не юридическая консультация" not in c.text  # once a day
 
 
 def test_4_3_answer_is_cut_to_900_chars(h: Harness) -> None:
@@ -198,7 +198,7 @@ def test_4_3_answer_from_hr_knowledge_base(h: Harness) -> None:
     c = login(h)
     c.say("Можно перенести отпуск с декабря на январь?")
     assert "Ответ HR из базы" in c.text and "ст. 124 ТК РФ" in c.text and "Анна" in c.text
-    assert h.pipeline.requests == []  # модель не вызывалась
+    assert h.pipeline.requests == []  # the model was not called
 
 
 def test_4_3_service_failure_saves_question_as_ticket(h: Harness) -> None:
@@ -214,7 +214,7 @@ def test_4_3_service_failure_saves_question_as_ticket(h: Harness) -> None:
     assert "обращение №102" in c.text
 
 
-# --- 4.4 диалог и профиль -----------------------------------------------------------------------------
+# --- 4.4 dialogue and profile ---
 
 
 def test_4_4_dialog_uses_last_six_messages(h: Harness) -> None:
@@ -225,7 +225,9 @@ def test_4_4_dialog_uses_last_six_messages(h: Harness) -> None:
         c.say(q)
     assert list(h.pipeline.requests[-1].history) == qs[-7:-1]
     assert h.pipeline.requests[-1].question == qs[-1]
-    assert h.pipeline.requests[-1].profile is None  # профиль в общий ответ не уходит (кэш, §9)
+    assert (
+        h.pipeline.requests[-1].profile is None
+    )  # the profile does not go into the general answer (cache, §9)
 
 
 def test_4_4_profile_is_shown_with_import_date_and_missing_data_is_asked(h: Harness) -> None:
@@ -233,11 +235,11 @@ def test_4_4_profile_is_shown_with_import_date_and_missing_data_is_asked(h: Harn
     c.say("/calc").tap("Отпускные")
     assert "данные на 12.11.2026" in c.text and "оклад 80 000 ₽" in c.text
     c.say("С 14 декабря, 14 дней")
-    assert "нет заработка" in c.text and "80 000 ₽ × 12 = 960 000 ₽" in c.text  # спрашивает
+    assert "нет заработка" in c.text and "80 000 ₽ × 12 = 960 000 ₽" in c.text  # asks
     assert c.buttons[:3] == ["Да, верно", "Ввести свою сумму", "Были премии"]
 
 
-# --- 4.5 расчёты -------------------------------------------------------------------------------------------
+# --- 4.5 calculations ---
 
 
 def test_4_5_vacation_pay_confirmed_and_own_sum(h: Harness) -> None:
@@ -270,7 +272,9 @@ def test_4_5_overtime_with_annual_limit_per_art_152(h: Harness) -> None:
     )
     c.tap("Пересчитать").say("12 ноября 3 часа")
     assert "С множителем 1,5 — 1 ч, с множителем 2 — 2 ч" in c.text
-    c.say("ерунда")  # после итога свободный текст — уже обычный вопрос, не расчёт
+    c.say(
+        "ерунда"
+    )  # after the result, free text is already an ordinary question, not a calculation
     assert "ответа нет" in c.text
 
 
@@ -338,14 +342,14 @@ def test_4_5_dialog_timeout_15_minutes(h: Harness) -> None:
     outs = h.engine.tick(h.now)
     assert len(outs) == 1 and "расчёт отменён, ничего не сохранено" in outs[0].text
     assert [b.text for r in outs[0].rows for b in r] == ["Посчитать", "В меню"]
-    # то же без фонового тика: ленивая проверка на следующем сообщении
+    # the same without the background tick: a lazy check on the next message
     c.say("/calc").tap("Отпускные")
     h.advance(minutes=20)
     c.say("С 14 декабря, 14 дней")
     assert "расчёт отменён" in c.text
 
 
-# --- 4.6 обращения к HR -------------------------------------------------------------------------------
+# --- 4.6 requests to HR ---
 
 
 def test_4_6_ticket_hr_answer_in_chat_and_rating(h: Harness) -> None:
@@ -391,7 +395,7 @@ def test_4_6_outside_hr_hours_autoreply_with_urgent_contact(h: Harness) -> None:
     c.tap("Оставить обращение").say("Нужна справка о доходах")
     assert "Обращение №101 принято" in c.text and "вне часов" in c.text
     assert "завтра до 14:00" in c.text and "+7 900 000-00-00" in c.text
-    # то же, если вопрос без ответа в источниках
+    # the same when the question has no answer in the sources
     c.say("абонемент?")
     assert "вне часов HR" in c.text and "+7 900" in c.text
 
@@ -422,7 +426,7 @@ def test_4_6_announcement_read_and_dates(h: Harness) -> None:
     assert kinds == ["dates"]
 
 
-# --- 4.7 конфиденциальное обращение ---------------------------------------------------------------------
+# --- 4.7 confidential request ---
 
 
 def test_4_7_confidential_flow(h: Harness) -> None:
@@ -436,13 +440,13 @@ def test_4_7_confidential_flow(h: Harness) -> None:
     [note] = h.hr_inbox()
     assert "Смирнова" not in note.text and "К-1" in note.text and "по ночам" in note.text
     assert all(r["text"] == "" for r in h.desk.analytics_rows(COMPANY))
-    # HR отвечает через бота; имя скрыто
+    # HR replies through the bot; the name is hidden
     view = h.desk.view(h.desk.get(COMPANY, "K1"), h.now)
     assert view.employee_name is None
     h.desk.answer(COMPANY, "K1", "Анна", "Спасибо, что написали. Разберёмся.", h.now)
     [reply] = c.pushes()
     assert "обращение К-1" in reply.text
-    # раскрытие имени — только по решению сотрудника
+    # the name is revealed only by the employee's decision
     c.say("Мои обращения").tap("Открыть К-1")
     h.chat(OLGA_TG).data("conf:reveal:K1")
     assert "Отменить это потом нельзя" in h.chat(OLGA_TG).data("conf:reveal:K1").text
@@ -479,7 +483,7 @@ def test_4_7_confidential_append(h: Harness) -> None:
     assert "К-1" in h.hr_inbox()[-1].text and "Смирнова" not in h.hr_inbox()[-1].text
 
 
-# --- 4.8 служебные сценарии -------------------------------------------------------------------------------
+# --- 4.8 service scenarios ---
 
 
 def test_4_8_code_did_not_arrive(h: Harness) -> None:
@@ -491,7 +495,7 @@ def test_4_8_code_did_not_arrive(h: Harness) -> None:
     c.pushes()
     assert any("Не пришёл код приглашения" in o.text for o in h.hr_inbox())
     assert [t.kind for t in h.repo.tickets(COMPANY)] == ["new_code"]
-    new = h.auth.issue_code(COMPANY, emp.id, h.now)  # HR перевыпускает (П6)
+    new = h.auth.issue_code(COMPANY, emp.id, h.now)  # HR reissues (П6)
     c.tap("Ввести код").say(new)
     assert "Код принят" in c.text
 
@@ -507,11 +511,13 @@ def test_4_8_new_telegram_unlinks_old_chat(h: Harness) -> None:
     assert h.repo.employee_by_telegram(5002) is not None
     assert h.repo.employee_by_telegram(5001) is None
     old.say("вопрос")
-    assert "Введите код приглашения" in old.text  # в старом чате бот больше не отвечает
+    assert "Введите код приглашения" in old.text  # in the old chat the bot no longer answers
     new.tap("Это не я")
     assert "Спасибо, что сообщили" in new.text
-    assert h.repo.employee_by_telegram(5002) is None  # привязка снята до входа по новому коду
-    assert h.auth.check_code(5003, new_code, h.now).status == "bad"  # код отозван
+    assert (
+        h.repo.employee_by_telegram(5002) is None
+    )  # the binding is removed until sign-in with a new code
+    assert h.auth.check_code(5003, new_code, h.now).status == "bad"  # the code is revoked
     assert [t.kind for t in h.repo.tickets(COMPANY)] == ["wrong_login"]
     h.engine.flush_outbox(lambda o: True)
 
@@ -534,7 +540,7 @@ def test_4_8_disabled_employee_gets_access_closed(h: Harness) -> None:
     assert c.last.rows == []
     c.data("menu")
     assert "Доступ закрыт" in c.text
-    # отключённому не выдаётся и новый вход
+    # a deactivated employee gets no new code and no new sign-in
     code = h.auth.issue_code(COMPANY, emp.id, h.now)
     g = h.chat(7777)
     g.say(code)

@@ -1,4 +1,4 @@
-"""П1–П3: «Сегодня», очередь, база ответов — действия и состояния."""
+"""П1-П3: "Today", queue, answer base: actions and states."""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ def test_today_tiles_overdue_and_mine() -> None:
     env = make_env()
     s = seed(env)
     env.deps.desk.assign(CO, s.t1.key, HR)
-    env.clock.advance(hours=6)  # SLA 4 рабочих часа истёк
+    env.clock.advance(hours=6)  # the SLA of 4 working hours has expired
     r = env.login(HR).get("/")
     assert "Просрочено" in r.text and "Назначено мне" in r.text
     assert f"№{s.t1.key}" in r.text
@@ -63,7 +63,7 @@ def test_rating_of_confidential_is_not_reachable() -> None:
     assert env.login(HR).get(f"/rating/{s.conf.key}").status_code == 404
 
 
-# ----- П2 -----------------------------------------------------------------------------
+# ----- П2 -----
 
 
 def test_queue_list_card_and_confidential_hidden() -> None:
@@ -138,7 +138,7 @@ def test_assign_to_colleague_and_away_blocked() -> None:
     s = seed(env)
     hr = env.login(HR)
     r = hr.post(f"/queue/{s.t1.key}/assign", data={"to": HR2, "comment": "ты в курсе"})
-    assert "в отпуске" in r.text  # Олег в отпуске
+    assert "в отпуске" in r.text  # Oleg is on leave
     r = hr.post(f"/queue/{s.t1.key}/assign", data={"to": ""})
     assert "Выберите коллегу" in r.text
     r = hr.post(f"/queue/{s.t1.key}/assign", data={"to": ADMIN, "comment": "x" * 501})
@@ -186,7 +186,7 @@ def test_queue_empty_state() -> None:
     assert "В очереди пусто" in r.text
 
 
-# ----- П3 -----------------------------------------------------------------------------
+# ----- П3 -----
 
 
 def test_kb_add_validation_and_list() -> None:
@@ -223,7 +223,7 @@ def test_kb_edit_keeps_history_and_archive_has_undo_10s() -> None:
     assert "исправил(а) ответ" in r.text
     r = hr.post(f"/kb/{s.kb_id}/archive")
     assert "Отменить — 10 с" in r.text
-    assert env.deps.kb.find_same(CO, "Сколько отпуск") is None  # архив бот не использует
+    assert env.deps.kb.find_same(CO, "Сколько отпуск") is None  # the bot does not use the archive
     uid = [d["id"] for d in env.store.all("pundo", CO)][0]
     r = hr.post(f"/undo/{uid}", data={"back": "/kb"})
     assert "Действие отменено" in r.text
@@ -266,7 +266,7 @@ def test_law_change_marks_affected_and_review_flow() -> None:
 def test_article_number_match_is_exact() -> None:
     env = make_env()
     seed(env)
-    assert env.deps.kbadmin.mark_law_change(CO, "11", env.clock.now) == 0  # не ст. 115
+    assert env.deps.kbadmin.mark_law_change(CO, "11", env.clock.now) == 0  # not Art. 115
 
 
 def test_kb_search_and_empty_search() -> None:

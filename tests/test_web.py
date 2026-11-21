@@ -40,7 +40,7 @@ def test_invite_required_and_tenant_from_invite_only() -> None:
     bad = c.post("/api/chat", json={"invite": "x", "question": "?"})
     assert bad.status_code == 403
     c.post("/api/chat", json={"invite": "tok-b", "question": "вопрос", "tenant_id": "A"})
-    assert tr.records[-1].tenant_id == "B"  # чужой tenant из тела запроса игнорируется
+    assert tr.records[-1].tenant_id == "B"  # a foreign tenant from the request body is ignored
 
 
 def test_validation() -> None:

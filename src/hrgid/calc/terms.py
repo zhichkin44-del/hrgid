@@ -1,4 +1,4 @@
-"""R7 последний рабочий день, R8 срок выплаты, R9 испытательный срок."""
+"""R7 last working day, R8 payment deadline, R9 probation period."""
 
 from __future__ import annotations
 
@@ -13,11 +13,11 @@ def _off(d: date) -> bool:
     try:
         return is_day_off(d)
     except CalcError:
-        return False  # календаря на этот год нет — выходные не проверяются
+        return False  # no calendar for this year, so days off are not checked
 
 
 def last_working_day(application_date: date, *, notice_days: int | None = None) -> CalcResult:
-    """R7. Срок предупреждения идёт со следующего дня после заявления."""
+    """R7. The notice period runs from the day after the statement."""
     days = notice_days if notice_days is not None else int(param("R7", "notice_days"))
     if days < 1:
         raise CalcError("Срок предупреждения — не меньше одного дня")
@@ -43,7 +43,7 @@ def last_working_day(application_date: date, *, notice_days: int | None = None) 
 
 
 def payment_deadline(kind: str, ref_date: date) -> CalcResult:
-    """R8. vacation: начало отпуска; final: последний рабочий день; salary: конец периода."""
+    """R8. vacation: start of vacation; final: last working day; salary: end of the period."""
     notes: list[str] = []
     if kind == "vacation":
         value = ref_date - timedelta(days=int(param("R8", "vacation_before_days")))
@@ -86,7 +86,7 @@ def probation_end(
     absence_days: int = 0,
     weeks: int | None = None,
 ) -> CalcResult:
-    """R9. senior — руководитель организации, заместитель, главбух (до 6 мес.)."""
+    """R9. senior - head of the organization, deputy, chief accountant (up to 6 months)."""
     if absence_days < 0:
         raise CalcError("Дни отсутствия не могут быть отрицательными")
     shift = timedelta(days=absence_days - 1)

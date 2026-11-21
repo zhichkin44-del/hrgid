@@ -1,6 +1,6 @@
-"""Сборка потока для прогона набора: настоящий поиск (БД, e5, переранжировщик) + модель.
+"""Flow assembly for running the set: real search (DB, e5, reranker) + model.
 
-Тяжёлые зависимости импортируются внутри функций: модуль безопасно импортируется без них.
+Heavy dependencies are imported inside functions, so the module is safe to import without them.
 """
 
 from __future__ import annotations
@@ -26,12 +26,13 @@ PROVIDERS = ("openrouter", "claude", "gigachat", "yandex")
 
 
 def dataset_version(eval_file: Path) -> str:
-    """Версия набора: хэш файла вопросов. Правка набора -> другие ключи записей."""
+    """Set version: hash of the questions file. Editing the set gives other recording keys."""
     return "eval-" + hashlib.sha256(eval_file.read_bytes()).hexdigest()[:12]
 
 
 def provider_from_env(default: str) -> str:
-    """HRGID_LLM_PROVIDER (openrouter|claude|gigachat|yandex|fake); старое HRGID_PROVIDER тоже."""
+    """HRGID_LLM_PROVIDER (openrouter|claude|gigachat|yandex|fake); the old HRGID_PROVIDER also
+    works."""
     return os.environ.get("HRGID_LLM_PROVIDER") or os.environ.get("HRGID_PROVIDER") or default
 
 
@@ -44,7 +45,7 @@ def make_client(provider: str) -> LLMClient:
         return GigaChatClient()
     if provider == "yandex":
         return YandexGPTClient()
-    if provider == "fake":  # запуск без ключей: поиск и панель работают, ответы — отказы
+    if provider == "fake":  # run without keys: search and the panel work, answers are refusals
         return no_model_client()
     raise ValueError(f"неизвестный провайдер: {provider}")
 
@@ -52,7 +53,7 @@ def make_client(provider: str) -> LLMClient:
 def make_llm(
     provider: str, eval_file: Path, record: bool, directory: Path = DEFAULT_DIR
 ) -> RecordingLLM:
-    """record=True — живой вызов с ключом владельца и запись; иначе только воспроизведение."""
+    """record=True: a live call with the owner's key and recording; otherwise replay only."""
     client = make_client(provider)
     inner: LLMClient = ResilientLLM(client) if record else client
     return RecordingLLM(inner, dataset_version(eval_file), directory, record=record)

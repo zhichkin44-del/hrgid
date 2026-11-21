@@ -1,7 +1,7 @@
-"""Эксплуатационные данные панели: технические настройки, лог вопросов, расход и бюджет.
+"""Panel operational data: technical settings, question log, spending and budget.
 
-Лог вопросов (`qlog`) — только замаскированный текст и цифры: стоимость, задержка, маршрут.
-Из него считаются П7 (аналитика) и П8 (расходы, скорость, сбои).
+The question log (`qlog`) holds only masked text and numbers: cost, latency, route.
+П7 (analytics) and П8 (spending, speed, failures) are computed from it.
 """
 
 from __future__ import annotations
@@ -22,7 +22,7 @@ from hrgid.flow.trace import TraceRecord, TraceSink
 K_TECH, K_QLOG = "ptech", "qlog"
 
 Provider = Literal["gigachat", "yandex", "claude", "openrouter"]
-FOREIGN = ("claude", "openrouter")  # передача за границу: только через предупреждение (П9.5)
+FOREIGN = ("claude", "openrouter")  # transfer across the border: only through a warning (П9.5)
 OverAction = Literal["queue", "refuse"]
 PROVIDER_NAMES: dict[str, str] = {
     "gigachat": "GigaChat",
@@ -55,10 +55,10 @@ def topic_of(text: str) -> str:
 
 
 class TechSettings(BaseModel):
-    """Технические настройки компании (П8, П9; меняет только администратор)."""
+    """Company technical settings (П8, П9; changed only by the administrator)."""
 
     provider: Provider = "gigachat"
-    claude_ack: bool = False  # «Сотрудники уведомлены» (П9.5·предупреждение)
+    claude_ack: bool = False  # "Employees notified" (П9.5 · warning)
     budget_rub: float = 10000.0
     over_action: OverAction = "queue"
     retention_days: int = 365
@@ -74,7 +74,7 @@ class OpsStore:
         self.repo = repo
         self.clock = clock
 
-    # --- технические настройки -----------------------------------------------------
+    # --- technical settings ---
     def tech(self, company: str) -> TechSettings:
         d = self.store.get(K_TECH, company, "main")
         return TechSettings.model_validate(d) if d else TechSettings()
@@ -82,7 +82,7 @@ class OpsStore:
     def save_tech(self, company: str, t: TechSettings) -> None:
         self.store.put(K_TECH, company, "main", t.model_dump(mode="json"))
 
-    # --- лог вопросов --------------------------------------------------------------
+    # --- question log ---
     def log_question(
         self,
         company: str,
@@ -122,7 +122,7 @@ class OpsStore:
     def questions(self, company: str) -> list[dict[str, Any]]:
         return self.store.all(K_QLOG, company)
 
-    # --- расход ----------------------------------------------------------------------
+    # --- spending ---
     def month_spend(self, company: str, now: datetime) -> float:
         s = self.repo.settings(company)
         local = hours.to_local(now, s)
@@ -152,7 +152,7 @@ class BudgetStatus:
 
 
 class PanelTraceSink:
-    """Приёмник трасс потока ответа: пишет в лог вопросов панели и передаёт дальше (БД)."""
+    """Sink for the traces of the answer flow: writes to the panel's question log and passes them on (DB)."""
 
     def __init__(self, ops: OpsStore, inner: TraceSink | None = None) -> None:
         self.ops = ops
@@ -174,13 +174,13 @@ class PanelTraceSink:
             self.inner.write(rec)
 
 
-class Answerer:  # минимальный интерфейс, как в bot.engine
-    def ask(self, req: AskRequest) -> FlowAnswer:  # pragma: no cover - протокол
+class Answerer:  # minimal interface, as in bot.engine
+    def ask(self, req: AskRequest) -> FlowAnswer:  # pragma: no cover - protocol
         raise NotImplementedError
 
 
 class BudgetGatedAnswerer:
-    """Сценарий 5: бюджет исчерпан — модель не вызывается, действие выбрано в П9/П8."""
+    """Scenario 5: budget exhausted, the model is not called, the action is chosen in П9/П8."""
 
     def __init__(
         self, inner: Any, ops: OpsStore, clock: Callable[[], datetime] | None = None

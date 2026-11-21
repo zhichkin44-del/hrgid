@@ -1,6 +1,7 @@
-"""Адаптер Telegram (aiogram 3): доставка сообщений движка, outbox, фоновые задачи, запуск.
+"""Telegram adapter (aiogram 3): delivery of engine messages, outbox, background tasks, startup.
 
-Токен — только из окружения TELEGRAM_BOT_TOKEN. Запуск: `python -m hrgid.bot` (см. README).
+The token comes only from the TELEGRAM_BOT_TOKEN environment variable. Run: `python -m hrgid.bot`
+(see README).
 """
 
 from __future__ import annotations
@@ -54,7 +55,8 @@ async def send_out(bot: Bot, out: Out, edit: Message | None = None) -> None:
         await edit.edit_text(text, reply_markup=inline_markup(out))
         return
     if out.menu:
-        # клавиатура меню — к первому сообщению; инлайн-кнопки (если есть) отдельным сообщением
+        # menu keyboard goes with the first message; inline buttons (if any) go in a separate
+        # message
         await bot.send_message(out.chat_id, text, reply_markup=menu_markup())
         return
     await bot.send_message(out.chat_id, text, reply_markup=inline_markup(out))
@@ -74,7 +76,7 @@ def build_dispatcher(engine: BotEngine) -> Dispatcher:
     async def on_message(message: Message, bot: Bot) -> None:
         if message.chat.type != "private" or message.from_user is None:
             return
-        if not message.text:  # голосовые и вложения — v2 (§4.9)
+        if not message.text:  # voice messages and attachments are v2 (§4.9)
             await bot.send_message(
                 message.chat.id, "Пока понимаю только текст. Напишите вопрос словами."
             )
@@ -104,13 +106,13 @@ def build_dispatcher(engine: BotEngine) -> Dispatcher:
 
 
 async def flush_outbox_once(bot: Bot, engine: BotEngine) -> int:
-    """Доставить накопленное в outbox (уведомления HR, ответы HR, объявления)."""
+    """Deliver what has accumulated in the outbox (HR notifications, HR replies, announcements)."""
     sent = 0
     for company, key, out in await asyncio.to_thread(engine.take_outbox):
         ok = True
         try:
             await send_out(bot, out)
-        except TelegramAPIError as e:  # бот заблокирован, чат не найден и т.п.
+        except TelegramAPIError as e:  # bot blocked, chat not found, etc.
             log.warning("не доставлено %s: %s", key, e)
             ok = False
         await asyncio.to_thread(engine.outbox_result, company, key, out, ok)
@@ -154,7 +156,8 @@ def token_from_env() -> str:
 
 
 def build_engine_from_env() -> BotEngine:
-    """Боевая сборка: PostgreSQL, поиск по закону + база ответов HR, модель Claude с запасными."""
+    """Production build: PostgreSQL, search over the law + HR answer base, Claude model with
+    fallbacks."""
     from hrgid.bot.auth import AuthService
     from hrgid.bot.desk import HrDesk
     from hrgid.bot.kb import KbSearcher, KbService

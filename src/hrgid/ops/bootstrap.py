@@ -1,6 +1,6 @@
-"""Первый запуск (сервис init в Compose): схема БД, индекс закона, первая компания и админ.
+"""First start (the init service in Compose): DB schema, law index, first company and admin.
 
-Идемпотентно: повторный запуск ничего не ломает и не переиндексирует то, что уже есть.
+Idempotent: a repeated start breaks nothing and does not re-index what already exists.
 """
 
 from __future__ import annotations
@@ -30,7 +30,8 @@ def needs_index(have: int, want: int) -> bool:
 
 
 def wait_for_db(url: str, timeout: float = 90.0) -> Any:
-    """Ждёт готовности PostgreSQL (healthcheck уже зелёный, но соединения бывают позже)."""
+    """Waits for PostgreSQL to be ready (the healthcheck is already green, but connections can come
+    later)."""
     from hrgid.db import connect
 
     deadline = time.monotonic() + timeout
@@ -45,7 +46,8 @@ def wait_for_db(url: str, timeout: float = 90.0) -> Any:
 
 
 def ensure_law_files(directory: Path) -> None:
-    """Текст ТК РФ не хранится в репозитории: при первом старте скачивается (нужна сеть)."""
+    """The text of the Labor Code is not stored in the repository: it is downloaded on the first
+    start (network required)."""
     if any(directory.glob("st_*.html")):
         return
     log.info("закон не найден в %s, загружаю с consultant.ru", directory)
@@ -57,7 +59,8 @@ def ensure_law_files(directory: Path) -> None:
 def ensure_company(
     repo: Repo, auth_add_user: Any, company_id: str, name: str, admin_email: str, admin_name: str
 ) -> bool:
-    """Первая компания и её администратор. True — создано сейчас, False — уже было."""
+    """The first company and its administrator. True means created now; False means it already
+    existed."""
     if not company_id or not admin_email:
         return False
     created = False

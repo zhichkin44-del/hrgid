@@ -62,7 +62,7 @@ def test_chunks_have_metadata_and_stable_hash() -> None:
 
 
 def test_long_part_is_split_by_paragraphs() -> None:
-    para = "Слово " * 120  # около 720 знаков
+    para = "Слово " * 120  # about 720 characters
     html = NUMBERED.replace("1) пункт первый;", para).replace("2) пункт второй.", para)
     art = parse_article_html(html)
     chunks = make_chunks(art, edition="x", max_chars=1000)

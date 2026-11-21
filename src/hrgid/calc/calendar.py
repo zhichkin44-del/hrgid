@@ -1,4 +1,4 @@
-"""Производственный календарь РФ из data/calendar/<год>.json."""
+"""Russian production calendar from data/calendar/<year>.json."""
 
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ def _year(year: int) -> dict[str, Any]:
 
 
 def is_day_off(d: date) -> bool:
-    """Выходной или нерабочий праздничный день по календарю."""
+    """Day off or non-working public holiday according to the calendar."""
     return d.isoformat() in set(_year(d.year)["non_working_days"])
 
 
@@ -31,5 +31,5 @@ def working_days_in_month(year: int, month: int) -> int:
 
 
 def month_norm_hours(year: int, month: int) -> Decimal:
-    """Норма рабочего времени месяца при 40-часовой неделе (с учётом сокращённых дней)."""
+    """Working-time norm of the month for a 40-hour week (taking shortened days into account)."""
     return Decimal(int(_year(year)["months"][str(month)]["hours"]))

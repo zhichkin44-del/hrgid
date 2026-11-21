@@ -52,14 +52,14 @@ def test_r1_days_range(days: int) -> None:
 def test_r1_bad_input() -> None:
     with pytest.raises(CalcError):
         vacation_pay(D(0), date(2026, 12, 1), 14)
-    with pytest.raises(CalcError):  # принят в месяц отпуска — расчётного периода нет
+    with pytest.raises(CalcError):  # hired in the vacation month: there is no settlement period
         vacation_pay(D(1000), date(2026, 12, 1), 14, hire_date=date(2026, 12, 1))
     with pytest.raises(CalcError):
         vacation_pay(D(1000), date(2026, 12, 1), 14, excluded_days={(2026, 3): 99})
 
 
 def test_r1_ndfl_rounding_half_up() -> None:
-    # 439500 / (29,3 x 12) = 1250,00; 1250 x 0,13 = 162,5 -> 163 (не банковское)
+    # 439500 / (29.3 x 12) = 1250.00; 1250 x 0.13 = 162.5 -> 163 (not banker's rounding)
     r = vacation_pay(D(439500), date(2026, 12, 1), 1)
     assert r.value == D("1250.00")
     assert r.details["ndfl"] == D(163)
@@ -85,7 +85,7 @@ def test_r3_ten_months_leftover_below_15() -> None:
 
 
 def test_r3_leftover_15_counts_as_month() -> None:
-    # 2026-01-01 .. 2026-01-15 включительно = 15 дней
+    # 2026-01-01 .. 2026-01-15 inclusive = 15 days
     r = accrued_vacation(date(2026, 1, 1), date(2026, 1, 15))
     assert r.details["months"] == 1
     r2 = accrued_vacation(date(2026, 1, 1), date(2026, 1, 14))
@@ -127,7 +127,7 @@ def test_r3_right_to_leave_after_six_months() -> None:
 
 
 def test_r1_fully_excluded_month_skipped() -> None:
-    # март 2026 — весь месяц исключён: 11 полных месяцев
+    # March 2026: the whole month is excluded, 11 full months
     r = vacation_pay(D(322300), date(2026, 9, 7), 10, excluded_days={(2026, 3): 31})
     assert r.details["divisor"] == D("322.3000")
     assert r.details["avg_daily"] == D("1000.00")

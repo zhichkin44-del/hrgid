@@ -1,4 +1,4 @@
-"""Вход по одноразовому коду (SPEC-09 §4.1, §4.8): хэш, 5 попыток, блок на 15 минут; согласие."""
+"""Sign-in with a one-time code (SPEC-09 §4.1, §4.8): hash, 5 attempts, 15-minute block; consent."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ from hrgid.bot.repo import Repo
 MAX_FAILS = 5
 BLOCK_MINUTES = 15
 _ALPHABET = "АБВГДЕКЛМНПРСТУХ0123456789"
-# латинские двойники кириллицы: сотрудник мог набрать код латиницей
+# Latin look-alikes of Cyrillic letters: an employee could type the code in Latin
 _LOOKALIKE = str.maketrans("ABEKMHOPCTXY", "АВЕКМНОРСТХУ")
 _CODE_RE = re.compile(r"^[A-ZА-ЯЁ0-9]{2,6}-\d{4}-[A-ZА-ЯЁ0-9]{4}$")
 
@@ -39,7 +39,7 @@ class LoginResult:
     status: LoginStatus
     employee: Employee | None = None
     code: InviteCode | None = None
-    fails: int = 0  # сколько ошибок подряд
+    fails: int = 0  # how many consecutive errors
     blocked_until: datetime | None = None
 
     @property
@@ -58,7 +58,8 @@ class AuthService:
         ).hexdigest()
 
     def issue_code(self, company_id: str, employee_id: str, now: datetime) -> str:
-        """Выдать код (старые коды сотрудника отзываются). Открытый вид — только в ответе."""
+        """Issues a code (the employee's old codes are revoked). The plain form is shown only in the
+        response."""
         for c in self.repo.codes_of(company_id, employee_id):
             if c.status == "active":
                 self.repo.save_code(c.model_copy(update={"status": "revoked"}))
@@ -88,7 +89,8 @@ class AuthService:
         return None
 
     def check_code(self, telegram_id: int, text: str, now: datetime) -> LoginResult:
-        """Проверка кода. Код не гасится: он гасится при подтверждении (согласие или вход)."""
+        """Checks the code. The code is not consumed here; it is consumed on confirmation (consent
+        or sign-in)."""
         until = self.blocked_until(telegram_id, now)
         if until:
             return LoginResult("blocked", blocked_until=until)
@@ -112,11 +114,11 @@ class AuthService:
     def bind(
         self, emp: Employee, code: InviteCode, telegram_id: int, now: datetime, *, consent: bool
     ) -> tuple[Employee, int | None]:
-        """Привязать Telegram, погасить код. Возвращает (сотрудник, прежний telegram_id)."""
+        """Links Telegram and consumes the code. Returns (employee, previous telegram_id)."""
         old = emp.telegram_id if emp.telegram_id != telegram_id else None
         upd: dict[str, object] = {"telegram_id": telegram_id}
         if consent and emp.consent_at is None:
-            upd["consent_at"] = now  # время согласия записывается (§4.1, §9)
+            upd["consent_at"] = now  # consent time is recorded (§4.1, §9)
         emp = emp.model_copy(update=upd)
         self.repo.save_employee(emp)
         self.repo.save_code(code.model_copy(update={"status": "used", "used_at": now}))

@@ -1,4 +1,4 @@
-"""П9 «Настройки» (только администратор) и П10 «Журнал»."""
+"""П9 "Settings" (administrator only) and П10 "Journal"."""
 
 import csv
 import html
@@ -104,7 +104,7 @@ def _date(s: str) -> date | None:
 
 
 def _rows_pdf(title: str, lines: list[str]) -> tuple[bytes, str]:
-    """PDF журнала; если собрать нельзя — HTML (формат «html»)."""
+    """The journal as PDF; if it cannot be built, HTML (format "html")."""
     try:
         from reportlab.lib.pagesizes import A4
         from reportlab.lib.styles import ParagraphStyle
@@ -213,7 +213,7 @@ def register(app: FastAPI, w: Web) -> None:
         d.ops.save_tech(c.company, t)
         d.journal.add(c.company, c.now, c.user.email, "settings.save", "")
         if provider in PROVIDER_NAMES and provider != t.provider:
-            if provider in FOREIGN:  # за границу — только через предупреждение (П9.5)
+            if provider in FOREIGN:  # abroad only through a warning (П9.5)
                 return settings_page(w, c, win="foreign", form={"provider": provider})
             d.ops.save_tech(
                 c.company, t.model_copy(update={"provider": provider, "claude_ack": False})
@@ -224,7 +224,7 @@ def register(app: FastAPI, w: Web) -> None:
         w.flash(c, "Настройки сохранены.")
         return w.see_other("/settings")
 
-    # --- модель (П9.5) ------------------------------------------------------------------------
+    # --- model (П9.5) ---
     @app.get("/settings/model", response_class=HTMLResponse)
     def model_form(c: Annotated[Ctx, Depends(w.ctx)]) -> Response:
         return _admin_only(c) or settings_page(
@@ -259,7 +259,7 @@ def register(app: FastAPI, w: Web) -> None:
         w.flash(c, f"Модель изменена: {PROVIDER_NAMES[provider]}.")
         return w.see_other("/settings")
 
-    # --- токен для ИИ-агентов (П9.6): MCP-сервер, SPEC-09 §10 --------------------------------------
+    # --- token for AI agents (П9.6): MCP server, SPEC-09 §10 ---
     @app.get("/settings/tokens", response_class=HTMLResponse)
     def tokens_form(c: Annotated[Ctx, Depends(w.ctx)]) -> Response:
         return _admin_only(c) or settings_page(w, c, win="tokens")
@@ -288,7 +288,7 @@ def register(app: FastAPI, w: Web) -> None:
             w.flash(c, "Токен отозван: ИИ-агент с ним больше не получит данных.")
         return w.see_other("/settings/tokens")
 
-    # --- выгрузка (П9.2) --------------------------------------------------------------------------
+    # --- export (П9.2) ---
     @app.get("/settings/export", response_class=HTMLResponse)
     def export_form(c: Annotated[Ctx, Depends(w.ctx)]) -> Response:
         return _admin_only(c) or settings_page(w, c, win="export")
@@ -324,7 +324,7 @@ def register(app: FastAPI, w: Web) -> None:
             headers={"Content-Disposition": 'attachment; filename="company-data.zip"'},
         )  # fmt: skip
 
-    # --- удаление данных компании (П9.3) -------------------------------------------------------------
+    # --- deletion of company data (П9.3) ---
     @app.get("/settings/delete", response_class=HTMLResponse)
     def delete_form(c: Annotated[Ctx, Depends(w.ctx)]) -> Response:
         return _admin_only(c) or settings_page(w, c, win="delete1")

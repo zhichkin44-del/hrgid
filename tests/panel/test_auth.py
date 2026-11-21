@@ -1,4 +1,4 @@
-"""П0: вход по почте и коду, блок после 5 ошибок, сессии, журнал входов."""
+"""П0: sign-in by email and code, block after 5 errors, sessions, sign-in log."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ def test_login_flow_and_today(env: Env) -> None:
     c = env.login(HR)
     r = c.get("/")
     assert r.status_code == 200 and "Анна Воронова" in r.text
-    # код не светится в письме-логе приложения, но доходит получателю
+    # the code does not appear in the application's email log, but reaches the recipient
     assert env.mailer.sent[-1][0] == HR
 
 
@@ -39,7 +39,7 @@ def test_wrong_code_counts_attempts_then_blocks_15_minutes(env: Env) -> None:
         assert "Код неверный" in r.text and f"Осталось {left} из 5" in r.text
     r = c.post("/login/code", data={"code": "000000"})
     assert "закрыт на 15 минут" in r.text
-    # даже верный код в блоке не пускает
+    # even a correct code does not get in while blocked
     good = env.mailer.last_code(HR)
     r = c.post("/login/code", data={"code": good})
     assert "закрыт на 15 минут" in r.text and "hrgid_sid" not in c.cookies
@@ -70,7 +70,7 @@ def test_code_is_single_use(env: Env) -> None:
     assert "hrgid_sid" in c.cookies
     c2 = env.anon()
     c2.post("/login", data={"email": HR})
-    r = c2.post("/login/code", data={"code": code})  # тот же код второй раз
+    r = c2.post("/login/code", data={"code": code})  # the same code a second time
     assert "hrgid_sid" not in c2.cookies, r.text[:80]
 
 
@@ -88,7 +88,7 @@ def test_resend_only_after_60_seconds(env: Env) -> None:
 def test_session_expires_after_8_hours_idle(env: Env) -> None:
     c = env.login(HR)
     env.clock.advance(hours=7)
-    assert c.get("/").status_code == 200  # действие продлевает сессию
+    assert c.get("/").status_code == 200  # an action extends the session
     env.clock.advance(hours=9)
     r = c.get("/queue")
     assert "Сессия закрыта" in r.text

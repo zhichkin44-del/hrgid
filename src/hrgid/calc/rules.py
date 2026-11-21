@@ -1,4 +1,4 @@
-"""Загрузка rules/labor_rules.yaml — единственный источник чисел и ссылок на статьи."""
+"""Loads rules/labor_rules.yaml, the single source of numbers and article references."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Общее для всех маршрутов панели: сессия, права, шаблоны, плашки-уведомления, ошибки."""
+"""Shared by all panel routes: session, rights, templates, notification banners, errors."""
 
 from __future__ import annotations
 
@@ -57,7 +57,7 @@ class Redirect(Exception):
 
 @dataclass
 class Ctx:
-    """Контекст запроса: кто вошёл, в какой компании, который час."""
+    """Request context: who signed in, in which company, the current time."""
 
     request: Request
     user: PanelUser
@@ -117,12 +117,12 @@ class Web:
         )  # fmt: skip
         env.filters["todt"] = datetime.fromisoformat
 
-    # --- сессия -----------------------------------------------------------------------
+    # --- session ---
     def now(self) -> datetime:
         return self.d.clock()
 
     def ctx(self, request: Request) -> Ctx:
-        """Зависимость маршрута: пользователь из cookie или переход на вход."""
+        """Route dependency: the user from the cookie, or a redirect to sign-in."""
         now = self.now()
         token = request.cookies.get(COOKIE, "")
         res = self.d.auth.session(token, now) if token else None
@@ -135,11 +135,11 @@ class Web:
         return Ctx(request, user, session.sid, now, self.d.repo.settings(user.company_id))
 
     def require(self, c: Ctx, action: str) -> None:
-        """Права по реестру: 403, если действие только для администратора."""
+        """Rights per the registry: 403 if the action is for the administrator only."""
         if not can(c.role, action):
             raise HTTPException(403, "Доступно администратору")
 
-    # --- плашки --------------------------------------------------------------------------
+    # --- banners ---
     def flash(self, c: Ctx, text: str, *, kind: str = "ok", undo: str = "") -> None:
         key = c.sid
         d = self.d.store.get(K_FLASH, c.company, key) or {"items": []}
@@ -154,9 +154,9 @@ class Web:
         items: list[dict[str, str]] = d["items"]
         return items
 
-    # --- страницы ---------------------------------------------------------------------------
+    # --- pages ---
     def nav_counts(self, c: Ctx) -> dict[str, tuple[int, bool]]:
-        """Числа у разделов меню; при сбое хранилища меню остаётся без чисел."""
+        """Numbers for the menu sections; if storage fails, the menu stays without numbers."""
         try:
             queue = self.d.desk.list_tickets(c.company, "all", c.now, c.user.email)
             risks = self.risk_count(c) if self.d.checker is not None else 0
@@ -165,8 +165,9 @@ class Web:
         return {"queue": (len(queue), False), "check": (risks, True)}
 
     def basis_options(self, c: Ctx) -> list[str]:
-        """Варианты поля «Основание»: частые статьи ТК, основания уже сохранённых ответов,
-        пункты действующих правил компании."""
+        """Options for the "Basis" field: frequent Labor Code articles, bases of already saved answers,
+        items of the company's current rules.
+        """
         opts = [f"ст. {n} ТК РФ" for n in (70, 115, 124, 136, 152, 153)]
         opts += [e.basis for e in self.d.repo.kb_entries(c.company) if e.basis]
         for doc in self.d.docs.documents(c.company):

@@ -1,4 +1,4 @@
-"""Подключение к PostgreSQL: DATABASE_URL или встроенный pgserver (локальная разработка)."""
+"""Connection to PostgreSQL: DATABASE_URL or the bundled pgserver (local development)."""
 
 from __future__ import annotations
 
@@ -43,7 +43,8 @@ _servers: dict[str, Any] = {}
 
 
 def database_url(data_dir: Path | None = None) -> str:
-    """URL БД: DATABASE_URL, иначе встроенный сервер в каталоге data_dir (по умолчанию .pgdata)."""
+    """DB URL: DATABASE_URL, otherwise the bundled server in the data_dir directory (default
+    .pgdata)."""
     env = os.environ.get("DATABASE_URL")
     if env:
         return env

@@ -1,4 +1,4 @@
-"""Сервис api: панель HR и веб-чат в одном процессе FastAPI (боевая сборка, PostgreSQL)."""
+"""The api service: HR panel and web chat in one FastAPI process (production build, PostgreSQL)."""
 
 from __future__ import annotations
 
@@ -16,7 +16,8 @@ log = logging.getLogger("hrgid.ops.api")
 
 
 def make_llm(provider: str) -> LLMClient:
-    """Провайдер из HRGID_LLM_PROVIDER; «fake» — запуск без ключей (все ответы — отказы)."""
+    """Provider from HRGID_LLM_PROVIDER; "fake" means running without keys (all answers are
+    refusals)."""
     if provider not in (*PROVIDERS, "fake"):
         raise SystemExit(f"неизвестный HRGID_LLM_PROVIDER: {provider}; нужен {PROVIDERS} или fake")
     if provider == "fake":
@@ -43,7 +44,8 @@ def create_api() -> FastAPI:
     store = PgDocStore(conn)
     store.init_schema()
     state = state_dir()
-    # Без SMTP код входа лежит файлом в томе (docker compose exec api cat ...); LOG — только факт.
+    # Without SMTP the sign-in code is kept as a file in the volume (docker compose exec api cat
+    # ...); LOG logs only the fact.
     mailer: Mailer = (
         LogMailer() if os.environ.get("HRGID_MAIL") == "log" else FileMailer(state / "outbox")
     )
@@ -71,7 +73,7 @@ def create_api() -> FastAPI:
         invites[secret("web_invite", "HRGID_WEB_INVITE", state)] = Invite(company_id)
 
     app = create_panel_app(deps)
-    app.mount("/", create_app(pipeline, invites))  # веб-чат: /c/{токен}, /api/chat
+    app.mount("/", create_app(pipeline, invites))  # web chat: /c/{token}, /api/chat
     log.info("api готов: панель /, веб-чат /c/<токен>, приглашений: %d", len(invites))
     return app
 

@@ -1,10 +1,10 @@
-"""Снимки ключевых экранов панели HR: 1440 и 375 px.
+"""Snapshots of the key HR panel screens: 1440 and 375 px.
 
     python scripts/panel_shots.py --out C:/Studio/hh-transfer/out/hrgid-panel-shots
 
-Поднимает панель на наполненном стенде (как scripts/panel_serve.py), входит в браузере по коду из
-письма (каталог outbox), обходит экраны и пишет PNG и index.json (экран, адрес, эталон раскладки).
-Браузер: встроенный Chromium Playwright, если он есть, иначе установленный Chrome или Edge.
+Starts the panel on the populated stand (as scripts/panel_serve.py does), signs in in the browser with the code
+from the email (outbox directory), walks through the screens and writes PNG files and index.json (screen, address, layout reference).
+Browser: the built-in Playwright Chromium if present, otherwise an installed Chrome or Edge.
 """
 
 from __future__ import annotations
@@ -35,7 +35,7 @@ from hrgid.bot.models import Employee  # noqa: E402
 from hrgid.panel.app import create_panel_app  # noqa: E402
 from panel_serve import CO, RULES, build  # noqa: E402
 
-# (имя снимка, адрес, роль, эталон в out/hrgid-layouts без суффикса размера)
+# (snapshot name, address, role, reference in out/hrgid-layouts without the size suffix)
 SHOTS: list[tuple[str, str, str, str]] = [
     ("m-p2-kollega", "/queue#assign", "hr", "m-p2-kollega"),
     ("m-p9-model", "/settings/model", "admin", "m-p9-model"),
@@ -72,7 +72,7 @@ def docx_bytes(lines: list[str]) -> bytes:
 
 
 def fill(deps: Any, now: datetime) -> None:
-    """Богатый набор данных «Студии Жичкина»."""
+    """Rich data set of "Студия Жичкина"."""
     d = deps
     people = [
         ("Ольга Смирнова", "дизайнер", "Дизайн", date(2024, 3, 11)),
@@ -171,7 +171,7 @@ def main() -> None:
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     outbox = Path(tempfile.mkdtemp(prefix="hrgid-outbox-"))
-    now = datetime(2026, 11, 18, 12, 40, tzinfo=UTC)  # среда, 15:40 мск
+    now = datetime(2026, 11, 18, 12, 40, tzinfo=UTC)  # Wednesday, 15:40 MSK
     deps, _ = build(outbox, now)
     fill(deps, now)
     server = uvicorn.Server(

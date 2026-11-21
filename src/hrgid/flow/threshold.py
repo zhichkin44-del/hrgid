@@ -1,6 +1,6 @@
-"""Порог «ответа нет» (§5 п.5): подбирается на настроечной части, фиксируется в ADR-0006.
+""" "No answer" threshold (§5 item 5): chosen on the tuning part and recorded in ADR-0006.
 
-Основная часть набора для подбора не используется.
+The main part of the set is not used for the choice.
 """
 
 from __future__ import annotations
@@ -9,10 +9,11 @@ from collections.abc import Sequence
 
 
 def pick_threshold(answerable: Sequence[float], unanswerable: Sequence[float]) -> float:
-    """Порог по оценке переранжировщика верхнего фрагмента.
+    """Threshold on the reranker score of the top fragment.
 
-    Максимизирует число верно обработанных вопросов на настроечной части: оценка ниже порога —
-    отказ. При равенстве берётся меньший порог (лучше ответить, чем отказать).
+    Maximizes the number of correctly handled questions on the tuning part: a score below the
+    threshold is
+    a refusal. On a tie, the smaller threshold is taken (better to answer than to refuse).
     """
     if not answerable and not unanswerable:
         raise ValueError("пустая настроечная часть")

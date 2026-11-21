@@ -1,4 +1,5 @@
-"""Документы и версии компании. Всё в границах company_id (tenant_id) через DocStore."""
+"""The company's documents and versions. Everything is scoped to company_id (tenant_id) through
+DocStore."""
 
 from __future__ import annotations
 
@@ -28,7 +29,7 @@ class Version:
     effective_from: date | None
 
     def applicable(self, today: date) -> bool:
-        """Версия применяется только с номером приказа, датой приказа и датой начала действия."""
+        """A version is applied only with an order number, an order date and an effective date."""
         return bool(
             self.order_no.strip()
             and self.order_date
@@ -130,7 +131,7 @@ class DocService:
     def now_iso(self) -> str:
         return self.clock().isoformat(timespec="seconds")
 
-    # --- журнал ---
+    # --- journal ---
     def audit(
         self, company: str, author: str, action: str, doc_id: str = "", **details: Any
     ) -> None:
@@ -151,7 +152,7 @@ class DocService:
     def audit_log(self, company: str) -> list[dict[str, Any]]:
         return self.store.all(K_AUDIT, company)
 
-    # --- документы и версии ---
+    # --- documents and versions ---
     def _put_ver(self, company: str, v: Version) -> None:
         self.store.put(K_VER, company, f"{v.doc_id}:{v.number}", _ver_to_dict(v))
 
@@ -197,8 +198,9 @@ class DocService:
         title: str = "",
         doc_id: str | None = None,
     ) -> Version:
-        """Загрузить файл: новый документ или новая версия существующего.
-        Версия — черновик, пока не указаны приказ и дата начала."""
+        """Uploads a file: a new document or a new version of an existing one.
+        A version stays a draft until the order and the start date are specified.
+        """
         items = tuple(parse_document(filename, data))
         parent: int | None = None
         if doc_id is None:
@@ -243,7 +245,7 @@ class DocService:
         )  # fmt: skip
         self._put_ver(company, v)
         doc = self._doc(company, doc_id)
-        doc["override"] = None  # новая утверждённая версия отменяет прежний откат
+        doc["override"] = None  # a new approved version cancels the previous rollback
         self.store.put(K_DOC, company, doc_id, doc)
         self.audit(
             company,
@@ -309,7 +311,7 @@ class DocService:
     def edit_item(
         self, company: str, doc_id: str, base: int, item_number: str, new_text: str, author: str
     ) -> Version:
-        """«Исправить пункт»: новая версия-проект с заменённым текстом пункта."""
+        """ "Fix item": a new draft version with the item text replaced."""
         if not new_text.strip():
             raise DocError("empty_text", "Итоговый текст пункта обязателен.")
         v = self.version(company, doc_id, base)

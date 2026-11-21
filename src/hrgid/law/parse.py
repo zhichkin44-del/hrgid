@@ -1,4 +1,4 @@
-"""Разбор страницы статьи ТК (consultant.ru) на статью → части → фрагменты."""
+"""Parses an article page of the Labor Code (consultant.ru) into article -> parts -> fragments."""
 
 from __future__ import annotations
 

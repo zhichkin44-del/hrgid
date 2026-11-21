@@ -1,4 +1,4 @@
-"""Промпты потока ответа. Любое изменение текста меняет ключ записей (ADR-0003): make record."""
+"""Prompts of the answer flow. Any change to the text changes the recording key (ADR-0003): make record."""
 
 from __future__ import annotations
 

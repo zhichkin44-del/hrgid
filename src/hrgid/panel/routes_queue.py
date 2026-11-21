@@ -1,4 +1,4 @@
-"""П2 «Очередь»: обращения, черновик, шаблон из базы, назначение, ответ, сохранение в базу."""
+"""П2 "Queue": requests, draft, template from the base, assignment, reply, saving to the base."""
 
 import re
 from dataclasses import dataclass, field
@@ -28,13 +28,14 @@ TABS: tuple[tuple[str, str], ...] = (
 @dataclass
 class Suggestion:
     summary: str = ""
-    found: list[tuple[str, str]] = field(default_factory=list)  # (источник, цитата)
+    found: list[tuple[str, str]] = field(default_factory=list)  # (source, quote)
     draft: str = ""
 
 
 def suggest(w: Web, c: Ctx, t: Ticket) -> Suggestion:
-    """Пересказ, найденные статьи и черновик. Источник — подключаемый помощник (extras['suggest']),
-    без него — похожие ответы из базы HR."""
+    """Summary, found articles and draft. The source is a pluggable helper (extras['suggest']);
+    without it, similar answers from the HR base are used.
+    """
     fn = w.d.extras.get("suggest")
     if t.confidential:
         return Suggestion()
@@ -142,7 +143,7 @@ def register(app: FastAPI, w: Web) -> None:
         q: Annotated[str, Form()] = "",
         save_kb: Annotated[str, Form()] = "",
     ) -> Response:
-        """Окна над карточкой (отправить / шаблон / назначить / в базу): черновик не теряется."""
+        """Windows over the card (send / template / assign / to the base): the draft is not lost."""
         if win not in ("send", "tpl", "assign", "savekb"):
             return queue_page(w, c, key=key)
         t = d.repo.ticket(c.company, key)
@@ -229,7 +230,9 @@ def register(app: FastAPI, w: Web) -> None:
         if not text.strip():
             return queue_page(w, c, key=key, form=form, errors={"text": "Напишите ответ."})
         params = _kb_params(t, form) if save_kb and not t.confidential else None
-        if not t.assignee:  # ответ закрепляет обращение за отвечающим (по почте, как вкладка «Мои»)
+        if (
+            not t.assignee
+        ):  # the reply binds the request to the responder (by email, as on the "Mine" tab)
             d.desk.assign(c.company, key, c.user.email)
         try:
             t2, entry = d.desk.answer(c.company, key, c.user.name, text, c.now, save_to_kb=params)

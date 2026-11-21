@@ -1,4 +1,4 @@
-"""Адаптер aiogram на фейковом Bot API: сессия вместо сети, настоящие Update и методы."""
+"""aiogram adapter on a fake Bot API: a session instead of the network, real Update objects and methods."""
 
 from __future__ import annotations
 
@@ -33,7 +33,7 @@ from .harness import VACATION_ANSWER, Harness  # noqa: E402
 
 
 class FakeSession(BaseSession):
-    """Фейковый Bot API: запоминает вызовы, возвращает правдоподобные ответы."""
+    """Fake Bot API: remembers calls, returns plausible responses."""
 
     def __init__(self) -> None:
         super().__init__()
@@ -171,7 +171,7 @@ def test_adapter_outbox_delivers_hr_notification_and_answer(h: Harness) -> None:
     assert n == 2
     assert "Новое обращение №101" in session.sent(HR_CHAT)[0].text
     assert "Ответ HR · обращение №101" in session.sent(OLGA_TG)[0].text
-    assert asyncio.run(app.flush_outbox_once(bot, h.engine)) == 0  # повторно не шлёт
+    assert asyncio.run(app.flush_outbox_once(bot, h.engine)) == 0  # does not send again
 
 
 def test_adapter_blocked_bot_marks_answer_not_delivered(h: Harness) -> None:

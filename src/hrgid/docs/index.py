@@ -1,4 +1,5 @@
-"""Пункты действующих правил компании -> тот же поиск, что и закон (маршрут «правила компании»)."""
+"""Items of the company's current rules -> the same search as for the law (the "company rules"
+route)."""
 
 from __future__ import annotations
 
@@ -18,7 +19,8 @@ SCOPE = "rules"
 
 @dataclass(frozen=True)
 class RuleChunk(Chunk):
-    """Пункт правил: title — название документа, article — номер пункта, part — id документа."""
+    """Rules item: title is the document name, article is the item number, part is the document
+    id."""
 
     @property
     def ref(self) -> str:
@@ -50,7 +52,7 @@ def rule_chunks(svc: DocService, company: str, today: date) -> list[RuleChunk]:
 def index_rules(
     conn: psycopg.Connection[Any], embedder: Embedder, svc: DocService, company: str, today: date
 ) -> int:
-    """Переиндексация правил одной компании: старые пункты убираются, действующие записываются."""
+    """Re-indexing of one company's rules: old items are removed, current ones are written."""
     conn.execute("DELETE FROM chunks WHERE tenant_id = %s AND scope = %s", (company, SCOPE))
     chunks = rule_chunks(svc, company, today)
     store_chunks(conn, chunks, embedder, scope=SCOPE)

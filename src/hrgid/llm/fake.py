@@ -1,4 +1,5 @@
-"""Fake-модель для тестов: ответы задаёт функция-обработчик, все запросы запоминаются."""
+"""Fake model for tests: responses are set by a handler function, and all requests are
+remembered."""
 
 from __future__ import annotations
 
@@ -35,7 +36,8 @@ NO_MODEL_ANSWER = json.dumps({"no_answer": True, "answer": "", "claims": []})
 
 
 def no_model_client() -> FakeLLM:
-    """Запуск без ключей (HRGID_LLM_PROVIDER=fake): маршрут «закон», на вопрос — «ответа нет»."""
+    """Run without keys (HRGID_LLM_PROVIDER=fake): "law" route; to a question it returns "ответа
+    нет"."""
 
     def handler(req: LLMRequest) -> LLMResponse | str:
         return json.dumps({"route": "law"}) if req.purpose == "route" else NO_MODEL_ANSWER

@@ -1,7 +1,9 @@
-"""Точка входа контейнеров: `python -m hrgid.ops.launch <роль>`.
+"""Container entry point: `python -m hrgid.ops.launch <role>`.
 
-Роли: init, api, worker, bot, mcp. Бот без токена и MCP без модуля (этап 7 ещё не слит) не падают,
-а честно пишут причину и ждут: `docker compose up` остаётся зелёным, а причина видна в логе.
+Roles: init, api, worker, bot, mcp. A bot without a token and an MCP without a module (stage 7 not
+yet merged) do not crash;
+they honestly write the reason and wait: `docker compose up` stays green, and the reason is visible
+in the log.
 """
 
 from __future__ import annotations
@@ -49,7 +51,8 @@ def run(role: str) -> None:
     elif importlib.util.find_spec("hrgid.mcp") is None:
         idle("модуль hrgid.mcp отсутствует (MCP-сервер — этап 7)")
     else:
-        # В контейнере нет stdin: MCP слушает HTTP, токен — в Authorization запроса.
+        # The container has no stdin: MCP listens over HTTP, the token is in the Authorization
+        # header of the request.
         port = os.environ.get("HRGID_MCP_PORT", "8765")
         sys.argv = ["hrgid.mcp", "--http", "--host", "0.0.0.0", "--port", port]  # noqa: S104
         runpy.run_module("hrgid.mcp", run_name="__main__")

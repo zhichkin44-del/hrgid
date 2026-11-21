@@ -1,6 +1,6 @@
-"""Отправка писем с кодом входа. Реального SMTP нет: интерфейс и заглушки.
+"""Sending sign-in code emails. There is no real SMTP: an interface and stubs.
 
-Код входа — секрет: в журнал приложения он не пишется, только факт отправки на замаскированный адрес.
+The sign-in code is a secret: it is not written to the application log, only the fact of sending to a masked address.
 """
 
 from __future__ import annotations
@@ -24,7 +24,7 @@ class Mailer(Protocol):
 
 @dataclass
 class MemoryMailer:
-    """Для тестов: письма лежат в памяти."""
+    """For tests: emails are kept in memory."""
 
     sent: list[tuple[str, str, str]] = field(default_factory=list)
 
@@ -41,14 +41,14 @@ class MemoryMailer:
 
 
 class LogMailer:
-    """Заглушка боевого запуска без SMTP: пишет в журнал только факт отправки."""
+    """Stub for a production run without SMTP: writes only the fact of sending to the log."""
 
     def send(self, to: str, subject: str, body: str) -> None:
         log.info("письмо «%s» отправлено на %s", subject, mask_email(to))
 
 
 class FileMailer:
-    """Локальная разработка: письмо — текстовый файл в каталоге (код виден только там)."""
+    """Local development: the email is a text file in a directory (the code is visible only there)."""
 
     def __init__(self, directory: Path) -> None:
         self.directory = directory
@@ -63,7 +63,7 @@ class FileMailer:
 
 
 class ConsoleMailer:
-    """Запуск для владельца без почты: письмо с кодом печатается в консоль (только локально)."""
+    """Run for the owner without email: the email with the code is printed to the console (local only)."""
 
     def send(self, to: str, subject: str, body: str) -> None:
         print(f"\n[письмо для {to}] {subject}\n{body}\n", flush=True)

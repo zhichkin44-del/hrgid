@@ -1,7 +1,7 @@
-"""Замер поиска: hit@5 (вектор / гибрид / гибрид + переранжирование) и задержка на CPU.
+"""Retrieval measurement: hit@5 (vector / hybrid / hybrid + reranking) and CPU latency.
 
-python scripts/eval_retrieval.py select   — выбор переранжировщика на настроечной части
-python scripts/eval_retrieval.py report <ключ> — замер на основной части (JSON в reports/)
+python scripts/eval_retrieval.py select   - choose the reranker on the tuning part
+python scripts/eval_retrieval.py report <key> - measurement on the main part (JSON in reports/)
 """
 
 from __future__ import annotations
@@ -15,7 +15,7 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
-import hrgid  # noqa: F401  # libpq на Windows
+import hrgid  # noqa: F401  # libpq on Windows
 from hrgid.db import connect, database_url, init_schema
 from hrgid.embed import E5Embedder
 from hrgid.law.ingest import load_chunks
@@ -25,7 +25,7 @@ from hrgid.search import SearchHit, hybrid_search, store_chunks, vector_search
 ROOT = Path(__file__).resolve().parent.parent
 K = 5
 POOL = 20
-TENANTS = ["studio"]  # компания без своих документов: видит только закон
+TENANTS = ["studio"]  # company without its own documents: sees only the law
 
 
 def load_set(name: str) -> list[dict[str, Any]]:
@@ -38,7 +38,7 @@ def hit(hits: list[SearchHit], gold: list[str]) -> bool:
 
 
 def rerank_keys(mode: str, args: list[str]) -> list[str]:
-    """Ключи переранжировщиков: select — все; report <ключ> — один; --no-rerank — ни одного."""
+    """Reranker keys: select - all; report <key> - one; --no-rerank - none."""
     if mode == "select":
         return list(CANDIDATES)
     if args[0] == "--no-rerank":
@@ -84,7 +84,7 @@ def main() -> int:
             conn, q, TENANTS, emb, k=K, pool=POOL, reranker=rr
         )
     for name, fn in runs.items():
-        fn(law[0]["question"])  # прогрев
+        fn(law[0]["question"])  # warm-up
         hits = sum(hit(fn(q["question"]), q["gold_articles"]) for q in law)
         times: list[float] = []
         for q in questions:

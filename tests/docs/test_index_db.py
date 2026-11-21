@@ -1,4 +1,4 @@
-"""Индексация правил в общий поиск (нужен PostgreSQL: на этой Windows блокируется — CI)."""
+"""Indexing of the rules into the common search (requires PostgreSQL: blocked on this Windows, so CI)."""
 
 from __future__ import annotations
 
@@ -31,7 +31,7 @@ def test_rule_chunks_only_active_items_with_refs(tmp_path: Path) -> None:
     c = next(c for c in chunks if c.article == "6.1")
     assert c.ref == "Правила студии, п. 6.1" and "31 календарный день" in c.text
     assert "приказ № 1 от 01.11.2026" in c.edition
-    assert not any(c.article == "1" for c in chunks)  # заголовки разделов не индексируются
+    assert not any(c.article == "1" for c in chunks)  # section headings are not indexed
     assert rule_chunks(svc, "other", TODAY) == []
 
 
@@ -42,7 +42,7 @@ def test_index_rules_searchable_and_isolated(conn: Any, tmp_path: Path) -> None:
 
     svc = _svc(tmp_path)
     n = index_rules(conn, HashEmbedder(), svc, COMPANY, TODAY)
-    assert n == index_rules(conn, HashEmbedder(), svc, COMPANY, TODAY)  # идемпотентно
+    assert n == index_rules(conn, HashEmbedder(), svc, COMPANY, TODAY)  # idempotent
     hits = fts_search(conn, "сколько дней отпуск", [COMPANY], 5)
     assert any(h.article == "6.1" for h in hits)
     assert fts_search(conn, "сколько дней отпуск", ["other"], 5) == []

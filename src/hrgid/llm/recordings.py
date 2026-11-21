@@ -1,7 +1,7 @@
-"""Записи ответов модели (ADR-0003). Ключ = хэш(промпт + модель + версия набора).
+"""Recorded model answers (ADR-0003). Key = hash(prompt + model + set version).
 
-replay (CI): записи нет — MissingRecording, тест красный (намеренно).
-record (локально, ключ владельца): вызывает настоящую модель и сохраняет ответ.
+replay (CI): no recording means MissingRecording and a red test (intentional).
+record (locally, owner's key): calls the real model and saves the answer.
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ DEFAULT_DIR = Path(__file__).resolve().parents[3] / "tests" / "recordings"
 
 
 class MissingRecording(AssertionError):
-    """Нет записи для этого промпта: выполните `make record` и закоммитьте tests/recordings."""
+    """No recording for this prompt: run `make record` and commit tests/recordings."""
 
 
 def recording_key(req: LLMRequest, model: str, dataset_version: str) -> str:

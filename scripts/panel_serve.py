@@ -1,9 +1,9 @@
-"""Запуск панели HR на наполненном стенде (для разработки и снимков экранов).
+"""Runs the HR panel on the populated test stand (for development and screenshots).
 
     python scripts/panel_serve.py --port 8765
 
-Хранилище — в памяти; письма с кодом входа складываются в каталог outbox/ (по файлу на письмо).
-Данные — «Студия Жичкина»: сотрудники, обращения, база ответов, правила с проверкой на ТК.
+Storage is in memory; sign-in code emails are written to the outbox/ directory (one file per email).
+Data: "Студия Жичкина" - employees, requests, answer base, rules checked against the Labor Code.
 """
 
 from __future__ import annotations

@@ -60,7 +60,7 @@ def ok(r: httpx.Request) -> httpx.Response:
 
 
 def test_default_models_and_registration() -> None:
-    assert set(MODELS.values()) == {"anthropic/claude-haiku-5.5"}  # Haiku на все роли
+    assert set(MODELS.values()) == {"anthropic/claude-haiku-5.5"}  # Haiku for all roles
     assert "openrouter" in PROVIDERS and make_client("openrouter").name == "openrouter"
 
 
@@ -79,7 +79,7 @@ def test_request_shape_and_response() -> None:
     assert seen["h"]["x-title"] == "HRgid" and "http-referer" in seen["h"]
     b = seen["body"]
     assert b["model"] == "anthropic/claude-haiku-5.5" and "tools" not in b
-    assert b["reasoning"] == {"enabled": False}  # иначе размышление съедает max_tokens
+    assert b["reasoning"] == {"enabled": False}  # otherwise the reasoning eats max_tokens
     assert b["messages"][0] == {"role": "system", "content": "s"}
     assert resp.text == "ответ" and (resp.input_tokens, resp.output_tokens) == (1000, 200)
     main = client(router(chat)).complete(LLMRequest("s", REQ.messages, tier="main"))
@@ -218,7 +218,7 @@ def test_401_not_retried_but_fallback_used() -> None:
 def test_cost_from_model_list_prices() -> None:
     c = client(router(ok))
     r = c.complete(LLMRequest("s", REQ.messages, tier="main", purpose="answer"))
-    # haiku-5.5: 1e-7 / 5e-7 USD за токен, курс 100 -> 10 / 50 ₽ за млн токенов
+    # haiku-5.5: 1e-7 / 5e-7 USD per token, rate 100 -> 10 / 50 RUB per 1M tokens
     assert RUB_PER_MTOK["anthropic/claude-haiku-5.5"] == pytest.approx((10.0, 50.0))
     m = UsageMeter()
     m.add(r)

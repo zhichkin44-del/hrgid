@@ -1,4 +1,4 @@
-"""Трасса в PostgreSQL. Нужен libpq: локально на этой Windows блокируется, гоняется в CI."""
+"""A trace in PostgreSQL. Needs libpq: blocked locally on this Windows, runs in CI."""
 
 from __future__ import annotations
 

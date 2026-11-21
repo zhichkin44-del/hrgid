@@ -1,4 +1,4 @@
-"""Общие помощники тестов этапа 5: источник норм по ключевым словам и Fake-модель проверки."""
+"""Common helpers of the stage 5 tests: the source of norms by keywords and the Fake verification model."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ def _stems(text: str) -> set[str]:
 
 
 class KeywordNormSource:
-    """Замена гибридного поиска (он требует PostgreSQL): пересечение основ слов."""
+    """A replacement for hybrid search (it needs PostgreSQL): intersection of word stems."""
 
     def __init__(self) -> None:
         raw = json.loads((FIX / "tk_norms.json").read_text(encoding="utf-8"))
@@ -46,7 +46,7 @@ def _json(verdict: str, why: str, article: str = "", sug: str = "") -> str:
 
 
 def fake_judge(req: LLMRequest) -> LLMResponse | str:
-    """Имитация модели с записями: простые правила по тексту пункта (механика, не качество)."""
+    """A model simulation with recordings: simple rules over the item text (mechanics, not quality)."""
     user = req.messages[0].content
     body = user.split("ПУНКТ ПРАВИЛ", 1)[1]
     text = body.split("<<<", 1)[1].split(">>>", 1)[0].strip().lower()

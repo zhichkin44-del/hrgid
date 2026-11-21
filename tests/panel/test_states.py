@@ -1,4 +1,4 @@
-"""У каждого раздела — пусто / загрузка / ошибка / нет прав (SPEC-09 §8)."""
+"""Each section has: empty / loading / error / no rights (SPEC-09 §8)."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ import pytest
 
 from .conftest import ADMIN, HR, make_env
 
-# раздел -> (адрес, что сломать, текст пустого состояния на свежей компании)
+# section -> (address, what to break, empty-state text on a fresh company)
 SECTIONS: list[tuple[str, str, tuple[str, str], str]] = [
     ("today", "/", ("repo", "tickets"), "Начало работы"),
     ("queue", "/queue", ("repo", "tickets"), "В очереди пусто"),
@@ -45,9 +45,9 @@ def test_error_state_has_retry_and_no_details(
     r = c.get(url)
     assert r.status_code == 500, name
     assert "Не удалось загрузить раздел" in r.text and "Повторить" in r.text
-    assert f'href="{url.split("?")[0]}"' in r.text  # «Повторить» ведёт на тот же раздел
+    assert f'href="{url.split("?")[0]}"' in r.text  # "Retry" leads to the same section
     assert "Секрет" not in r.text and "123-456-789" not in r.text and "Traceback" not in r.text
-    assert "Вернуться на «Сегодня»" in r.text  # не тупик
+    assert "Вернуться на «Сегодня»" in r.text  # not a dead end
 
 
 def test_loading_state_page_has_skeleton_and_exit() -> None:

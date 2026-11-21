@@ -1,8 +1,8 @@
-"""Импорт сотрудников из выгрузки 1С:ЗУП (CSV/XLSX), П6.2–П6.5.
+"""Importing employees from a 1C:ZUP export (CSV/XLSX), П6.2-П6.5.
 
-Шаги: файл -> сопоставление колонок -> предпросмотр (обновятся / новые / с ошибкой / нет в файле)
--> итог. Повторный импорт обновляет данные тех, кто уже есть (по ФИО), и предлагает отключить
-тех, кого нет в новой выгрузке.
+Steps: file -> column mapping -> preview (will be updated / new / with an error / not in the file)
+-> summary. A repeated import updates the data of those already present (by full name) and offers to disable
+those who are not in the new export.
 """
 
 from __future__ import annotations
@@ -40,7 +40,7 @@ _HINTS: dict[str, tuple[str, ...]] = {
 
 
 class ImportError_(ValueError):
-    """Файл не подошёл (формат, нет колонки «ФИО»)."""
+    """The file was not accepted (format, or no "Full name" column)."""
 
     def __init__(self, code: str, message: str) -> None:
         super().__init__(message)
@@ -52,7 +52,7 @@ def norm_name(s: str) -> str:
 
 
 def read_table(filename: str, data: bytes) -> tuple[list[str], list[list[str]]]:
-    """Заголовки и строки как текст. Поддерживает CSV (; или ,) и XLSX."""
+    """Headers and rows as text. Supports CSV (; or ,) and XLSX."""
     if len(data) > MAX_BYTES:
         raise ImportError_("size", "Файл больше 10 МБ.")
     name = filename.lower()
@@ -112,7 +112,7 @@ def _cell(v: Any) -> str:
 
 
 def auto_map(headers: list[str]) -> dict[str, int]:
-    """Колонки по названиям (без учёта регистра); что не нашлось — выбирает человек (П6.3)."""
+    """Columns by name (case-insensitive); whatever is not found is chosen by a person (П6.3)."""
     found: dict[str, int] = {}
     low = [h.lower().replace("ё", "е") for h in headers]
     for field_, hints in _HINTS.items():

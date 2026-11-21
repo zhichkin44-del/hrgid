@@ -1,4 +1,4 @@
-"""Адаптер поиска: hybrid_search (вектор, полнотекст, RRF, переранжирование) для потока."""
+"""Search adapter: hybrid_search (vector, full-text, RRF, reranking) for the flow."""
 
 from __future__ import annotations
 

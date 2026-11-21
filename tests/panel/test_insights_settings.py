@@ -1,4 +1,4 @@
-"""П7 аналитика, П8 расходы, П9 настройки, П10 журнал: данные, валидация, права."""
+"""П7 analytics, П8 spending, П9 settings, П10 journal: data, validation, rights."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ import zipfile
 from .conftest import ADMIN, CO, HR, make_env, msk
 from .seed import seed
 
-# ----- П7 -----------------------------------------------------------------------------
+# ----- П7 -----
 
 
 def test_analytics_empty_state_and_error_state() -> None:
@@ -27,13 +27,13 @@ def test_analytics_topics_growth_share_and_confidential_excluded() -> None:
     d.desk.rate(d.repo.ticket(CO, s.t1.key), "up")  # type: ignore[arg-type]
     r = env.login(HR).get("/analytics")
     assert "Отпуск" in r.text and "Зарплата и выплаты" in r.text
-    assert "притесняет" not in r.text  # конфиденциальное не попадает
+    assert "притесняет" not in r.text  # confidential does not get in
     assert "Частые вопросы без ответа" in r.text and "Добавить в базу" in r.text
     topics = {t.topic: t for t in d.analytics.topics(CO, env.clock.now)}
     assert topics["Отпуск"].total >= 3 and topics["Отпуск"].up == 1
-    assert topics["Зарплата и выплаты"].without_hr == 1  # no_answer не считается «без HR»
+    assert topics["Зарплата и выплаты"].without_hr == 1  # no_answer is not counted as "without HR"
     assert topics["Отпуск"].without_hr >= 2
-    # конфиденциальный текст не попал в строки аналитики
+    # confidential text did not get into the analytics rows
     assert all("притесн" not in r["text"] for r in d.desk.analytics_rows(CO))
     detail = env.login(HR).get("/analytics/topic?name=Отпуск")
     assert "Тема «Отпуск»" in detail.text
@@ -44,12 +44,14 @@ def test_analytics_unanswered_dedup_and_link_by_ticket_key() -> None:
     s = seed(env)
     env.ticket(s.igor, "Можно ли перенести отпуск на январь?")
     items = env.deps.analytics.frequent_unanswered(CO)
-    assert items and items[0][2] == 2  # два похожих обращения
+    assert items and items[0][2] == 2  # two similar requests
     r = env.login(HR).get("/analytics")
-    assert f"/kb/new?from={items[0][0]}" in r.text  # в адресе номер, а не текст вопроса
+    assert (
+        f"/kb/new?from={items[0][0]}" in r.text
+    )  # the address holds a number, not the question text
 
 
-# ----- П8 -----------------------------------------------------------------------------
+# ----- П8 -----
 
 
 def test_costs_hr_sees_only_spend_and_limit() -> None:
@@ -72,7 +74,7 @@ def test_costs_admin_sees_perf_traces_without_pd() -> None:
     assert "Медленные 5" in r.text and "Разбор запросов" in r.text
     assert (
         "[ФИО_1]" in r.text or "[ФИО_1]" in env.login(ADMIN).get("/costs/trace").text
-    )  # метки вместо имён
+    )  # labels instead of names
     assert "Качество ответов по версиям" in r.text
 
 
@@ -105,7 +107,7 @@ def test_hr_asks_admin_to_change_limit() -> None:
     assert "Нужно больше" in adm.get("/settings").text
 
 
-# ----- П9 -----------------------------------------------------------------------------
+# ----- П9 -----
 
 
 def test_settings_hr_has_no_access_with_ask_link() -> None:
@@ -144,7 +146,7 @@ def test_settings_save_and_validation() -> None:
 def test_model_switch_and_claude_warning_needs_ack() -> None:
     env = make_env()
     adm = env.login(ADMIN)
-    assert env.deps.ops.tech(CO).provider == "gigachat"  # российская по умолчанию
+    assert env.deps.ops.tech(CO).provider == "gigachat"  # Russian by default
     r = adm.post("/settings/model", data={"provider": "claude"})
     assert "Вопросы уйдут за границу" in r.text and env.deps.ops.tech(CO).provider == "gigachat"
     r = adm.post("/settings/model", data={"provider": "claude", "confirm_claude": "1"})
@@ -168,7 +170,7 @@ def test_export_zip_has_no_confidential_and_is_admin_only_download() -> None:
     assert {"employees.json", "tickets.json", "kb.json", "journal.json"} <= set(zf.namelist())
     tickets = zf.read("tickets.json").decode()
     assert "перенести отпуск" in tickets and "притесняет" not in tickets
-    assert env.mailer.sent[-1][0] == ADMIN  # ссылка ушла на почту администратора
+    assert env.mailer.sent[-1][0] == ADMIN  # the link went to the administrator's email
     assert env.login(HR).get(f"/settings/export/{token}").status_code == 403
     env.clock.advance(hours=25)
     assert env.login(ADMIN).get(f"/settings/export/{token}").status_code == 404
@@ -192,12 +194,12 @@ def test_company_delete_two_steps_with_name() -> None:
     assert env.deps.repo.employees(CO) == [] and env.deps.repo.tickets(CO) == []
     assert env.deps.docs.documents(CO) == [] and env.deps.repo.kb_entries(CO) == []
     assert env.deps.auth.users(CO) == [] and env.store.all("paudit", CO) == []
-    assert adm.get("/").url.path == "/login"  # сессии закрыты
-    assert len(env.deps.repo.employees("northwind")) == other_before  # чужая компания цела
+    assert adm.get("/").url.path == "/login"  # sessions closed
+    assert len(env.deps.repo.employees("northwind")) == other_before  # the other company is intact
     assert other.get("/").status_code == 200
 
 
-# ----- П10 ----------------------------------------------------------------------------
+# ----- П10 -----
 
 
 def test_journal_records_actions_without_message_text() -> None:

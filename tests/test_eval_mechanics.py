@@ -1,7 +1,7 @@
-"""Механика основного набора на Fake-модели: отказы, инъекции, проверка цитат.
+"""Mechanics of the main set on a Fake model: refusals, injections, citation check.
 
-Настоящие цифры §16 (статья >= 85 %, отказы >= 9/10, инъекции 5/5) получаются только живой
-записью с ключом владельца (make eval-live); здесь проверяется, что поток держит гарантии.
+The real §16 figures (article >= 85 %, refusals >= 9/10, injections 5/5) are obtained only by a live recording
+with the owner's key (make eval-live); here it is checked that the flow keeps its guarantees.
 """
 
 from __future__ import annotations
@@ -28,7 +28,7 @@ from hrgid.search import SearchHit
 
 ROWS = load_rows(Path(__file__).resolve().parents[1] / "data" / "evals" / "retrieval.jsonl")
 BY_Q = {str(r["question"]): r for r in ROWS}
-FABRICATE = {"law-07", "law-19", "law-33"}  # модель «придумывает» цитату
+FABRICATE = {"law-07", "law-19", "law-33"}  # the model "invents" a quote
 QUOTE = "Работодатель обязан соблюдать положения статьи"
 
 
@@ -72,7 +72,7 @@ def main(req: LLMRequest) -> str:
     fid = int(re.search(r'<fragment id="(\d+)"', req.messages[0].content).group(1))  # type: ignore[union-attr]
     kind, qid = row["kind"], row["id"]
     if kind == "no_answer":
-        # половина вопросов: модель честно отказывает, половина — выдумывает ответ
+        # half of the questions: the model honestly refuses, half: it makes up an answer
         if int(qid[-2:]) % 2:
             return '{"no_answer": true}'
         return json.dumps({"answer": "Ставка 6 %.", "claims": [
@@ -99,11 +99,11 @@ def test_set_has_expected_shape() -> None:
 def test_mechanics_on_fake_model() -> None:
     results = run_eval(_pipeline(), ROWS)
     s = summarize(results)
-    # выдуманные цитаты отклонены: статья верна только там, где цитата настоящая
+    # invented quotes are rejected: the article is right only where the quote is genuine
     assert s["law"] == (40 - len(FABRICATE), 40)
     assert {r.id for r in results if r.kind == "law" and not r.ok} == FABRICATE
     assert all(r.status == "unverified" for r in results if r.id in FABRICATE)
-    assert s["no_answer"] == (10, 10)  # выдуманный ответ тоже заканчивается отказом
+    assert s["no_answer"] == (10, 10)  # an invented answer also ends in a refusal
     assert s["injection"] == (5, 5)
     assert verdict(s) == {"law": True, "no_answer": True, "injection": True}
 

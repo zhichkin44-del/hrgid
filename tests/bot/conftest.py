@@ -21,11 +21,11 @@ OLGA_TG = 5001
 
 
 def msk(y: int, m: int, d: int, h: int = 12, mi: int = 0) -> datetime:
-    """Момент по московскому времени, в UTC."""
+    """The moment in Moscow time, in UTC."""
     return datetime(y, m, d, h, mi, tzinfo=MSK).astimezone(UTC)
 
 
-NOW = msk(2026, 11, 18, 15, 40)  # среда, рабочее время HR
+NOW = msk(2026, 11, 18, 15, 40)  # Wednesday, HR working hours
 
 
 @pytest.fixture(params=["memory", pytest.param("pg", marks=pytest.mark.db)])

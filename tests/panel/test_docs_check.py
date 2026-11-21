@@ -1,4 +1,4 @@
-"""П4 «Документы» и П5 «Проверка на ТК»: версии, приказ, откат, удаление, риски, права."""
+"""П4 "Documents" and П5 "Labor Code check": versions, order, rollback, deletion, risks, rights."""
 
 from __future__ import annotations
 
@@ -102,7 +102,7 @@ def test_new_version_compare_rollback_and_active_delete_denied() -> None:
     assert "Сравнение версий 1 и 2" in r.text and "два раза в месяц" in r.text
     adm = env.login(ADMIN)
     r = adm.get(f"/docs/{s.doc_id}/2/delete")
-    assert "удалить нельзя" in r.text  # действует
+    assert "удалить нельзя" in r.text  # in force
     assert adm.post(f"/docs/{s.doc_id}/2/delete").status_code == 409
     r = adm.post(f"/docs/{s.doc_id}/rollback", data={"to": "1", "reason": ""})
     assert "Укажите причину" in r.text
@@ -116,7 +116,7 @@ def test_delete_version_has_10_second_undo_and_executes_after() -> None:
     env = make_env()
     s = seed(env)
     approve(env, s.doc_id, 1)
-    upload(env.login(HR), RULES, doc_id=s.doc_id)  # версия 2 — проект, не действует
+    upload(env.login(HR), RULES, doc_id=s.doc_id)  # version 2 is a draft, not in force
     adm = env.login(ADMIN)
     r = adm.post(f"/docs/{s.doc_id}/2/delete")
     assert "Отменить — 10 с" in r.text and len(env.deps.docs.versions(CO, s.doc_id)) == 2
@@ -124,11 +124,11 @@ def test_delete_version_has_10_second_undo_and_executes_after() -> None:
     assert "Действие отменено" in adm.post(f"/undo/{uid}", data={"back": "/docs"}).text
     adm.post(f"/docs/{s.doc_id}/2/delete")
     env.clock.advance(seconds=12)
-    adm.get("/docs")  # любой запрос докручивает окно отмены
+    adm.get("/docs")  # any request extends the cancellation window
     assert [v.number for v in env.deps.docs.versions(CO, s.doc_id)] == [1]
 
 
-# ----- П5 ------------------------------------------------------------------------------
+# ----- П5 -----
 
 
 def test_check_empty_and_unchecked() -> None:
@@ -149,7 +149,7 @@ def test_check_finds_planted_violations_and_suggests_fix() -> None:
     hr.post(f"/check/{s.doc_id}/1/run")
     assert env.deps.checker is not None
     rep = env.deps.checker.report(CO, s.doc_id, 1)
-    assert rep is not None and {i.number for i in rep.risks} == {"3.1"}  # выплата раз в месяц
+    assert rep is not None and {i.number for i in rep.risks} == {"3.1"}  # payment once a month
     page = hr.get(f"/check?doc={s.doc_id}&v=1").text
     assert "ст. 136" in page and "Предлагаем:" in page
     assert "Доступно администратору" in page
@@ -208,7 +208,7 @@ def test_pdf_report_downloads() -> None:
     env = make_env()
     s = seed(env)
     hr = env.login(HR)
-    assert hr.get(f"/check/{s.doc_id}/1/pdf").status_code == 404  # ещё не проверено
+    assert hr.get(f"/check/{s.doc_id}/1/pdf").status_code == 404  # not checked yet
     hr.post(f"/check/{s.doc_id}/1/run")
     r = hr.get(f"/check/{s.doc_id}/1/pdf")
     assert r.status_code == 200 and "attachment" in r.headers["content-disposition"]

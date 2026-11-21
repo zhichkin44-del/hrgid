@@ -1,4 +1,4 @@
-"""HTTP-вариант: токен в Authorization, чужой/отозванный — 401 до протокола MCP."""
+"""HTTP variant: the token is in Authorization; a foreign or revoked token gets 401 before the MCP protocol."""
 
 from __future__ import annotations
 

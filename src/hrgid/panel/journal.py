@@ -1,4 +1,4 @@
-"""Журнал действий панели (П10): только факт действия, текст переписки не хранится (§0 п.7)."""
+"""Panel action journal (П10): only the fact of an action; message text is not stored (§0 item 7)."""
 
 from __future__ import annotations
 

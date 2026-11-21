@@ -1,8 +1,6 @@
-"""Изоляция компаний (SPEC-09 §9): чужое недоступно через панель, бот и базу ответов; 0 утечек.
+"""Company isolation (SPEC-09 §9): a foreign company's data is unreachable through the panel, the bot and the answer base; 0 leaks.
 
-Компания «zhichkin» наполнена приметными словами; HR компании «northwind» (с собственными
-данными) обходит все страницы с чужими идентификаторами. Ни одно слово чужой компании не должно
-появиться в ответах, чужие данные не должны измениться.
+The company "zhichkin" is filled with distinctive words; the HR of the company "northwind" (with its own data) walks through all pages with foreign identifiers. Not a single word of the foreign company may appear in the answers, and the foreign data must not change.
 """
 
 from __future__ import annotations
@@ -35,7 +33,7 @@ def make_pair() -> tuple[Env, Any]:
     approve(env, s.doc_id, 1)
     env.login(HR).post(f"/check/{s.doc_id}/1/run")
     env.login(HR).post("/announcements/send", data={"title": "Секретный приказ", "text": "Текст А"})
-    # у «northwind» свои данные, чтобы страницы не были пустыми
+    # "northwind" has its own data, so the pages are not empty
     e = env.employee(OTHER, "Борис Северный", emp_id="n1")
     env.connect(e, 7001)
     env.ticket(e, "Вопрос северной компании")
@@ -73,14 +71,14 @@ def test_foreign_company_pages_have_zero_leaks() -> None:
         if bad := leaks(r.text):
             found.append((url, bad))
         assert r.status_code < 500, (url, r.status_code)
-    assert found == []  # 0 утечек
+    assert found == []  # 0 leaks
 
 
 def test_foreign_identifiers_do_not_resolve() -> None:
     env, s = make_pair()
     other = env.login(OTHER_HR)
     ann_id = env.deps.repo.announcements(CO)[0].id
-    # номера обращений и ответов у каждой компании свои (101, 1): такой номер открывает СВОЁ
+    # request and answer numbers are separate for each company (101, 1): such a number opens ITS OWN record
     for url in (f"/queue/{s.t1.key}/history", f"/rating/{s.t1.key}", f"/kb/{s.kb_id}/edit"):
         assert leaks(other.get(url).text) == [], url
     for url in (
@@ -95,7 +93,7 @@ def test_foreign_identifiers_do_not_resolve() -> None:
 
 def test_foreign_writes_change_nothing() -> None:
     env, s = make_pair()
-    other = env.login(OTHER_HR)  # у northwind — администратор
+    other = env.login(OTHER_HR)  # northwind has an administrator
     d = env.deps
     before = {
         "tickets": [t.model_dump_json() for t in d.repo.tickets(CO)],
@@ -140,7 +138,7 @@ def test_foreign_writes_change_nothing() -> None:
         )
         assert leaks(r.text) == [], url
     env.clock.advance(seconds=30)
-    other.get("/staff")  # докрутить отложенные действия «другой» компании
+    other.get("/staff")  # run the deferred actions of the "other" company to completion
     env.login(HR).get("/staff")
     after = {
         "tickets": [t.model_dump_json() for t in d.repo.tickets(CO)],
@@ -149,7 +147,7 @@ def test_foreign_writes_change_nothing() -> None:
         "docs": str(d.docs.versions(CO, s.doc_id)),
     }
     assert after == before
-    # а в «чужой» компании ничего не появилось из-за этих попыток
+    # and nothing appeared in the "foreign" company because of these attempts
     assert all(e.company_id == OTHER for e in d.repo.employees(OTHER))
     assert d.repo.outbox_pending() == [] or all(
         o.company_id in (CO, OTHER) for _, _, o in d.repo.outbox_pending()
@@ -183,7 +181,7 @@ def test_undo_tokens_are_per_company() -> None:
     other = env.login(OTHER_HR)
     r = other.post(f"/undo/{uid}", data={"back": "/"})
     assert "вышло" in r.text
-    assert env.deps.repo.kb_entries(CO)[0].archived  # чужой «отмены» нет
+    assert env.deps.repo.kb_entries(CO)[0].archived  # there is no foreign "cancel"
 
 
 def test_session_of_deleted_user_company_does_not_cross() -> None:
@@ -192,7 +190,7 @@ def test_session_of_deleted_user_company_does_not_cross() -> None:
     token = other.cookies["hrgid_sid"]
     hr = env.anon()
     hr.cookies.set("hrgid_sid", token)
-    r = hr.get("/")  # та же сессия — тот же тенант, не чужой
+    r = hr.get("/")  # the same session: the same tenant, not a foreign one
     assert "Нортвинд" in r.text and "Студия Жичкина" not in r.text.split("<main")[0]
 
 
@@ -203,18 +201,20 @@ def test_bot_and_kb_channels_do_not_cross_tenants() -> None:
     assert d.kb.find_same(OTHER, "Сколько дней отпуска положено") is None
     assert d.kb.ranked(OTHER, "Сколько дней отпуска положено") == []
     assert d.repo.codes_of(OTHER, s.olga.id) == [] and d.repo.employee(OTHER, s.olga.id) is None
-    mine = d.repo.ticket(OTHER, s.t1.key)  # номер 101 есть и у «northwind», но это его обращение
+    mine = d.repo.ticket(
+        OTHER, s.t1.key
+    )  # number 101 exists also in "northwind", but that is its own request
     assert mine is not None and mine.company_id == OTHER and "перенести отпуск" not in mine.text
-    # кэш ответов: ключ зависит от компании
+    # answer cache: the key depends on the company
     assert cache_key(CO, "", "v1", "q") != cache_key(OTHER, "", "v1", "q")
-    # код сотрудника компании A не открывает вход в компанию B (код привязан к своей компании)
+    # an employee code of company A does not open sign-in to company B (the code is bound to its own company)
     code = d.bot_auth.issue_code(CO, s.olga.id, env.clock.now)
     res = d.bot_auth.check_code(1, code, env.clock.now)
     assert res.employee is not None and res.employee.company_id == CO
 
 
 def test_no_company_id_accepted_from_request() -> None:
-    """Компания берётся только из сессии: параметры запроса с чужим company_id игнорируются."""
+    """The company is taken only from the session: request parameters with a foreign company_id are ignored."""
     env, s = make_pair()
     other = env.login(OTHER_HR)
     r = other.get(f"/queue?company_id={CO}&company={CO}&tenant_id={CO}")

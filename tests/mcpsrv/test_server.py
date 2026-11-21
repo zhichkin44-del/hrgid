@@ -1,4 +1,4 @@
-"""Через настоящий протокол MCP (клиент-сессия в памяти): список инструментов и вызовы."""
+"""Through the real MCP protocol (an in-memory client session): the list of tools and calls."""
 
 from __future__ import annotations
 
@@ -52,7 +52,7 @@ async def test_call_calc_over_protocol(rig: Rig, monkeypatch: pytest.MonkeyPatch
         res = await client.call_tool(
             "calc", {"kind": "probation_end", "args": {"start": "2026-11-02", "months": 3}}
         )
-        bad = await client.call_tool("calc", {"kind": "probation_end"})  # args обязателен
+        bad = await client.call_tool("calc", {"kind": "probation_end"})  # args is required
     assert not res.isError and "R9" in _text(res)
     assert bad.isError
 
@@ -60,12 +60,14 @@ async def test_call_calc_over_protocol(rig: Rig, monkeypatch: pytest.MonkeyPatch
 async def test_no_token_and_revoked_token_are_refused(
     rig: Rig, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    async with _session(rig) as client:  # токена в окружении нет
+    async with _session(rig) as client:  # no token in the environment
         res = await client.call_tool("search_law", {"query": "отпуск"})
     assert res.isError and "недействителен" in _text(res)
     monkeypatch.setenv(TOKEN_ENV, rig.tok[A])
     async with _session(rig) as client:
         ok = await client.call_tool("search_law", {"query": "отпуск"})
-        rig.tokens.revoke(A, rig.tokens.list(A)[0]["id"], "admin")  # отзыв посреди сессии
+        rig.tokens.revoke(
+            A, rig.tokens.list(A)[0]["id"], "admin"
+        )  # revocation in the middle of a session
         denied = await client.call_tool("search_law", {"query": "отпуск"})
     assert not ok.isError and denied.isError

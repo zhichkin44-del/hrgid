@@ -50,7 +50,7 @@ def test_r6_one_day() -> None:
 
 
 def test_r6_year_cap() -> None:
-    # 2024 база 2 225 000, 2025 — 2 759 000: заработок выше обрезается
+    # 2024 base 2,225,000; 2025 - 2,759,000: earnings above it are capped
     r = sick_pay({2024: D(5000000), 2025: D(5000000)}, START, END, D(10))
     assert r.details["avg_daily"] == D("6827.40")
     assert r.value == D("68274.00")
@@ -85,7 +85,7 @@ def test_r6_bad_input() -> None:
         sick_pay({2024: D(-1), 2025: D(1)}, START, END, D(6))
     with pytest.raises(CalcError):
         sick_pay(E2, START, END, D(6), excluded_days=730)
-    with pytest.raises(CalcError):  # нет МРОТ/базы для года болезни
+    with pytest.raises(CalcError):  # no minimum wage/base for the sickness year
         sick_pay({2028: D(1), 2029: D(1)}, date(2030, 1, 10), date(2030, 1, 12), D(6))
 
 

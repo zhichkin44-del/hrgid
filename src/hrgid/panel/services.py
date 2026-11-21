@@ -1,7 +1,7 @@
-"""Прикладные операции панели поверх сервисов этапов 2–5 (очередь, база, документы, сотрудники).
+"""Application operations of the panel on top of the services of stages 2-5 (queue, base, documents, employees).
 
-Здесь нет HTTP: маршруты только вызывают эти методы. Всё внутри одной компании (company_id берётся
-из сессии пользователя, а не из запроса), чужие данные недоступны по построению.
+There is no HTTP here: the routes only call these methods. Everything is inside one company (company_id is taken
+from the user's session, not from the request), so foreign data is unreachable by construction.
 """
 
 from __future__ import annotations
@@ -40,7 +40,7 @@ K_GROUP, K_IMPORT, K_UNDO, K_EXPORT, K_DOWN, K_REQ, K_NOTE = (
     "pnote",
 )
 
-# Все виды документов компании: нужны выгрузке и удалению данных компании (П9.2, П9.3).
+# All document kinds of the company: needed for the export and for company data deletion (П9.2, П9.3).
 COMPANY_KINDS = (
     "settings", "employee", "code", "ticket", "kb", "announcement", "feedback", "outbox",
     "doc", "docver", "docaudit", "tkcheck", "puser", "plogin", "psess", "plog", "paudit",
@@ -49,7 +49,7 @@ COMPANY_KINDS = (
 
 
 class PanelError(ValueError):
-    """Ошибка поля формы: field — какое поле подсветить."""
+    """Form field error: field is the field to highlight."""
 
     def __init__(self, field: str, message: str, **extra: str) -> None:
         super().__init__(message)
@@ -67,12 +67,12 @@ class ImportResult:
     updated: int
     skipped: int
     disabled: int
-    codes: dict[str, str]  # employee_id -> код (только что выданные новым)
+    codes: dict[str, str]  # employee_id -> code (just issued by the new one)
     on_date: date
 
 
 class Undo:
-    """«Отменить — 10 с»: действие, которое можно вернуть сразу, или отложенное до конца окна."""
+    """ "Cancel - 10 s": an action that can be reverted at once, or one deferred until the end of the window."""
 
     WINDOW = timedelta(seconds=10)
 
@@ -102,7 +102,7 @@ class Undo:
         return True
 
     def flush(self, company: str, now: datetime) -> int:
-        """Довести до конца отложенные действия, у которых окно отмены закончилось."""
+        """Finishes the deferred actions whose cancellation window has ended."""
         done = 0
         for d in self.store.all(K_UNDO, company):
             if datetime.fromisoformat(d["until"]) >= now:
@@ -118,7 +118,7 @@ class StaffService:
     def __init__(self, repo: Repo, bot_auth: AuthService, desk: HrDesk, store: DocStore) -> None:
         self.repo, self.bot_auth, self.desk, self.store = repo, bot_auth, desk, store
 
-    # --- группы -------------------------------------------------------------------
+    # --- groups ---
     def groups(self, company: str) -> list[str]:
         names = {d["name"] for d in self.store.all(K_GROUP, company)}
         names |= {e.group for e in self.repo.employees(company) if e.group}
@@ -145,7 +145,7 @@ class StaffService:
             raise PanelError("name", "Удалить можно только пустую группу.")
         self.store.delete(K_GROUP, company, name)
 
-    # --- сотрудники ---------------------------------------------------------------
+    # --- employees ---
     def find_duplicate(self, company: str, full_name: str) -> Employee | None:
         key = imports.norm_name(full_name)
         for e in self.repo.employees(company):
@@ -190,8 +190,9 @@ class StaffService:
         return self.bot_auth.issue_code(company, emp_id, now)
 
     def issue_codes(self, company: str, who: str, now: datetime) -> list[tuple[Employee, str]]:
-        """Массовая выдача: «new» — тем, у кого нет Telegram и нет действующего кода; «all» — всем
-        без Telegram (старые коды отзываются)."""
+        """Mass issue: "new" - to those without Telegram and without a valid code; "all" - to everyone
+        without Telegram (old codes are revoked).
+        """
         res: list[tuple[Employee, str]] = []
         for e in self.repo.employees(company):
             if e.status != "active" or e.telegram_id is not None:
@@ -254,7 +255,7 @@ class StaffService:
         return e
 
     def ticket_count(self, company: str, emp_id: str) -> int:
-        """Обращения к HR в профиле: конфиденциальные не считаются и не показываются."""
+        """Requests to HR in the profile: confidential ones are not counted and not shown."""
         return sum(
             1
             for t in self.repo.tickets(company)
@@ -263,7 +264,7 @@ class StaffService:
             and t.status not in ("deleted", "deleted_pending")
         )
 
-    # --- импорт 1С ---------------------------------------------------------------------
+    # --- 1C import ---
     def import_start(self, company: str, filename: str, data: bytes) -> str:
         headers, rows = imports.read_table(filename, data)
         mapping = imports.auto_map(headers)
@@ -318,7 +319,7 @@ class StaffService:
             if p.earnings_12m is not None:
                 upd["earnings_12m"] = p.earnings_12m
             if ex.status == "disabled":
-                upd["status"] = "active"  # снова в выгрузке — значит работает
+                upd["status"] = "active"  # present in the export again, so it works
             self.repo.save_employee(ex.model_copy(update=upd))
         missing = {e.id for e in plan.missing}
         n_dis = 0
@@ -329,7 +330,7 @@ class StaffService:
         self.store.delete(K_IMPORT, company, token)
         return ImportResult(len(plan.new), len(plan.update), len(plan.errors), n_dis, codes, today)
 
-    # --- листы кодов ----------------------------------------------------------------------
+    # --- code sheets ---
     @staticmethod
     def codes_csv(rows: list[tuple[Employee, str]]) -> str:
         buf = io.StringIO()
@@ -349,7 +350,7 @@ class StaffService:
 
 
 class KbAdmin:
-    """База ответов (П3): правка, архив, пересмотр после изменения закона или правил."""
+    """Answer base (П3): editing, archive, review after a change in the law or the rules."""
 
     Q_MAX, A_MAX = 300, 900
 
@@ -414,7 +415,7 @@ class KbAdmin:
         self.repo.save_kb(e)
         return e
 
-    # --- затронутые ответы (сценарий 4) ------------------------------------------------
+    # --- affected answers (scenario 4) ---
     @staticmethod
     def _mentions(basis: str, article: str) -> bool:
         a = re.escape(article.strip().lower().replace("ст.", "").strip())
@@ -429,7 +430,7 @@ class KbAdmin:
         ]  # fmt: skip
 
     def mark_law_change(self, company: str, article: str, now: datetime) -> int:
-        """Статья изменилась: ответы, которые на неё опираются, помечаются «проверить»."""
+        """An article changed: answers based on it are marked "check"."""
         hit = self.affected_by_article(company, article)
         for e in hit:
             self.repo.save_kb(
@@ -443,7 +444,7 @@ class KbAdmin:
         return len(hit)
 
     def mark_by_doc(self, company: str, doc_title: str, note: str) -> int:
-        """Изменился документ компании: ответы с основанием «пункт правил» получают пометку."""
+        """A company document changed: answers with the basis "rules item" get a mark."""
         words = [w for w in re.findall(r"[а-яё]{4,}", doc_title.lower())][:2]
         n = 0
         for e in self.repo.kb_entries(company):
@@ -479,7 +480,7 @@ class KbAdmin:
 
 
 class Ratings:
-    """Разбор оценок 👎 (П1.1): оценка считается разобранной после решения HR."""
+    """Analysis of 👎 ratings (П1.1): a rating counts as analyzed after the HR decision."""
 
     def __init__(self, repo: Repo, store: DocStore) -> None:
         self.repo, self.store = repo, store
@@ -488,7 +489,7 @@ class Ratings:
         return {d["key"] for d in self.store.all(K_DOWN, company)}
 
     def open_items(self, company: str, now: datetime) -> list[Ticket]:
-        """Обращения с 👎 за последние сутки, ещё не разобранные (конфиденциальные не берём)."""
+        """Requests with 👎 from the last day that are not yet analyzed (confidential ones are not taken)."""
         done = self._resolved(company)
         since = now - timedelta(days=1)
         return [
@@ -512,14 +513,15 @@ class Ratings:
 
 
 class CompanyAdmin:
-    """Выгрузка и удаление данных компании (П9.2, П9.3)."""
+    """Export and deletion of company data (П9.2, П9.3)."""
 
     def __init__(self, store: DocStore, repo: Repo, journal: Journal, auth: PanelAuth) -> None:
         self.store, self.repo, self.journal, self.auth = store, repo, journal, auth
 
     def export_zip(self, company: str, since: date | None = None) -> bytes:
-        """Профили, переписка и обращения (кроме конфиденциальных), база ответов, версии
-        документов, журнал. Конфиденциальные обращения не входят."""
+        """Profiles, correspondence and requests (except confidential ones), answer base, document versions,
+        journal. Confidential requests are not included.
+        """
         ok_t = [
             t.model_dump(mode="json")
             for t in self.repo.tickets(company)
@@ -571,7 +573,7 @@ class CompanyAdmin:
 
 
 def _keys_of(store: DocStore, kind: str, company: str, d: dict[str, Any]) -> list[str]:
-    """Ключи документа (DocStore отдаёт только данные): подбираем по полям, как их кладут сервисы."""
+    """Document keys (DocStore returns only data): selected by fields, as the services store them."""
     cand: list[str] = []
     for f in ("id", "key", "email", "sid", "token", "n", "name", "doc_id", "code_hash"):
         if f in d:
@@ -589,7 +591,7 @@ def _keys_of(store: DocStore, kind: str, company: str, d: dict[str, Any]) -> lis
     return [k for k in dict.fromkeys(cand) if store.get(kind, company, k) is not None]
 
 
-# --- аналитика (П7) -----------------------------------------------------------------------
+# --- analytics (П7) ---
 
 
 @dataclass(frozen=True)
@@ -601,7 +603,7 @@ class TopicRow:
     without_hr: int
     up: int
     down: int
-    weeks: tuple[int, ...] = ()  # 6 недель, от старой к новой (мини-график)
+    weeks: tuple[int, ...] = ()  # 6 weeks, from old to new (mini chart)
 
     @property
     def growth(self) -> int:
@@ -628,7 +630,7 @@ class Analytics:
         self.repo, self.ops, self.desk, self.kb = repo, ops, desk, kb
 
     def _events(self, company: str) -> list[tuple[datetime, str, bool]]:
-        """(когда, тема, ответил без HR) из лога вопросов и обращений к HR без конфиденциальных."""
+        """(when, topic, answered without HR) from the question log and requests to HR, without confidential ones."""
         ev: list[tuple[datetime, str, bool]] = []
         for q in self.ops.questions(company):
             ev.append((datetime.fromisoformat(q["at"]), q["topic"], q["status"] == "answered"))
@@ -692,7 +694,7 @@ class Analytics:
         ]
 
     def frequent_unanswered(self, company: str, limit: int = 5) -> list[tuple[str, str, int]]:
-        """Частые вопросы, дошедшие до HR и ещё не решённые в базе: (номер обращения, текст, сколько раз)."""
+        """Frequent questions that reached HR and are not yet resolved in the base: (request number, text, how many times)."""
         items = [
             (t.key, t.text)
             for t in self.repo.tickets(company)

@@ -1,4 +1,4 @@
-"""Расчёты R1-R9 как инструменты модели (tool calling). Считает Python, модель только вызывает."""
+"""R1-R9 calculations as model tools (tool calling). Python computes; the model only calls them."""
 
 from __future__ import annotations
 
@@ -219,7 +219,7 @@ TOOLS: tuple[ToolSpec, ...] = tuple(spec for spec, _ in REGISTRY.values())
 
 
 def run_tool(name: str, args: dict[str, Any]) -> CalcResult:
-    """Выполнить расчёт. Ошибки ввода — CalcError с текстом для сотрудника."""
+    """Runs a calculation. Input errors are CalcError with text for the employee."""
     if name not in REGISTRY:
         raise CalcError(f"Неизвестный расчёт: {name}")
     try:

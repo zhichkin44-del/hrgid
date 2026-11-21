@@ -1,4 +1,4 @@
-"""Эмбеддинги: multilingual-e5-small на CPU (+ детерминированный хэш-эмбеддер для тестов)."""
+"""Embeddings: multilingual-e5-small on CPU (plus a deterministic hash embedder for tests)."""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ class Embedder(Protocol):
 
 
 class E5Embedder:
-    """Локальная модель e5-small; префиксы query:/passage: обязательны для e5."""
+    """Local e5-small model; the query:/passage: prefixes are required for e5."""
 
     def __init__(self, model_name: str = MODEL_NAME) -> None:
         from sentence_transformers import SentenceTransformer
@@ -43,7 +43,7 @@ class E5Embedder:
 
 
 class HashEmbedder:
-    """Мешок слов в хэш-пространстве: быстрый детерминированный эмбеддер для тестов."""
+    """Bag of words in hash space: a fast deterministic embedder for tests."""
 
     def _vec(self, text: str) -> np.ndarray:
         v = np.zeros(EMBED_DIM, dtype=np.float32)

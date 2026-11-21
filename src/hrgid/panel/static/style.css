@@ -15,7 +15,7 @@ b,strong{font-weight:600}
 a{color:inherit}
 .num{font-variant-numeric:tabular-nums}
 
-/* ============ Telegram (тёмная тема, стандартный вид) ============ */
+/* ============ Telegram (dark theme, standard look) ============ */
 .tg{display:grid;grid-template-columns:320px 1fr;min-height:100vh;background:#0e1621;--tgbg:#0e1621;--in:#182533;--out:#2b5278;--tgl:#6ab3f3;--tgm:#6d7f8f}
 .tg-side{background:#17212b;border-right:1px solid #0a1018;display:flex;flex-direction:column}
 .tg-side .top{height:56px;display:flex;align-items:center;gap:12px;padding:0 14px;color:#8b9aa8;border-bottom:1px solid #0e1621}
@@ -65,7 +65,7 @@ a{color:inherit}
 .rk button{border:0;background:#242f3d;border-radius:8px;padding:11px 8px;font-size:15px;color:#fff}
 .rk button.w{grid-column:1/-1}
 
-/* ============ Общие элементы веба и панели ============ */
+/* ============ Common web and panel elements ============ */
 .app{display:grid;grid-template-columns:244px 1fr;min-height:100vh}
 .nav{border-right:1px solid var(--line);background:var(--s1);padding:20px 12px;display:flex;flex-direction:column;gap:1px}
 .brand{display:flex;align-items:center;gap:10px;padding:0 10px 4px;font-weight:600;font-size:17px;letter-spacing:-.01em}
@@ -150,7 +150,7 @@ a{color:inherit}
 .meter{height:6px;background:var(--s4);border-radius:3px;overflow:hidden;min-width:90px}
 .meter i{display:block;height:100%;background:var(--tx)}
 
-/* веб-чат */
+/* web chat */
 .main.chat{padding:0;display:flex;flex-direction:column;min-height:100vh}
 .c-head{height:60px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 32px;border-bottom:1px solid var(--line)}
 .c-head span{color:var(--mu);font-size:13.5px}
@@ -178,7 +178,7 @@ a{color:inherit}
 .c-in .ft{max-width:740px;margin:8px auto 0;font-size:12px;color:var(--dim);text-align:center}
 .form{background:var(--s1);border:1px solid var(--line);border-radius:12px;padding:16px;margin:10px 0}
 
-/* вход */
+/* sign-in */
 .login{min-height:100vh;display:grid;place-items:center;padding:24px}
 .login .box{width:100%;max-width:400px;padding:30px}
 .login h1{font-size:22px;font-weight:600;margin:18px 0 6px;letter-spacing:-.01em}
@@ -186,7 +186,7 @@ a{color:inherit}
 .codes span{flex:1;height:50px;border-radius:10px;border:1px solid var(--line2);background:var(--s2);display:grid;place-items:center;font-size:22px;font-weight:600}
 .codes span.cur{border-color:var(--tx)}
 
-/* прочее панели */
+/* other panel styles */
 .draft{background:var(--s2);border:1px solid var(--line2);border-radius:10px;padding:12px 14px;font-size:14.5px;line-height:1.55;white-space:pre-line}
 .qt{border-left:2px solid #444;padding:2px 0 2px 12px;color:#cfcfcf;margin:6px 0}
 .found{padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--s2);margin-bottom:8px;font-size:14px}
@@ -243,7 +243,7 @@ a{color:inherit}
 }
 .pill{flex:none}
 
-/* ============ Окна поверх экрана, тосты, ссылки-кнопки (этап 0, v1.2) ============ */
+/* ============ Overlay windows, toasts, link buttons (stage 0, v1.2) ============ */
 .tabs a{padding:8px 14px;color:var(--mu);font-size:14px;text-decoration:none;border-bottom:2px solid transparent;margin-bottom:-1px}
 .tabs a:hover{color:var(--tx)}
 body.mo{height:100vh;overflow:hidden}

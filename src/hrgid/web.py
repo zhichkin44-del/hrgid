@@ -1,6 +1,6 @@
-"""Минимальный веб-чат (§4.10): тот же поток, что в боте; вход по ссылке-приглашению.
+"""Minimal web chat (§4.10): the same flow as in the bot; sign-in through an invitation link.
 
-Без расчётов профиля и без конфиденциального канала. Оформление — функциональное, без дизайна.
+No profile calculations and no confidential channel. The look is functional, without design.
 """
 
 from __future__ import annotations

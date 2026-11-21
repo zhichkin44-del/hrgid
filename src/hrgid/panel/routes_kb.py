@@ -1,4 +1,4 @@
-"""П3 «База ответов»: список, поиск, добавить, править, архив, затронутые ответы и пересмотр."""
+"""П3 "Answer base": list, search, add, edit, archive, affected answers and review."""
 
 from typing import Annotated
 
@@ -145,7 +145,7 @@ def register(app: FastAPI, w: Web) -> None:
         w.flash(c, "Ответ возвращён из архива.")
         return w.see_other("/kb")
 
-    # --- затронутые ответы (П3.4) и пересмотр (П3.5) -----------------------------------------
+    # --- affected answers (П3.4) and review (П3.5) -----------------------------------------
     @app.get("/kb/affected", response_class=HTMLResponse)
     def kb_affected(c: Annotated[Ctx, Depends(w.ctx)]) -> Response:
         return kb_page(w, c, win="affected")

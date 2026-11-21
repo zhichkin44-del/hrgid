@@ -1,4 +1,5 @@
-"""Разбор ввода сотрудника в расчётах: суммы, даты, часы, стаж. Ошибка — InputError с подсказкой."""
+"""Parsing of employee input in the calculations: amounts, dates, hours, length of service. Error is
+InputError with a hint."""
 
 from __future__ import annotations
 
@@ -18,7 +19,7 @@ _TEXT = re.compile(rf"(?<!\d)(\d{{1,2}})\s+({_MONTH_RE})(?:\s+(\d{{4}}))?", re.I
 
 
 class InputError(ValueError):
-    """Ввод не прочитан; сообщение показывается сотруднику (что не так + пример)."""
+    """Input not read; the message is shown to the employee (what is wrong + an example)."""
 
 
 def _nearest(day: int, month: int, today: date) -> date:
@@ -47,7 +48,8 @@ def _mk(day: int, month: int, year: int | None, today: date) -> date:
 
 
 def find_dates(text: str, today: date) -> list[date]:
-    """Все даты в тексте, в порядке появления (ГГГГ-ММ-ДД, ДД.ММ[.ГГГГ], «14 декабря [2026]»)."""
+    """All dates in the text, in order of appearance (YYYY-MM-DD, DD.MM[.YYYY], "14 December
+    [2026]")."""
     found: list[tuple[int, date]] = []
     low = text.lower()
     for m in _ISO.finditer(low):
@@ -110,7 +112,7 @@ def parse_int(text: str, *, what: str = "число") -> int:
 
 
 def parse_vacation(text: str, today: date) -> tuple[date, int]:
-    """«С 14 декабря, 14 дней» -> (дата начала, дней)."""
+    """ "From 14 December, 14 days" -> (start date, days)."""
     ds = find_dates(text, today)
     if not ds:
         raise InputError(
@@ -127,7 +129,7 @@ def parse_vacation(text: str, today: date) -> tuple[date, int]:
 
 
 def parse_overtime(text: str, today: date) -> list[tuple[date, Decimal]]:
-    """«12 ноября 3 часа, 17 ноября 2 часа» -> [(дата, часы), ...]."""
+    """ "12 November 3 hours, 17 November 2 hours" -> [(date, hours), ...]."""
     parts = [p for p in re.split(r"[;,\n]| и ", text) if p.strip()]
     days: list[tuple[date, Decimal]] = []
     for p in parts:
@@ -146,7 +148,7 @@ def parse_overtime(text: str, today: date) -> list[tuple[date, Decimal]]:
 
 
 def parse_years(text: str) -> Decimal:
-    """«6 лет 4 месяца» -> 6,33; «6» -> 6; «6,5» -> 6,5."""
+    """ "6 years 4 months" -> 6.33; "6" -> 6; "6,5" -> 6.5."""
     low = text.lower().strip().replace(",", ".")
     y = re.search(r"(\d+(?:\.\d+)?)\s*(?:г|л)", low)
     mo = re.search(r"(\d+)\s*мес", low)
@@ -174,7 +176,7 @@ def parse_earnings_by_year(text: str) -> dict[int, Decimal]:
 
 
 def parse_period(text: str, today: date) -> tuple[date, date]:
-    """«с 10 по 16 ноября», «10.11–16.11» -> (начало, конец); порядок как написан."""
+    """ "from 10 to 16 November", "10.11-16.11" -> (start, end); order as written."""
     ds = find_dates(text, today)
     if len(ds) == 2:
         return ds[0], ds[1]

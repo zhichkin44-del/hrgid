@@ -1,4 +1,4 @@
-"""Токены компании для ИИ-агентов: выдаёт и отзывает администратор (П9), хранятся хэшем."""
+"""Company tokens for AI agents: issued and revoked by the administrator (П9); stored as a hash."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ PREFIX = "hrg_"
 
 
 def token_hash(token: str) -> str:
-    """Токен случайный и длинный, поэтому достаточно SHA-256 без соли (поиск по хэшу)."""
+    """The token is random and long, so SHA-256 without salt is sufficient (lookup by hash)."""
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
@@ -25,7 +25,7 @@ class McpTokens:
         self.clock = clock or (lambda: datetime.now(UTC))
 
     def issue(self, company: str, label: str, by: str) -> tuple[str, dict[str, Any]]:
-        """Новый токен. Открытый вид возвращается один раз и нигде не хранится."""
+        """New token. The plain form is returned once and is not stored anywhere."""
         token = PREFIX + secrets.token_urlsafe(32)
         n = self.store.next_seq(company, K_TOKEN)
         rec: dict[str, Any] = {
@@ -60,7 +60,7 @@ class McpTokens:
         return True
 
     def verify(self, token: str | None) -> str | None:
-        """Компания токена или None (неизвестный, чужой формат, отозванный)."""
+        """The company of the token, or None (unknown, wrong format, revoked)."""
         if not token or not token.startswith(PREFIX):
             return None
         found = self.store.find(K_TOKEN, "hash", token_hash(token))

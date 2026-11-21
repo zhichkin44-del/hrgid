@@ -1,7 +1,7 @@
-"""Статическая проверка файлов эксплуатации (Docker нет на машине разработки; запуск — в CI).
+"""Static check of the operations files (Docker is not on the development machine; it runs in CI).
 
-Compose, Dockerfile, .env.example, ci.yml и README проверяются как данные: роли, healthcheck,
-порядок запуска, непривилегированный пользователь, согласованность переменных.
+Compose, Dockerfile, .env.example, ci.yml and README are checked as data: roles, healthcheck,
+startup order, unprivileged user, consistency of variables.
 """
 
 from __future__ import annotations
@@ -58,7 +58,7 @@ def test_roles_in_commands_exist_and_api_is_published(compose: dict[str, Any]) -
         assert cmd[3] == name
     api = compose["services"]["api"]
     assert "healthcheck" in api and any("8000" in p for p in api["ports"])
-    # база и redis наружу не опубликованы
+    # the database and redis are not published outward
     assert "ports" not in compose["services"]["postgres"]
     assert "ports" not in compose["services"]["redis"]
 
@@ -120,14 +120,14 @@ def test_quality_gate_skips_with_warning_when_pending(ci: dict[str, Any]) -> Non
     steps = ci["jobs"]["quality-gate"]["steps"]
     text = steps_text(ci["jobs"]["quality-gate"])
     assert "tests/recordings/PENDING" in text and "::warning" in text
-    assert "tests/test_quality_gate.py" in text  # ворота доказанно краснеют
+    assert "tests/test_quality_gate.py" in text  # the gate is proven to turn red
     gated = [s for s in steps if "python scripts/quality_gate.py" in str(s.get("run", ""))]
     assert gated and gated[0]["if"] == "steps.rec.outputs.pending == 'false'"
 
 
 def test_eval_retrieval_workflow_is_manual_only() -> None:
     wf = load(".github/workflows/eval-retrieval.yml")
-    assert list(wf[True]) == ["workflow_dispatch"]  # YAML: ключ on == True
+    assert list(wf[True]) == ["workflow_dispatch"]  # YAML: the key on == True
 
 
 def test_required_docs_exist() -> None:
@@ -166,7 +166,7 @@ def _git(*args: str) -> str:
 
 
 def test_no_secrets_in_history() -> None:
-    """Ключи моделей, токены Telegram и закрытые ключи не попадали ни в один коммит."""
+    """Model keys, Telegram tokens and private keys never got into any commit."""
     commits = _git("rev-list", "--all").split()
     if not commits:
         pytest.skip("пустая история")

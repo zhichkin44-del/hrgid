@@ -1,4 +1,4 @@
-"""П6 «Сотрудники» (приглашение, импорт 1С, коды, группы, профиль) и П11 «Объявления»."""
+"""П6 "Employees" (invitation, 1C import, codes, groups, profile) and П11 "Announcements"."""
 
 from dataclasses import dataclass
 from typing import Annotated, Any
@@ -106,7 +106,7 @@ def register(app: FastAPI, w: Web) -> None:
             raise HTTPException(404, "Сотрудник не найден")
         return e
 
-    # ===== список ====================================================================================
+    # ===== list ====================================================================================
     @app.get("/staff", response_class=HTMLResponse)
     def staff(
         c: Annotated[Ctx, Depends(w.ctx)], w_: Annotated[str, Query(alias="w")] = ""
@@ -116,7 +116,7 @@ def register(app: FastAPI, w: Web) -> None:
         )
         return staff_page(w, c, win=win)
 
-    # ===== приглашение ======================================================================================
+    # ===== invitation ======================================================================================
     @app.post("/staff/invite", response_class=HTMLResponse)
     def invite(
         c: Annotated[Ctx, Depends(w.ctx)],
@@ -146,7 +146,7 @@ def register(app: FastAPI, w: Web) -> None:
         d.journal.add(c.company, c.now, c.user.email, "emp.invite", e.full_name)
         return staff_page(w, c, win="code", emp=e, extra={"code": code, "bot": d.bot_username})
 
-    # ===== код заново ======================================================================================
+    # ===== new code ======================================================================================
     @app.get("/staff/{emp_id}/newcode", response_class=HTMLResponse)
     def newcode_form(emp_id: str, c: Annotated[Ctx, Depends(w.ctx)]) -> Response:
         return staff_page(w, c, win="newcode", emp=_emp(c, emp_id))
@@ -165,7 +165,7 @@ def register(app: FastAPI, w: Web) -> None:
             w, c, win="code", emp=e, extra={"code": code, "bot": d.bot_username, "again": True}
         )
 
-    # ===== отключение =======================================================================================
+    # ===== deactivation =======================================================================================
     @app.get("/staff/{emp_id}/disable", response_class=HTMLResponse)
     def disable_form(emp_id: str, c: Annotated[Ctx, Depends(w.ctx)]) -> Response:
         return staff_page(w, c, win="disable", emp=_emp(c, emp_id))
@@ -192,7 +192,7 @@ def register(app: FastAPI, w: Web) -> None:
         w.flash(c, "Доступ возвращён. Выдайте новый код, если нужно.")
         return w.see_other("/staff")
 
-    # ===== профиль, правка, удаление данных =====================================================================
+    # ===== profile, editing, data deletion =====================================================================
     @app.get("/staff/{emp_id}", response_class=HTMLResponse)
     def profile(emp_id: str, c: Annotated[Ctx, Depends(w.ctx)]) -> Response:
         return staff_page(w, c, win="profile", emp=_emp(c, emp_id))
@@ -253,7 +253,7 @@ def register(app: FastAPI, w: Web) -> None:
         w.flash(c, "Данные сотрудника будут удалены через 10 секунд.", undo=uid)
         return w.see_other("/staff")
 
-    # ===== группы =======================================================================================
+    # ===== groups =======================================================================================
     @app.get("/staff/groups/list", response_class=HTMLResponse)
     def groups(c: Annotated[Ctx, Depends(w.ctx)]) -> Response:
         return staff_page(w, c, win="groups")
@@ -280,7 +280,7 @@ def register(app: FastAPI, w: Web) -> None:
         w.flash(c, "Группа удалена.")
         return w.see_other("/staff/groups/list")
 
-    # ===== импорт 1С =========================================================================================
+    # ===== 1C import =========================================================================================
     @app.post("/staff/import", response_class=HTMLResponse)
     async def import_upload(
         c: Annotated[Ctx, Depends(w.ctx)], file: Annotated[UploadFile | None, File()] = None
@@ -352,7 +352,7 @@ def register(app: FastAPI, w: Web) -> None:
                       f"новых {res.created}, обновлено {res.updated}, отключено {res.disabled}")  # fmt: skip
         return staff_page(w, c, win="import4", extra={"res": res})
 
-    # ===== массовая выдача кодов ===================================================================================
+    # ===== mass issue of codes ===================================================================================
     @app.post("/staff/codes", response_class=HTMLResponse)
     def codes(
         c: Annotated[Ctx, Depends(w.ctx)],
@@ -384,7 +384,7 @@ def register(app: FastAPI, w: Web) -> None:
         return Response(("﻿" + txt).encode("utf-8"), media_type="text/csv; charset=utf-8",
                         headers={"Content-Disposition": 'attachment; filename="sample.csv"'})  # fmt: skip
 
-    # ===== П11 «Объявления» =========================================================================================
+    # ===== П11 "Announcements" =========================================================================================
     @app.get("/announcements", response_class=HTMLResponse)
     def announcements(c: Annotated[Ctx, Depends(w.ctx)]) -> Response:
         return ann_page(w, c)

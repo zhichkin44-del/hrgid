@@ -91,11 +91,11 @@ def test_quote_normalisation() -> None:
     assert quote_in_fragment('предоставляется отпуск - "28" дней', frag)
     assert quote_in_fragment("дней, елочная игрушка", frag)
     assert not quote_in_fragment("предоставляется 30 дней", frag)
-    assert not quote_in_fragment("короткая", "короткая цитата тут")  # короче порога
+    assert not quote_in_fragment("короткая", "короткая цитата тут")  # shorter than the threshold
     assert quote_in_fragment("Работнику предоставляется ... дней, елочная игрушка", frag)
     assert not quote_in_fragment(
         "дней, елочная игрушка ... Работнику предоставляется", frag
-    )  # порядок
+    )  # order
 
 
 def test_happy_path_with_sources() -> None:
@@ -105,7 +105,7 @@ def test_happy_path_with_sources() -> None:
     assert a.sources[0].ref == "ст. 115 ТК РФ"
     t = tr.records[0]
     assert t.route == "law" and t.fragment_ids == (1, 2) and t.llm_calls == 3
-    assert t.cost_rub == 0.0 and t.tenant_id == "c1"  # Fake: цены нет
+    assert t.cost_rub == 0.0 and t.tenant_id == "c1"  # Fake: no price
 
 
 def test_citation_not_in_fragment_one_rebuild_then_refusal() -> None:
@@ -113,7 +113,7 @@ def test_citation_not_in_fragment_one_rebuild_then_refusal() -> None:
     p, _, m, _ = make(answers=[bad])
     a = p.ask(REQ)
     assert a.status == "unverified" and not a.sources
-    assert len(m.requests) == 2  # ровно одна перестройка
+    assert len(m.requests) == 2  # exactly one rebuild
 
 
 def test_rebuild_succeeds() -> None:
@@ -244,7 +244,7 @@ def test_cache_hit_skips_models_and_is_tenant_isolated() -> None:
     assert p.ask(REQ).status == "answered"
     calls = len(c.requests) + len(m.requests)
     again = p.ask(REQ)
-    assert again.cached and len(c.requests) + len(m.requests) == calls + 1  # только маршрут
+    assert again.cached and len(c.requests) + len(m.requests) == calls + 1  # only the route
     assert tr.records[1].cache_hit
     other = p.ask(AskRequest(REQ.question, "c2"))
     assert not other.cached

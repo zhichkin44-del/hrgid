@@ -1,4 +1,5 @@
-"""Адаптер Claude (Anthropic SDK). Ключ — ANTHROPIC_API_KEY из окружения; без него не вызывается."""
+"""Claude adapter (Anthropic SDK). Key: ANTHROPIC_API_KEY from the environment; without it, it is
+not called."""
 
 from __future__ import annotations
 

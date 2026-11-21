@@ -12,7 +12,7 @@ def test_november_2026_norm() -> None:
     assert month_norm_hours(2026, 11) == Decimal(159)
 
 
-# (рабочих дней, часов) по месяцам — таблица производственного календаря consultant.ru
+# (working days, hours) by month: the production calendar table of consultant.ru
 TABLE_2026 = [
     (15, 120),
     (19, 152),
@@ -53,11 +53,11 @@ def test_year_tables(year: int, table: list[tuple[int, int]]) -> None:
 
 
 def test_day_off() -> None:
-    assert is_day_off(date(2026, 11, 14))  # суббота
-    assert is_day_off(date(2026, 11, 4))  # праздник
-    assert is_day_off(date(2026, 1, 9))  # перенос
-    assert not is_day_off(date(2026, 11, 3))  # сокращённый, но рабочий
-    assert not is_day_off(date(2025, 11, 1))  # рабочая суббота
+    assert is_day_off(date(2026, 11, 14))  # Saturday
+    assert is_day_off(date(2026, 11, 4))  # holiday
+    assert is_day_off(date(2026, 1, 9))  # transfer
+    assert not is_day_off(date(2026, 11, 3))  # shortened, but a working day
+    assert not is_day_off(date(2025, 11, 1))  # working Saturday
 
 
 def test_unknown_year() -> None:

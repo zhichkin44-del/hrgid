@@ -1,10 +1,10 @@
-"""Прогон набора через поток ответа (этап 2).
+"""Runs the evaluation set through the answer flow (stage 2).
 
-Воспроизведение записей (CI):  python scripts/eval_flow.py --provider claude
-Живая запись (ключ владельца): python scripts/eval_flow.py --provider claude --record
+Replay of recordings (CI):  python scripts/eval_flow.py --provider claude
+Live recording (owner's key): python scripts/eval_flow.py --provider claude --record
   OPENROUTER_API_KEY (openrouter), ANTHROPIC_API_KEY (claude), GIGACHAT_CREDENTIALS (gigachat),
   YANDEX_API_KEY + YANDEX_FOLDER_ID (yandex).
-Отчёт: reports/stage2-<провайдер>-<дата>.md; порог «ответа нет» — из ADR-0006 (--threshold).
+Report: reports/stage2-<provider>-<date>.md; the "no answer" threshold comes from ADR-0006 (--threshold).
 """
 
 from __future__ import annotations
@@ -13,7 +13,7 @@ import argparse
 import time
 from datetime import date
 
-import hrgid  # noqa: F401  # libpq на Windows
+import hrgid  # noqa: F401  # libpq on Windows
 from hrgid.db import connect, database_url, init_schema
 from hrgid.embed import E5Embedder
 from hrgid.flow.build import PROVIDERS, ROOT, make_llm, make_pipeline, make_searcher

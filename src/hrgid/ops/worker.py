@@ -1,4 +1,5 @@
-"""Фоновый работник: хранение данных (§9) и сигнал жизни. Доставку outbox ведёт бот (hrgid.bot)."""
+"""Background worker: data retention (§9) and a liveness signal. The bot (hrgid.bot) delivers the
+outbox."""
 
 from __future__ import annotations
 
@@ -14,7 +15,8 @@ HEARTBEAT_KEY = "hrgid:worker:heartbeat"
 
 
 def purge_old_traces(conn: Any, days: int) -> int:
-    """Удаляет трассы старше срока хранения (по умолчанию 1 год, §9). Вернёт число строк."""
+    """Deletes traces older than the retention period (default 1 year, §9). Returns the number of
+    rows."""
     cur = conn.execute("DELETE FROM traces WHERE ts < now() - make_interval(days => %s)", (days,))
     return int(cur.rowcount)
 

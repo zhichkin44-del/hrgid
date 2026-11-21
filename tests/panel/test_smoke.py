@@ -1,4 +1,4 @@
-"""Каждый раздел и окно открывается (на живых данных) и не падает; для обеих ролей."""
+"""Every section and window opens (on live data) and does not crash; for both roles."""
 
 from __future__ import annotations
 
@@ -72,7 +72,7 @@ def test_every_page_opens(who: str) -> None:
     env = make_env()
     s = seed(env)
     c = env.login(who)
-    # проверка на ТК, чтобы открылись разборы пунктов
+    # Labor Code check, so that the item breakdowns open
     env.login(ADMIN).post(f"/check/{s.doc_id}/1/run")
     bad: list[tuple[str, Any]] = []
     for url in GET_URLS:

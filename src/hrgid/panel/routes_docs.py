@@ -1,4 +1,4 @@
-"""П4 «Документы» и П5 «Проверка на ТК»."""
+"""П4 "Documents" and П5 "Labor Code check"."""
 
 import tempfile
 from dataclasses import dataclass
@@ -22,7 +22,7 @@ class DocRow:
     title: str
     versions: list[Version]
     active: int | None
-    report_risks: dict[int, int]  # версия -> открытых рисков
+    report_risks: dict[int, int]  # version -> open risks
 
 
 def doc_rows(w: Web, c: Ctx) -> list[DocRow]:

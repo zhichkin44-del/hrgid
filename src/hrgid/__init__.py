@@ -1,4 +1,4 @@
-"""HRgid — ИИ-помощник HR."""
+"""HRgid - AI assistant for HR."""
 
 from __future__ import annotations
 
@@ -9,9 +9,10 @@ from pathlib import Path
 
 
 def _windows_libpq_fallback() -> None:
-    """На Windows с политикой блокировки неподписанных DLL libpq из psycopg-binary не грузится.
+    """On Windows with a policy that blocks unsigned DLLs, libpq from psycopg-binary does not load.
 
-    Тогда берём libpq из встроенного pgserver и включаем чисто-питоновую реализацию psycopg.
+    In that case we take libpq from the bundled pgserver and enable the pure-Python implementation
+    of psycopg.
     """
     if os.name != "nt" or "PSYCOPG_IMPL" in os.environ:
         return
@@ -30,7 +31,7 @@ def _windows_libpq_fallback() -> None:
     if (bin_dir / "libpq.dll").exists():
         os.environ["PATH"] = f"{bin_dir}{os.pathsep}{os.environ.get('PATH', '')}"
         os.environ["PSYCOPG_IMPL"] = "python"
-        if sys.platform == "win32":  # для mypy на Linux: WinDLL есть только в Windows
+        if sys.platform == "win32":  # for mypy on Linux: WinDLL exists only on Windows
             ctypes.WinDLL(str(bin_dir / "libpq.dll"))
 
 

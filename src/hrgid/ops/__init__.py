@@ -1,1 +1,1 @@
-"""Эксплуатация (этап 8): первичная настройка, запуск ролей Compose, фоновый работник."""
+"""Operations (stage 8): initial setup, starting the Compose roles, the background worker."""

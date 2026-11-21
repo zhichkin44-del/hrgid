@@ -1,4 +1,4 @@
-"""Стенд владельца (scripts/run_panel.py) собирается и открывается."""
+"""The owner's stand (scripts/run_panel.py) is assembled and opens."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Эксплуатация: секреты тома, приглашения, первая компания, работник, роли запуска."""
+"""Operations: volume secrets, invitations, first company, worker, startup roles."""
 
 from __future__ import annotations
 

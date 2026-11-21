@@ -1,8 +1,10 @@
-"""Проверка пунктов правил компании на соответствие ТК РФ (SPEC-09 §6).
+"""Checks the company rules items for compliance with the Labor Code of the RF (SPEC-09 §6).
 
-Для каждого пункта: поиск норм ТК -> модель оценивает «соответствует / лучше закона / риск»,
-называет статью (только из найденных норм) и предлагает формулировку. Оценка «риск» без статьи
-из найденных норм и без формулировки не принимается — пункт уходит «на проверку человеком».
+For each item: search of Labor Code norms -> the model rates it "complies / better than the law /
+risk",
+names the article (only from the norms found) and proposes a wording. A "risk" verdict without an
+article
+from the norms found and without a wording is not accepted: the item goes to "human review".
 """
 
 from __future__ import annotations
@@ -40,7 +42,7 @@ SYSTEM = (
 
 @dataclass(frozen=True)
 class Norm:
-    ref: str  # «ТК РФ, ст. 70, ч. 5»
+    ref: str  # "Labor Code RF, Art. 70, part 5"
     article: str  # «70»
     text: str
 
@@ -50,7 +52,7 @@ class NormSource(Protocol):
 
 
 class HybridNormSource:
-    """Боевой источник: тот же гибридный поиск по закону, что и в потоке ответа."""
+    """Production source: the same hybrid search over the law as in the answer flow."""
 
     def __init__(self, conn: Any, embedder: Any, reranker: Any = None) -> None:
         self.conn, self.embedder, self.reranker = conn, embedder, reranker
@@ -149,7 +151,7 @@ def _grade(item: Item, norms: list[Norm], raw: str) -> ItemCheck:
     return ItemCheck(item.number, item.text, verdict, explanation, article, suggestion, refs)
 
 
-grade_item = _grade  # публичное имя для MCP-инструмента check_policy_clause
+grade_item = _grade  # public name of the MCP tool check_policy_clause
 
 
 class TkChecker:
@@ -173,7 +175,7 @@ class TkChecker:
         out = self.llm.complete(req)
         self.usage.add(out)
         res = _grade(item, norms, out.text)
-        if res.verdict == "unclear":  # одна повторная попытка
+        if res.verdict == "unclear":  # one retry
             out = self.llm.complete(req)
             self.usage.add(out)
             res = _grade(item, norms, out.text)
@@ -207,7 +209,7 @@ class TkChecker:
             res = self._check_item(item)
             prev = old.get(item.number)
             if prev and prev.text == item.text and prev.accepted and res.verdict == "risk":
-                res.accepted = prev.accepted  # принятый риск переносится на неизменённый пункт
+                res.accepted = prev.accepted  # an accepted risk carries over to an unchanged item
             out.append(res)
         rep = CheckReport(doc_id, number, out, self.svc.now_iso(), self.usage.cost - before)
         self._save(company, rep)
@@ -250,6 +252,6 @@ class TkChecker:
     def fix_item(
         self, company: str, doc_id: str, number: int, item_number: str, new_text: str, author: str
     ) -> tuple[Version, CheckReport]:
-        """«Исправить пункт» -> новая версия-проект -> перепроверка."""
+        """ "Fix item" -> new draft version -> re-check."""
         nv = self.svc.edit_item(company, doc_id, number, item_number, new_text, author)
         return nv, self.check_version(company, doc_id, nv.number, author)

@@ -1,7 +1,8 @@
-"""Проверка одного пункта правил на соответствие ТК (инструмент check_policy_clause).
+"""Checks one rules item for compliance with the Labor Code (the check_policy_clause tool).
 
-Тот же приём, что в панели (hrgid.docs.tkcheck): нормы ТК из поиска, оценка модели, статья только
-из найденных норм; «риск» без статьи и формулировки не принимается.
+The same approach as in the panel (hrgid.docs.tkcheck): Labor Code norms from search, model
+assessment, the article only
+from the norms found; a "risk" without an article and a wording is not accepted.
 """
 
 from __future__ import annotations
@@ -32,7 +33,7 @@ class LlmClauseChecker:
             purpose="tkcheck",
         )
         res = grade_item(item, norms, self.llm.complete(req).text)
-        if res.verdict == "unclear":  # одна повторная попытка, как в панели
+        if res.verdict == "unclear":  # one retry, as in the panel
             res = grade_item(item, norms, self.llm.complete(req).text)
         return {
             "verdict": res.verdict,

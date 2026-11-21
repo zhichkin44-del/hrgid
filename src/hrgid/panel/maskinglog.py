@@ -1,7 +1,7 @@
-"""Маскирование персональных данных в логах и трассах панели (SPEC-09 §9).
+"""Masking of personal data in the logs and traces of the panel (SPEC-09 §9).
 
-Фильтр вешается на логгер `hrgid`: сообщение и аргументы проходят через тот же Masker, что и
-вопросы к модели (natasha для ФИО + шаблоны паспорта, СНИЛС, ИНН, телефона, почты).
+The filter is attached to the `hrgid` logger: the message and arguments pass through the same Masker as
+questions to the model (natasha for full names, templates for passport, SNILS, TIN, phone and email).
 """
 
 from __future__ import annotations
@@ -22,17 +22,17 @@ def masker() -> Masker:
 
 
 def mask_text(text: str) -> str:
-    """Текст без персональных данных (метки вместо значений)."""
+    """Text without personal data (labels instead of values)."""
     return masker().mask(text)[0]
 
 
 class MaskingFilter(logging.Filter):
-    """Заменяет персональные данные в записи журнала приложения до вывода."""
+    """Replaces personal data in an application log record before output."""
 
     def filter(self, record: logging.LogRecord) -> bool:
         try:
             msg = record.getMessage()
-        except Exception:  # неверные аргументы форматирования: не роняем вывод
+        except Exception:  # wrong formatting arguments: do not break the output
             msg = str(record.msg)
         record.msg = mask_text(msg)
         record.args = None
@@ -43,8 +43,9 @@ _installed = False
 
 
 def install(prefix: str = "hrgid") -> None:
-    """Маскировать записи журнала всех логгеров `hrgid.*` фабрикой записей: родительские фильтры
-    на дочерние логгеры не действуют, а фабрика срабатывает всегда, до любых обработчиков."""
+    """Masks the records of the logs of all `hrgid.*` loggers with a record factory: parent filters
+    do not apply to child loggers, while the factory always runs, before any handlers.
+    """
     global _installed
     if _installed:
         return
@@ -66,5 +67,5 @@ def install(prefix: str = "hrgid") -> None:
 
 
 def mask_trace(fields: dict[str, Any]) -> dict[str, Any]:
-    """Трасса без ПДн: все строковые поля маскируются."""
+    """A trace without personal data: all string fields are masked."""
     return {k: mask_text(v) if isinstance(v, str) else v for k, v in fields.items()}

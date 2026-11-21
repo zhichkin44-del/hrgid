@@ -37,7 +37,7 @@ def test_r4_annual_limit_120() -> None:
 def test_r4_time_off() -> None:
     r = overtime_pay(SAL, NORM, [(date(2026, 11, 10), D(3))], time_off=True)
     assert r.details["rest_hours"] == D(3)
-    assert r.value == D("1500.00")  # одинарная оплата, отдых не оплачивается
+    assert r.value == D("1500.00")  # single pay, the rest day is not paid
 
 
 @pytest.mark.parametrize("hours", [D(0), D(-1), D(25)])

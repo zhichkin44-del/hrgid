@@ -1,4 +1,4 @@
-"""Общие типы и округление расчётов. Только Decimal, никаких вызовов моделей."""
+"""Common types and rounding of calculations. Decimal only, no model calls."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ Detail = Decimal | date | int | str | bool
 
 
 class CalcError(ValueError):
-    """Ошибка ввода или правила: сообщение показывается сотруднику."""
+    """Input or rule error: the message is shown to the employee."""
 
 
 @dataclass(frozen=True)
@@ -29,17 +29,17 @@ class CalcResult:
 
 
 def money(x: Decimal) -> Decimal:
-    """Округление до копеек (математическое)."""
+    """Rounding to kopecks (arithmetic)."""
     return x.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
 def rubles(x: Decimal) -> Decimal:
-    """Округление до рубля (НДФЛ): 50 копеек и больше — вверх."""
+    """Rounding to the ruble (income tax): 50 kopecks and above round up."""
     return x.quantize(Decimal(1), rounding=ROUND_HALF_UP)
 
 
 def add_months(d: date, n: int) -> date:
-    """Прибавить месяцы; если дня нет в месяце — последний день месяца."""
+    """Adds months; if the day does not exist in the month, the last day of the month is used."""
     idx = d.year * 12 + (d.month - 1) + n
     year, month = divmod(idx, 12)
     month += 1

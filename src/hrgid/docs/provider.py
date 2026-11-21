@@ -1,4 +1,4 @@
-"""RulesProvider для бота (/rules): действующие версии документов компании."""
+"""RulesProvider for the bot (/rules): the company's current document versions."""
 
 from __future__ import annotations
 

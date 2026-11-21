@@ -1,7 +1,7 @@
-"""Строит data/calendar/<год>.json из правил производственного календаря РФ.
+"""Builds data/calendar/<year>.json from the rules of the Russian production calendar.
 
-Источник правил: КонсультантПлюс, производственный календарь РФ (consultant.ru/law/ref/calendar);
-2025 — Постановление Правительства РФ от 04.10.2024 N 1335, 2026 — от 24.09.2025 N 1466.
+Source of the rules: ConsultantPlus, Russian production calendar (consultant.ru/law/ref/calendar);
+2025 - Government of the Russian Federation resolution No. 1335 of 04.10.2024, 2026 - No. 1466 of 24.09.2025.
 """
 
 from __future__ import annotations
@@ -12,7 +12,7 @@ from pathlib import Path
 
 OUT = Path(__file__).resolve().parent.parent / "data" / "calendar"
 
-# (месяц, день) постоянных праздников ст. 112 ТК; 1-8 января — каникулы
+# (month, day) of fixed public holidays under Art. 112 of the Labor Code; 1-8 January are holidays
 FIXED = [(1, d) for d in range(1, 9)] + [(2, 23), (3, 8), (5, 1), (5, 9), (6, 12), (11, 4)]
 
 YEARS: dict[int, dict[str, object]] = {

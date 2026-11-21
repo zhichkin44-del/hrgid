@@ -1,4 +1,4 @@
-"""П6 «Сотрудники» (приглашение, импорт 1С, коды, группы, профиль, удаление данных) и П11."""
+"""П6 "Employees" (invitation, 1C import, codes, groups, profile, data deletion) and П11."""
 
 from __future__ import annotations
 
@@ -39,7 +39,7 @@ def test_invite_shows_code_once_and_hashes_it() -> None:
     assert "Код выдан" in r.text
     code = re.search(r"data-code>([^<]+)<", r.text).group(1)  # type: ignore[union-attr]
     assert code.startswith("ЖС-")
-    assert code not in str(env.store._docs)  # только хэш
+    assert code not in str(env.store._docs)  # hash only
     emp = env.deps.repo.employees(CO)[0]
     assert env.deps.bot_auth.check_code(7, code, env.clock.now).status == "ok"
     assert emp.full_name == "Иванов Иван"
@@ -62,7 +62,7 @@ def test_invite_validation_and_duplicate_blocked() -> None:
 
 def test_import_csv_steps_preview_and_apply() -> None:
     env = make_env()
-    s = seed(env)  # в компании уже Ольга и Игорь: они «нет в файле»
+    s = seed(env)  # the company already has Olga and Igor: they are "not in the file"
     hr = env.login(HR)
     token = start_import(hr)
     r = hr.get(f"/staff/import/{token}/preview")
@@ -77,7 +77,7 @@ def test_import_csv_steps_preview_and_apply() -> None:
     assert str(emps["Иванов Иван Иванович"].salary) == "80000.50"
     assert str(emps["Иванов Иван Иванович"].earnings_12m) == "960000"
     assert emps["Ольга Смирнова"].status == "disabled"
-    assert emps["Игорь Петров"].status == "active"  # отметку можно снять
+    assert emps["Игорь Петров"].status == "active"  # the mark can be removed
 
 
 def test_reimport_updates_instead_of_duplicating() -> None:
@@ -130,7 +130,7 @@ def test_bulk_codes_csv_and_print_sheet_with_qr() -> None:
     hr = env.login(HR)
     r = hr.post("/staff/codes", data={"who": "new", "fmt": "csv"})
     assert r.headers["content-type"].startswith("text/csv") and "Новенький Нил" in r.text
-    assert "Ольга Смирнова" not in r.text  # у неё уже есть Telegram
+    assert "Ольга Смирнова" not in r.text  # she already has Telegram
     r = hr.post("/staff/codes", data={"who": "all", "fmt": "print"})
     assert "<svg" in r.text and "Лист содержит секреты" in r.text and "ЖС-" in r.text
     r2 = hr.post("/staff/codes", data={"who": "new", "fmt": "csv"})
@@ -173,7 +173,7 @@ def test_profile_counts_exclude_confidential_and_match_queue() -> None:
     hr = env.login(HR)
     r = hr.get(f"/staff/{s.olga.id}")
     assert "Обращений к HR" in r.text
-    # у Ольги 1 обычное и 1 конфиденциальное: в профиле считается только обычное
+    # Olga has 1 regular and 1 confidential request: the profile counts only the regular one
     assert env.deps.staff.ticket_count(CO, s.olga.id) == 1
     assert re.search(r"Обращений к HR</span><span class=\"r\">1<", r.text)
     assert "притесняет" not in r.text and "Согласие на обработку данных" in r.text
@@ -223,7 +223,7 @@ def test_hr_can_purge_but_groups_rules() -> None:
     env = make_env()
     s = seed(env)
     hr = env.login(HR)
-    assert hr.get(f"/staff/{s.olga.id}/purge").status_code == 200  # П6.12 делает HR
+    assert hr.get(f"/staff/{s.olga.id}/purge").status_code == 200  # П6.12 is done by HR
     assert "Группа добавлена" in hr.post("/staff/groups/add", data={"name": "Тестирование"}).text
     assert "уже есть" in hr.post("/staff/groups/add", data={"name": "тестирование"}).text
     assert "Напишите название" in hr.post("/staff/groups/add", data={"name": ""}).text
@@ -231,7 +231,7 @@ def test_hr_can_purge_but_groups_rules() -> None:
     assert "Группа удалена" in hr.post("/staff/groups/delete", data={"name": "Тестирование"}).text
 
 
-# ----- П11 -------------------------------------------------------------------------------
+# ----- П11 -----
 
 
 def test_announcement_empty_validation_send_read_remind() -> None:

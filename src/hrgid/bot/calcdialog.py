@@ -1,5 +1,8 @@
-"""Расчёты R1–R9 в боте пошагово (SPEC-09 §4.5, SCREENS §16): профиль -> вопрос о недостающем ->
-итог с формулой, числами, статьёй и «до НДФЛ / на руки». Считает hrgid.calc, не модель."""
+"""Calculations R1-R9 in the bot, step by step (SPEC-09 §4.5, SCREENS §16): profile -> question
+about missing data ->
+result with the formula, numbers, article and "before income tax / take-home". Computed by
+hrgid.calc, not by the model.
+"""
 
 from __future__ import annotations
 
@@ -45,8 +48,8 @@ class CalcReply:
     text: str
     rows: Rows = field(default_factory=list)
     done: bool = False
-    summary: str = ""  # короткая запись для «Спросить HR»
-    rate: bool = False  # показать 👍/👎
+    summary: str = ""  # short record for "Ask HR"
+    rate: bool = False  # show 👍/👎
     cancelled: bool = False
 
 
@@ -137,7 +140,7 @@ def _money_result(title: str, r: CalcResult) -> str:
     return f"{title}: {money(gross)} до НДФЛ\n{r.substituted}\n{_ndfl_block(gross)}\n"
 
 
-# --- запуск ---------------------------------------------------------------------------------
+# --- start ---
 
 
 def start(code: str, e: Employee, today: date) -> tuple[CalcState, CalcReply]:
@@ -235,13 +238,13 @@ def _years(v: Decimal) -> str:
     return f"{y} л. {m} мес." if m else f"{y} л."
 
 
-# --- шаги -----------------------------------------------------------------------------------
+# --- steps ---
 
 
 def advance(
     st: CalcState, e: Employee, today: date, text: str, *, callback: bool = False
 ) -> CalcReply:
-    """Следующий шаг. Ошибка ввода -> тот же вопрос с пояснением (state не меняется)."""
+    """Next step. Input error -> the same question with an explanation (state does not change)."""
     if text.strip().lower() in ("отмена", "/cancel", "calc:cancel"):
         return CalcReply("Отменено, ничего не сохранено.", cancelled=True, done=True)
     try:
@@ -251,7 +254,7 @@ def advance(
 
 
 def _rows_for(st: CalcState) -> Rows:
-    """Кнопки шага, которые нужно показать и при ошибке ввода."""
+    """Step buttons to show, including on an input error."""
     if st.stage == "on_date":
         return [[b("Сегодня", "cs:today")]]
     if st.stage == "earn_confirm":
@@ -287,7 +290,8 @@ def _reprompt(st: CalcState) -> str:
 
 
 def _earnings_prompt(st: CalcState, e: Employee, title_period: str) -> CalcReply:
-    """Заработок за 12 месяцев: из импорта, предположение «оклад × 12» или свой ввод."""
+    """Earnings over 12 months: from the import, the assumption "salary x 12", or the employee's own
+    input."""
     st.stage = "earn_confirm"
     if e.earnings_12m is not None:
         st.data["assumed"] = e.earnings_12m
@@ -314,12 +318,14 @@ def _earnings_prompt(st: CalcState, e: Employee, title_period: str) -> CalcReply
 
 
 def _earnings_step(st: CalcState, e: Employee, text: str) -> CalcReply | Decimal:
-    """Общий разбор ответа на вопрос о заработке; возвращает сумму либо следующий вопрос."""
+    """Common handling of the answer to the earnings question; returns the amount or the next
+    question."""
     if st.stage == "earn_confirm":
         if text in ("cs:yes", "Да, верно"):
             return Decimal(st.data["assumed"])
         if text not in ("cs:own", "cs:bonus"):
-            amount = parse.parse_amount(text)  # число вместо кнопки — принимаем как свою сумму
+            # a number instead of a button is accepted as the employee's own amount
+            amount = parse.parse_amount(text)
             st.data["own_sum"] = True
             return amount
         st.stage = "own"
@@ -585,7 +591,8 @@ def _r9(st: CalcState, e: Employee, today: date, text: str) -> CalcReply:
         return _ask("На сколько месяцев установлен испытательный срок? Например: 3.")
     if st.stage == "months":
         m = parse.parse_int(text, what="число месяцев")
-        calc.probation_end(st.data["start"], m)  # проверка предела по ст. 70 до следующего вопроса
+        # check the limit under Art. 70 before the next question
+        calc.probation_end(st.data["start"], m)
         st.data["months"] = m
         st.stage = "absence"
         return _ask("Были ли дни болезни или отсутствия за время испытания? Напишите число или 0.")

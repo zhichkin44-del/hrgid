@@ -1,4 +1,4 @@
-"""Бот этапа 4 + документы этапа 5: /rules показывает действующую версию документа компании."""
+"""Stage 4 bot + stage 5 documents: /rules shows the company's current document version."""
 
 from __future__ import annotations
 

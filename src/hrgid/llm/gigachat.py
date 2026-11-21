@@ -1,9 +1,9 @@
-"""Адаптер GigaChat (REST, https://developers.sber.ru/docs/ru/gigachat/api/overview).
+"""GigaChat adapter (REST, https://developers.sber.ru/docs/ru/gigachat/api/overview).
 
-OAuth: POST ngw.devices.sberbank.ru:9443/api/v2/oauth, заголовок Basic <ключ авторизации>,
-RqUID, scope GIGACHAT_API_PERS -> access_token на 30 минут. Чат: /api/v1/chat/completions,
-инструменты — через functions/function_call. Сертификаты Минцифры подключаются через ca_bundle.
-Ключ — GIGACHAT_CREDENTIALS из окружения; без него не вызывается.
+OAuth: POST ngw.devices.sberbank.ru:9443/api/v2/oauth, header Basic <authorization key>,
+RqUID, scope GIGACHAT_API_PERS -> access_token for 30 minutes. Chat: /api/v1/chat/completions,
+tools through functions/function_call. Ministry certificates are attached through ca_bundle.
+Key: GIGACHAT_CREDENTIALS from the environment; without it, it is not called.
 """
 
 from __future__ import annotations

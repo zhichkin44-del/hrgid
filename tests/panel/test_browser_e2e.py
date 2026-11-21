@@ -1,8 +1,8 @@
-"""Шесть сценариев SPEC-09 §17 в настоящем браузере (Playwright + Chrome): клики, окна, Esc, HTMX.
+"""Six SPEC-09 §17 scenarios in a real browser (Playwright + Chrome): clicks, windows, Esc, HTMX.
 
-Маркер `browser`: нужен Playwright и браузер (встроенный Chromium, иначе установленный Chrome/Edge).
-В CI: `playwright install chromium`. Панель поднимается на живом сервере в этом же процессе, на
-хранилище в памяти; бот — движок с Fake-потоком (как в test_e2e_scenarios).
+Marker `browser`: needs Playwright and a browser (the built-in Chromium, or an installed Chrome/Edge).
+In CI: `playwright install chromium`. The panel runs on a live server in this same process, on
+in-memory storage; the bot is the engine with the Fake flow (as in test_e2e_scenarios).
 """
 
 from __future__ import annotations
@@ -64,7 +64,7 @@ def browser() -> Iterator[Any]:
             try:
                 b = p.chromium.launch(headless=True, **kw)
                 break
-            except Exception as e:  # браузера нет — тест пропускается
+            except Exception as e:  # no browser: the test is skipped
                 last = e
         if b is None:
             pytest.skip(f"нет браузера для Playwright: {last}")
@@ -122,7 +122,7 @@ def set_order(page: Any, no: str = "1") -> None:
 
 
 # ----------------------------------------------------------------------------------------
-# 1. Новая компания: администратор → документ → проверка на ТК → импорт 3 → вопрос в Telegram
+# 1. New company: administrator -> document -> Labor Code check -> import 3 -> question in Telegram
 # ----------------------------------------------------------------------------------------
 
 
@@ -136,7 +136,7 @@ def test_browser_scenario_1_new_company(browser: Any, live: Live) -> None:
     page.get_by_role("button", name="Проверить версию на ТК").click()
     page.wait_for_selector("text=Риск нарушения")
     assert page.locator(".pill.bad").count() >= 1
-    # импорт из 1С по шагам
+    # 1C import, step by step
     page.goto(live.url + "/staff?w=import1")
     page.set_input_files(
         "input[type=file]", {"name": "zup.csv", "mimeType": "text/csv", "buffer": STAFF_CSV}
@@ -165,7 +165,7 @@ def test_browser_scenario_1_new_company(browser: Any, live: Live) -> None:
     assert "31 календарный день" in text_of(bot.say(7001, "Сколько дней отпуска?"))
     page.goto(live.url + "/staff")
     assert page.locator("text=Подключён").count() == 1
-    # тот же путь на телефоне: без горизонтальной прокрутки
+    # the same path on a phone: no horizontal scrolling
     page.set_viewport_size({"width": 375, "height": 812})
     for path in ("/", "/staff", "/docs", "/check"):
         page.goto(live.url + path)
@@ -173,7 +173,7 @@ def test_browser_scenario_1_new_company(browser: Any, live: Live) -> None:
 
 
 # ----------------------------------------------------------------------------------------
-# 2. Вопрос без ответа → П1 → П2 ответ HR → в базу → тот же вопрос — из базы
+# 2. Question with no answer -> П1 -> П2 HR reply -> to the base -> the same question is answered from the base
 # ----------------------------------------------------------------------------------------
 
 
@@ -194,13 +194,13 @@ def test_browser_scenario_2_hr_answer_to_kb(browser: Any, live: Live) -> None:
     login(page, live, HR)
     page.evaluate("window.__marker = 1")
     assert page.locator("text=Можно ли работать из другого города").count() >= 1  # П1
-    page.get_by_role("link", name="Очередь").first.click()  # HTMX-переход без перезагрузки
+    page.get_by_role("link", name="Очередь").first.click()  # HTMX navigation without a reload
     page.wait_for_url(live.url + "/queue")
     assert page.evaluate("window.__marker") == 1
     page.fill("textarea[name=text]", "Можно до 14 дней по согласованию с руководителем.")
     page.get_by_role("button", name="Отправить ответ").click()
     page.wait_for_selector("text=Отправить ответ?")
-    # поля базы появляются по галочке (Alpine)
+    # base fields appear on a checkbox (Alpine)
     assert not page.locator("select[name=basis]").is_visible()
     page.get_by_text("Сохранить ответ в базу").click()
     page.wait_for_selector("select[name=basis]", state="visible")
@@ -217,7 +217,7 @@ def test_browser_scenario_2_hr_answer_to_kb(browser: Any, live: Live) -> None:
 
 
 # ----------------------------------------------------------------------------------------
-# 3. Риск → исправить → новая версия → перепроверка → бот использует новую версию
+# 3. Risk -> fix -> new version -> re-check -> the bot uses the new version
 # ----------------------------------------------------------------------------------------
 
 
@@ -251,7 +251,7 @@ def test_browser_scenario_3_fix_risk_bot_uses_new_version(browser: Any, live: Li
 
 
 # ----------------------------------------------------------------------------------------
-# 4. Изменение статьи закона → ответы помечены «проверить»; окна, Esc, отмена
+# 4. Change of a law article -> answers marked "check"; windows, Esc, cancel
 # ----------------------------------------------------------------------------------------
 
 
@@ -270,14 +270,14 @@ def test_browser_scenario_4_law_change_and_window_controls(browser: Any, live: L
     assert page.locator(".pill.bad", has_text="Проверить").count() == 1
     page.get_by_role("link", name="Пересмотреть →").click()
     page.wait_for_selector("text=Пересмотр ответа 1 из 1")
-    # Esc закрывает окно и возвращает на экран, откуда открыто
+    # Esc closes the window and returns to the screen it was opened from
     page.keyboard.press("Escape")
     page.wait_for_selector(".ov", state="detached")
     page.goto(live.url + "/kb/review")
     page.get_by_role("button", name="Оставить").click()
     page.wait_for_selector("text=Пересмотр завершён")
     assert page.locator(".pill.bad", has_text="Проверить").count() == 0
-    # окно «В архив» → «Отмена» не меняет данные, щелчок по затемнению тоже закрывает
+    # the "To archive" window -> "Cancel" does not change data; a click on the overlay also closes it
     page.goto(live.url + "/kb/1/archive")
     page.get_by_role("link", name="Отмена").click()
     page.wait_for_url(live.url + "/kb")
@@ -285,7 +285,7 @@ def test_browser_scenario_4_law_change_and_window_controls(browser: Any, live: L
     page.goto(live.url + "/kb/1/archive")
     page.mouse.click(5, 5)
     page.wait_for_selector(".ov", state="detached")
-    # архив с отменой в 10 секунд
+    # archive with a 10-second cancellation
     page.goto(live.url + "/kb/1/archive")
     page.get_by_role("button", name="В архив").click()
     page.get_by_role("button", name="Отменить — 10 с").click()
@@ -298,7 +298,7 @@ def test_browser_scenario_4_law_change_and_window_controls(browser: Any, live: L
 
 
 # ----------------------------------------------------------------------------------------
-# 5. Бюджет исчерпан → действие из П9/П8 → предупреждение в П1
+# 5. Budget exhausted -> action from П9/П8 -> warning in П1
 # ----------------------------------------------------------------------------------------
 
 
@@ -312,7 +312,7 @@ def test_browser_scenario_5_budget(browser: Any, live: Live) -> None:
     page.get_by_role("link", name="Изменить лимит").click()
     page.fill("input[name=limit]", "500")
     page.get_by_role("button", name="Сохранить").click()
-    page.wait_for_selector("text=не меньше 1 000")  # ошибка поля в том же окне
+    page.wait_for_selector("text=не меньше 1 000")  # field error in the same window
     page.fill("input[name=limit]", "1000")
     page.select_option("select[name=action]", "refuse")
     page.get_by_role("button", name="Сохранить").click()
@@ -324,7 +324,7 @@ def test_browser_scenario_5_budget(browser: Any, live: Live) -> None:
     page.get_by_role("link", name="Открыть настройки →").click()
     page.wait_for_url(live.url + "/settings")
     assert "Только для администратора" in page.inner_text("main")
-    # HR настройки не видит
+    # HR does not see the settings
     hr_page = new_page(browser)
     login(hr_page, live, HR)
     hr_page.goto(live.url + "/settings")
@@ -333,7 +333,7 @@ def test_browser_scenario_5_budget(browser: Any, live: Live) -> None:
 
 
 # ----------------------------------------------------------------------------------------
-# 6. Увольнение → отключение (отмена 10 с) → бот не отвечает, история хранится
+# 6. Dismissal -> deactivation (10 s cancel) -> the bot does not answer, history is kept
 # ----------------------------------------------------------------------------------------
 
 
@@ -352,7 +352,9 @@ def test_browser_scenario_6_dismissal(browser: Any, live: Live) -> None:
     page.get_by_role("link", name="Отключить").click()
     page.wait_for_selector("text=Отключить доступ?")
     page.get_by_role("button", name="Отключить доступ").click()
-    page.wait_for_selector("text=больше не работает")  # ошибка поля: без галочки нельзя
+    page.wait_for_selector(
+        "text=больше не работает"
+    )  # field error: cannot proceed without a checkbox
     page.get_by_text("Сотрудник больше не работает в компании").click()
     page.get_by_role("button", name="Отключить доступ").click()
     page.wait_for_selector("text=Доступ отключён")

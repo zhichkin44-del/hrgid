@@ -1,8 +1,8 @@
-"""Шлюз инструментов MCP: проверка токена -> компания -> инструмент. Только чтение.
+"""MCP tool gateway: token check -> company -> tool. Read-only.
 
-Токен определяет компанию; её идентификатор в аргументах инструментов не принимается.
-Ответы по правилам компании, проверке пункта и расчётам проходят маскирование ПДн (§9).
-Текст закона публичный и не маскируется.
+The token determines the company; its identifier is not accepted in tool arguments.
+Answers based on company rules, item checks and calculations pass personal-data masking (§9).
+The text of the law is public and is not masked.
 """
 
 from __future__ import annotations
@@ -24,11 +24,11 @@ MAX_CLAUSE = 4000
 
 
 class McpDenied(Exception):
-    """Токен неизвестен, чужой или отозван."""
+    """The token is unknown, belongs to someone else, or has been revoked."""
 
 
 class McpInputError(ValueError):
-    """Неверные аргументы инструмента: текст понятен модели-агенту."""
+    """Invalid tool arguments: the text is understandable to the model agent."""
 
 
 @dataclass(frozen=True)
@@ -39,7 +39,8 @@ class ToolDef:
 
 
 def calc_schema() -> dict[str, Any]:
-    """Схема входа calc: по одной ветке на каждый расчёт R1-R9 (kind + args по схеме расчёта)."""
+    """Input schema for calc: one branch per calculation R1-R9 (kind + args per the calculation
+    schema)."""
     branches = [
         {
             "title": f"{kind}: {spec.description}",
@@ -121,7 +122,7 @@ def _jsonable(r: CalcResult) -> dict[str, Any]:
 
 
 class McpGateway:
-    """searcher — любой объект с search(вопрос, [компании]) -> list[SearchHit]."""
+    """searcher is any object with search(question, [companies]) -> list[SearchHit]."""
 
     def __init__(
         self,
@@ -153,7 +154,7 @@ class McpGateway:
             return self._clause(args)
         raise McpInputError(f"Неизвестный инструмент: {name}")
 
-    # --- маскирование ----------------------------------------------------------------------
+    # --- masking ---
     def _mask(self, value: Any) -> Any:
         if isinstance(value, str):
             return self.masker.mask(value)[0]
@@ -163,7 +164,7 @@ class McpGateway:
             return {k: self._mask(v) for k, v in value.items()}
         return value
 
-    # --- инструменты -----------------------------------------------------------------------
+    # --- tools ---
     def _search(self, company: str, args: dict[str, Any], *, law: bool) -> dict[str, Any]:
         query = str(args.get("query", "")).strip()
         if not query:
@@ -171,7 +172,7 @@ class McpGateway:
         k = max(1, min(int(args.get("k", 5)), 10))
         owner = LAW_TENANT if law else company
         hits = self.searcher.search(query[:MAX_QUERY], [owner])
-        # Защита второго рубежа: поиск уже фильтрует по tenant_id, здесь проверяем ещё раз.
+        # Second line of defense: search already filters by tenant_id; checked again here.
         rows = [
             {
                 "ref": h.ref,
@@ -205,6 +206,6 @@ class McpGateway:
             raise McpInputError("Пустой текст пункта.")
         if self.clause is None:
             raise McpInputError("Проверка пунктов на этом сервере не настроена (нет модели).")
-        masked = self.masker.mask(text[:MAX_CLAUSE])[0]  # в модель уходит только замаскированное
+        masked = self.masker.mask(text[:MAX_CLAUSE])[0]  # only the masked text goes to the model
         out: dict[str, Any] = self._mask(self.clause.check(masked))
         return out

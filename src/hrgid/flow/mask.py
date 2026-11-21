@@ -1,8 +1,9 @@
-"""Маскирование персональных данных до отправки в модель (§9).
+"""Masking of personal data before it is sent to the model (§9).
 
-natasha находит ФИО в любом падеже, шаблоны — паспорт, СНИЛС, ИНН, телефон, почту.
-Метки [ФИО_1], [ПАСПОРТ_1] ...; таблица соответствия живёт только в памяти запроса.
-Метка, которой нет в таблице (чужая или изменённая моделью), не раскрывается.
+natasha finds full names in any grammatical case; templates cover passport, SNILS, TIN, phone and
+email.
+Labels [ФИО_1], [ПАСПОРТ_1] ... ; the mapping table lives only in the memory of the request.
+A label that is not in the table (foreign, or changed by the model) is not revealed.
 """
 
 from __future__ import annotations
@@ -31,7 +32,7 @@ _LABEL = re.compile(r"\[([A-ZА-ЯЁ]+)_(\d+)\]")
 
 @dataclass
 class MaskMap:
-    """Таблица «метка -> исходный текст». Не сериализуется и не логируется."""
+    """Table "label -> original text". Not serialized and not logged."""
 
     items: dict[str, str] = field(default_factory=dict)
     _by_value: dict[tuple[str, str], str] = field(default_factory=dict)
@@ -47,7 +48,7 @@ class MaskMap:
         return lab
 
     def unmask(self, text: str) -> tuple[str, list[str]]:
-        """Вернуть исходные значения. Неизвестные метки заменяются на «[скрыто]»."""
+        """Returns the original values. Unknown labels are replaced with "[скрыто]"."""
         unknown: list[str] = []
 
         def sub(m: re.Match[str]) -> str:
@@ -64,7 +65,7 @@ _natasha_finder: NameFinder | None = None
 
 
 def natasha_names(text: str) -> list[tuple[int, int]]:
-    """Диапазоны ФИО (PER) через natasha; модели грузятся один раз."""
+    """Full-name spans (PER) through natasha; models are loaded once."""
     global _natasha_finder
     if _natasha_finder is None:
         from natasha import (
@@ -97,7 +98,7 @@ class Masker:
         for kind, pat in _PATTERNS:
             spans += [(m.start(), m.end(), kind) for m in pat.finditer(text)]
         spans += [(a, b, "ФИО") for a, b in self._names(text)]
-        # при пересечении побеждает более ранний и длинный
+        # on overlap, the earlier and longer match wins
         spans.sort(key=lambda s: (s[0], -(s[1] - s[0])))
         chosen: list[tuple[int, int, str]] = []
         end = -1

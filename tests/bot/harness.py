@@ -15,7 +15,7 @@ from .conftest import COMPANY, NOW
 
 
 class FakePipeline:
-    """Поток этапа 2 заменён скриптом: ключевое слово вопроса -> готовый FlowAnswer."""
+    """The stage 2 flow is replaced by a script: the question keyword -> a ready FlowAnswer."""
 
     def __init__(self) -> None:
         self.script: list[tuple[str, FlowAnswer | Exception]] = []
@@ -96,7 +96,7 @@ class Chat:
         return self
 
     def pushes(self) -> list[Out]:
-        """Доставить outbox (как делает адаптер) и вернуть то, что пришло в этот чат."""
+        """Delivers the outbox (as the adapter does) and returns what arrived in this chat."""
         got: list[Out] = []
 
         def send(o: Out) -> bool:

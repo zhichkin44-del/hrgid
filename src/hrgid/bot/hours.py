@@ -1,4 +1,4 @@
-"""Рабочие часы HR и SLA в рабочих часах (SPEC-09 §4.6, П9)."""
+"""HR working hours and SLA in working hours (SPEC-09 §4.6, П9)."""
 
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ def is_workday(d: date, s: CompanySettings) -> bool:
         return False
     try:
         return not is_day_off(d)
-    except CalcError:  # календаря на этот год нет — считаем по дням недели
+    except CalcError:  # no calendar for this year, so count by weekdays
         return True
 
 
@@ -40,7 +40,7 @@ def is_open(now: datetime, s: CompanySettings) -> bool:
 
 
 def next_open(now: datetime, s: CompanySettings) -> datetime:
-    """Ближайший момент начала рабочих часов (если открыто — сейчас)."""
+    """The nearest start of working hours (if open now, then now)."""
     loc = to_local(now, s)
     d = loc.date()
     for _ in range(400):
@@ -56,7 +56,7 @@ def next_open(now: datetime, s: CompanySettings) -> datetime:
 
 
 def add_working_hours(start: datetime, hours: float, s: CompanySettings) -> datetime:
-    """Срок через `hours` рабочих часов; нерабочее время не считается."""
+    """Deadline in `hours` working hours; non-working time is not counted."""
     cur = to_local(next_open(start, s), s)
     left = timedelta(hours=hours)
     for _ in range(2000):
@@ -79,12 +79,12 @@ def _day_word(now: datetime, when: datetime, s: CompanySettings) -> str:
 
 
 def deadline_phrase(now: datetime, due: datetime, s: CompanySettings) -> str:
-    """«сегодня до 18:00», «завтра до 10:40», «20.11 до 12:00»."""
+    """ "today until 18:00", "tomorrow until 10:40", "20.11 until 12:00"."""
     return f"{_day_word(now, due, s)} до {to_local(due, s):%H:%M}"
 
 
 def open_phrase(now: datetime, s: CompanySettings) -> str:
-    """«завтра с 10:00» — когда HR снова на связи."""
+    """ "tomorrow from 10:00" is when HR is available again."""
     nxt = next_open(now, s)
     return f"{_day_word(now, nxt, s)} с {to_local(nxt, s):%H:%M}"
 

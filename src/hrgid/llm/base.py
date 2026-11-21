@@ -1,4 +1,4 @@
-"""Общий интерфейс моделей: запрос, ответ, вызов инструментов, ошибки, цена в рублях."""
+"""Common model interface: request, response, tool calls, errors, price in rubles."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ Tier = Literal["cheap", "main"]
 
 
 class LLMError(Exception):
-    """Ошибка провайдера. retryable — стоит повторить (таймаут, 429, 5xx)."""
+    """Provider error. retryable: worth retrying (timeout, 429, 5xx)."""
 
     def __init__(self, message: str, *, retryable: bool = True, provider: str = "") -> None:
         super().__init__(message)
@@ -47,7 +47,7 @@ class LLMRequest:
     tier: Tier = "cheap"
     tools: tuple[ToolSpec, ...] = ()
     max_tokens: int = 1024
-    purpose: str = ""  # route | answer | support | calc — для трассы и записей
+    purpose: str = ""  # route | answer | support | calc (for the trace and the recordings)
 
 
 @dataclass(frozen=True)
@@ -67,8 +67,10 @@ class LLMClient(Protocol):
     def complete(self, req: LLMRequest) -> LLMResponse: ...
 
 
-# Оценочные цены, ₽ за 1 млн токенов (вход, выход). СВЕРИТЬ С ПРАЙСОМ: цены claude-*-5-5 перенесены
-# с прежних версий и не проверены по актуальному прайсу Anthropic. Обновлять по прайсам провайдеров.
+# Estimated prices, RUB per 1M tokens (input, output). CHECK AGAINST THE PRICE LIST: the
+# claude-*-5-5 prices were carried over
+# from earlier versions and have not been checked against Anthropic's current price list. Update
+# from the providers' price lists.
 RUB_PER_MTOK: dict[str, tuple[float, float]] = {
     "claude-haiku-5-5": (90.0, 450.0),
     "claude-sonnet-5-5": (270.0, 1350.0),
@@ -80,7 +82,7 @@ RUB_PER_MTOK: dict[str, tuple[float, float]] = {
 
 
 def register_price(model: str, rub_in: float, rub_out: float) -> None:
-    """Добавить/обновить цену модели (₽ за 1 млн токенов), например из списка цен OpenRouter."""
+    """Adds or updates a model price (RUB per 1M tokens), e.g. from the OpenRouter price list."""
     RUB_PER_MTOK[model] = (rub_in, rub_out)
 
 
@@ -91,7 +93,7 @@ def cost_rub(model: str, input_tokens: int, output_tokens: int) -> float:
 
 @dataclass
 class UsageMeter:
-    """Накопитель расходов одного запроса пользователя."""
+    """Cost accumulator for one user request."""
 
     input_tokens: int = 0
     output_tokens: int = 0

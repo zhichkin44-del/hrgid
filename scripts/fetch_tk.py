@@ -1,6 +1,6 @@
-"""Загрузка текста Трудового кодекса РФ с consultant.ru (постатейно) в data/raw/.
+"""Downloads the text of the Labor Code of the Russian Federation from consultant.ru (article by article) into data/raw/.
 
-Источник записывается в data/raw/SOURCE.json. Запуск: python scripts/fetch_tk.py
+The source is recorded in data/raw/SOURCE.json. Run: python scripts/fetch_tk.py
 """
 
 from __future__ import annotations

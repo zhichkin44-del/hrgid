@@ -1,8 +1,9 @@
-"""Ворота качества (§12, ADR-0003): прогон набора на записанных ответах.
+"""Quality gate (§12, ADR-0003): runs the set on recorded answers.
 
-Красные ворота — если пороги этапа 2 не достигнуты или для текущих промптов нет записи
-(промпт изменили, а `make record` не выполнили). Пока первой живой записи не было
-(tests/recordings/PENDING), ворота пропускаются с явным предупреждением, не падают.
+The gate is red if the stage 2 thresholds are not met, or if there is no recording for the current
+prompts
+(the prompt was changed but `make record` was not run). While there is no first live recording
+(tests/recordings/PENDING), the gate is skipped with an explicit warning and does not fail.
 """
 
 from __future__ import annotations

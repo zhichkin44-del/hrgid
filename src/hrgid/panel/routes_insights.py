@@ -1,4 +1,4 @@
-"""П7 «Аналитика» и П8 «Расходы и качество»."""
+"""П7 "Analytics" and П8 "Spending and quality"."""
 
 from typing import Annotated
 

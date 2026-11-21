@@ -1,4 +1,4 @@
-"""Собирает retrieval.jsonl из таблицы ниже (запуск вручную при правке набора)."""
+"""Builds retrieval.jsonl from the table below (run manually when the set is edited)."""
 import json
 from pathlib import Path
 
@@ -74,7 +74,7 @@ out = Path(__file__).with_name("retrieval.jsonl")
 out.write_text("\n".join(json.dumps(r, ensure_ascii=False) for r in rows) + "\n", encoding="utf-8")
 print(len(rows))
 
-# --- настроечная часть (25 вопросов): только для подбора порога «ответа нет» (SPEC-09 §5 п.5) ---
+# --- tuning part (25 questions): used only to pick the "no answer" threshold (SPEC-09 §5 item 5) ---
 TUNE_LAW = [
  ("Не позднее какого срока до начала отпуска выплачиваются отпускные?", ["136"]),
  ("В каких случаях работодатель вправе удерживать деньги из заработной платы?", ["137"]),

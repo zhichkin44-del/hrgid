@@ -1,1 +1,1 @@
-"""Документы компании (этап 5): загрузка, версии, сравнение, проверка на соответствие ТК."""
+"""Company documents (stage 5): upload, versions, comparison, check against the Labor Code."""

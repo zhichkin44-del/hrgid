@@ -12,16 +12,16 @@ from .conftest import COMPANY, NOW, make_employee, msk
 
 def test_sla_in_working_hours(repo: Repo) -> None:
     s = repo.settings(COMPANY)
-    # 15:40 + 4 рабочих часа: 3 ч 20 мин сегодня до 19:00 и 40 мин завтра -> 10:40 (экран Б2.6)
+    # 15:40 + 4 working hours: 3 h 20 min today until 19:00 and 40 min tomorrow -> 10:40 (screen Б2.6)
     due = hours.add_working_hours(NOW, 4, s)
     assert due == msk(2026, 11, 19, 10, 40)
     assert hours.deadline_phrase(NOW, due, s) == "завтра до 10:40"
-    # вне часов: считаем со следующего открытия
+    # outside working hours: count from the next opening
     night = msk(2026, 11, 17, 21, 36)
     assert not hours.is_open(night, s)
     assert hours.add_working_hours(night, 4, s) == msk(2026, 11, 18, 14, 0)
     assert hours.open_phrase(night, s) == "завтра с 10:00"
-    # пятница вечером -> понедельник
+    # Friday evening -> Monday
     assert hours.add_working_hours(msk(2026, 11, 20, 18, 0), 4, s) == msk(2026, 11, 23, 13, 0)
     assert hours.hours_range(s) == "пн–пт с 10:00 до 19:00 (мск)"
 
@@ -34,7 +34,7 @@ def test_sla_same_day(repo: Repo) -> None:
 
 def test_weekend_is_not_working(repo: Repo) -> None:
     s = repo.settings(COMPANY)
-    assert not hours.is_workday(msk(2026, 11, 21).date(), s)  # суббота
+    assert not hours.is_workday(msk(2026, 11, 21).date(), s)  # Saturday
     assert not hours.is_open(msk(2026, 11, 21, 12), s)
 
 
@@ -42,7 +42,7 @@ def test_code_normalization() -> None:
     assert looks_like_code("жс-4817-т9к2")
     assert not looks_like_code("привет, как дела")
     assert normalize_code("ЖС-4817-Т9К2") == normalize_code(" жс-4817-т9к2 ")
-    # латинские двойники кириллицы
+    # Latin look-alikes of Cyrillic letters
     assert normalize_code("ЖС-4817-AB12") == normalize_code("ЖС-4817-АВ12")
 
 
@@ -60,7 +60,7 @@ def test_code_stored_as_hash_and_login(repo: Repo, auth: AuthService) -> None:
     assert r.status == "ok" and r.employee is not None and r.code is not None
     emp, old = auth.bind(r.employee, r.code, 1, NOW, consent=True)
     assert emp.telegram_id == 1 and emp.consent_at == NOW and old is None
-    # код одноразовый
+    # one-time code
     assert auth.check_code(2, code, NOW).status == "bad"
 
 
@@ -71,11 +71,11 @@ def test_five_fails_block_for_15_minutes(repo: Repo, auth: AuthService) -> None:
         assert r.status == "bad" and r.fails == i
     r = auth.check_code(7, "ЖС-0000-ААА9", NOW)
     assert r.status == "blocked" and r.blocked_until == NOW + timedelta(minutes=15)
-    # даже верный код в блоке не принимается
+    # even a correct code is not accepted while blocked
     assert auth.check_code(7, code, NOW + timedelta(minutes=5)).status == "blocked"
-    # через 15 минут — можно, счётчик сброшен
+    # after 15 minutes it is allowed again; the counter is reset
     assert auth.check_code(7, code, NOW + timedelta(minutes=16)).status == "ok"
-    # блок — на конкретный Telegram, другой аккаунт не затронут
+    # the block applies to a specific Telegram account; another account is not affected
     assert auth.blocked_until(8, NOW) is None
 
 

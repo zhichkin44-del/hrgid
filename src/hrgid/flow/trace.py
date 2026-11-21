@@ -1,4 +1,4 @@
-"""Трасса запроса (§11): маршрут, фрагменты, модель, токены, стоимость, задержка (traces)."""
+"""Request trace (§11): route, fragments, model, tokens, cost, latency (traces)."""
 
 from __future__ import annotations
 

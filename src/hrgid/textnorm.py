@@ -1,4 +1,4 @@
-"""Нормализация текста для сравнения цитат с источником (п. 12.2 спецификации)."""
+"""Text normalization for comparing quotes with the source (spec item 12.2)."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ _SPACES = re.compile(r"\s+")
 
 
 def normalize(text: str) -> str:
-    """Привести текст к виду, пригодному для дословного сравнения."""
+    """Brings the text to a form suitable for verbatim comparison."""
     t = unicodedata.normalize("NFKC", text)
     t = t.replace("­", "")
     t = _LINEBREAK_HYPHEN.sub("", t)

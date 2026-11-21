@@ -1,10 +1,12 @@
-"""Адаптер OpenRouter (OpenAI-совместимый API https://openrouter.ai/api/v1/chat/completions).
+"""OpenRouter adapter (OpenAI-compatible API https://openrouter.ai/api/v1/chat/completions).
 
-Ключ — OPENROUTER_API_KEY только из окружения; без него не вызывается. Инструменты — tool_calls.
-Цены моделей берутся из открытого списка /models (USD за токен), в ₽ — по курсу HRGID_USD_RUB;
-если список недоступен — запасная таблица. Идентификаторы сверены со списком 21.11.2026:
-anthropic/claude-haiku-5.5 и anthropic/claude-sonnet-5.5.
-OpenRouter — трансграничная передача данных, как и прямой Claude.
+Key: OPENROUTER_API_KEY from the environment only; without it, it is not called. Tools: tool_calls.
+Model prices come from the public /models list (USD per token), converted to RUB at the
+HRGID_USD_RUB rate;
+if the list is unavailable, a fallback table is used. Identifiers checked against the list of
+21.11.2026:
+anthropic/claude-haiku-5.5 and anthropic/claude-sonnet-5.5.
+OpenRouter transfers data across the border, as direct Claude does.
 """
 
 from __future__ import annotations
@@ -28,11 +30,11 @@ from hrgid.llm.base import (
 BASE_URL = "https://openrouter.ai/api/v1"
 CHAT_URL = f"{BASE_URL}/chat/completions"
 MODELS_URL = f"{BASE_URL}/models"
-MODELS: dict[Tier, str] = {  # бюджетный Haiku на все роли (route, answer, проверка цитат)
+MODELS: dict[Tier, str] = {  # budget Haiku for all roles (route, answer, citation check)
     "cheap": "anthropic/claude-haiku-5.5",
-    "main": "anthropic/claude-haiku-5.5",  # решение владельца: Haiku для всех ролей
+    "main": "anthropic/claude-haiku-5.5",  # owner's decision: Haiku for all roles
 }
-# USD за 1 токен (вход, выход) по списку моделей на 21.11.2026; если список недоступен.
+# USD per token (input, output) per the model list of 21.11.2026; used if the list is unavailable.
 FALLBACK_USD_PER_TOKEN: dict[str, tuple[float, float]] = {
     "anthropic/claude-haiku-5.5": (1e-7, 5e-7),
     "anthropic/claude-sonnet-5.5": (2e-6, 1e-5),
@@ -129,7 +131,7 @@ class OpenRouterClient:
         return self._catalog
 
     def _price(self, model: str) -> None:
-        """Записать цену модели (₽/млн токенов) в общую таблицу учёта стоимости."""
+        """Records a model price (RUB per 1M tokens) in the shared cost accounting table."""
         if model in self._priced:
             return
         usd = self._load_catalog().get(model) or FALLBACK_USD_PER_TOKEN.get(model)
@@ -146,8 +148,9 @@ class OpenRouterClient:
             "messages": to_openai_messages(req.system, req.messages),
             "max_tokens": req.max_tokens,
             "temperature": 0.1,
-            # Haiku 5.5 на OpenRouter по умолчанию «размышляет»: размышление съедает max_tokens,
-            # и ответ приходит пустым (замер 21.11.2026: 31 пустой ответ из 104). Отключаем.
+            # Haiku 5.5 on OpenRouter reasons by default: the reasoning eats max_tokens,
+            # and the answer comes back empty (measured 21.11.2026: 31 empty answers out of 104).
+            # Reasoning is turned off.
             "reasoning": {"enabled": False},
         }
         if req.tools:
@@ -175,7 +178,8 @@ class OpenRouterClient:
             data = r.json()
         except ValueError as e:
             raise LLMError("ответ не JSON", retryable=True, provider=self.name) from e
-        if isinstance(data, dict) and data.get("error"):  # OpenRouter отдаёт ошибки и с кодом 200
+        # OpenRouter also returns errors with status 200
+        if isinstance(data, dict) and data.get("error"):
             err = data["error"]
             code = int(err.get("code", 500)) if isinstance(err, dict) else 500
             raise LLMError(f"error {code}", retryable=_retryable(code), provider=self.name)

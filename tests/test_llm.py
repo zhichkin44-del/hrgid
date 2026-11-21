@@ -144,7 +144,7 @@ def test_gigachat_oauth_and_chat() -> None:
     r = c.complete(LLMRequest("s", (Message("user", "q"),), tools=(tool,)))
     assert r.tool_calls[0].name == "f" and r.tool_calls[0].args == {"x": 2}
     c.complete(REQ)
-    assert sum("oauth" in u for u in seen) == 1  # токен переиспользуется
+    assert sum("oauth" in u for u in seen) == 1  # the token is reused
 
 
 def test_gigachat_no_key(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -208,10 +208,10 @@ def test_recording_replay_and_prompt_change_fails(tmp_path: Path) -> None:
     rec = RecordingLLM(inner, "v1", tmp_path, record=True)
     assert rec.complete(REQ).text == "записано"
     replay = RecordingLLM(None, "v1", tmp_path, model_name="fake")
-    # ключ зависит от имени модели: у Fake model_for = fake-cheap, у replay — fake-cheap
+    # the key depends on the model name: for Fake model_for = fake-cheap, for replay: fake-cheap
     assert replay.complete(REQ).text == "записано"
     changed = LLMRequest(system="другой промпт", messages=REQ.messages, purpose="t")
     with pytest.raises(MissingRecording):
         replay.complete(changed)
-    with pytest.raises(MissingRecording):  # другая версия набора
+    with pytest.raises(MissingRecording):  # another set version
         RecordingLLM(None, "v2", tmp_path, model_name="fake").complete(REQ)

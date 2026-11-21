@@ -46,7 +46,7 @@ def test_risk_with_foreign_article_is_not_accepted(tmp_path: Path) -> None:
     )
     rep = TkChecker(bad, KeywordNormSource(), svc).check_version(COMPANY, doc, 1, "a")
     assert rep.count("risk") == 0 and rep.count("unclear") == len(rep.items)
-    assert len(bad.requests) == 2 * len(rep.items)  # одна повторная попытка на пункт
+    assert len(bad.requests) == 2 * len(rep.items)  # one repeat attempt per item
 
 
 def test_garbage_answer_is_unclear(tmp_path: Path) -> None:

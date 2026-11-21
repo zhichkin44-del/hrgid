@@ -1,4 +1,4 @@
-"""Приложение панели HR: сборка маршрутов, защита, обработчики ошибок и пустых прав."""
+"""HR panel application: route assembly, protection, error handlers and empty-rights handling."""
 
 from __future__ import annotations
 
@@ -38,7 +38,7 @@ def create_panel_app(deps: PanelDeps) -> FastAPI:
     async def secure(
         request: Request, call_next: Callable[[Request], Awaitable[Response]]
     ) -> Response:
-        # Подделка запроса с другого сайта: у изменяющих запросов Origin/Referer должен быть наш.
+        # Cross-site request forgery: state-changing requests must carry our Origin/Referer.
         if request.method not in ("GET", "HEAD", "OPTIONS"):
             src = request.headers.get("origin") or request.headers.get("referer")
             host = request.headers.get("host", "")
@@ -80,7 +80,7 @@ def create_panel_app(deps: PanelDeps) -> FastAPI:
 
     @app.exception_handler(Exception)
     async def crash_handler(request: Request, exc: Exception) -> Response:
-        # Текст исключения может содержать данные сотрудников: в журнал пишем только тип.
+        # An exception text may contain employee data, so the log records only the type.
         log.error("сбой в панели: %s на %s", type(exc).__name__, request.url.path)
         c = _ctx_or_none(request)
         if c is None:

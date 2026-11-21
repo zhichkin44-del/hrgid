@@ -1,4 +1,4 @@
-"""Чтение PDF/DOCX и разбор текста на пронумерованные пункты."""
+"""Reading PDF/DOCX and splitting the text into numbered items."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ MAX_BYTES = 20 * 1024 * 1024
 
 
 class DocError(Exception):
-    """Ошибка работы с документом; code — машинный признак, str — понятный HR текст."""
+    """Document error; code is a machine-readable tag, str is text understandable to HR."""
 
     def __init__(self, code: str, message: str) -> None:
         super().__init__(message)
@@ -31,9 +31,10 @@ _ITEM = re.compile(r"^\s*(\d+(?:\.\d+)*)[.)]?\s+(\S.*)$")
 
 
 def split_items(text: str) -> list[Item]:
-    """Пункты вида «5.5 Текст…». Строки без номера дописываются к предыдущему пункту.
+    """Items like "5.5 Text...". Lines without a number are appended to the previous item.
 
-    Заголовок раздела — «1. Общие положения»: номер без точки внутри, короткий, без точки в конце.
+    A section heading, "1. General provisions": the number without a dot inside, short, no period at
+    the end.
     """
     raw: list[list[str]] = []
     for line in text.splitlines():

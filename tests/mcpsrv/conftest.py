@@ -1,4 +1,4 @@
-"""Стенд тестов MCP: две компании, поиск в памяти с фильтром по tenant_id, Fake-модель проверки."""
+"""MCP test stand: two companies, in-memory search with a tenant_id filter, Fake check model."""
 
 from __future__ import annotations
 
@@ -48,7 +48,7 @@ def _words(t: str) -> set[str]:
 
 
 class MemSearcher:
-    """Как настоящий поиск: видны только переданные компании (+ закон), пустой список — ничего."""
+    """As in the real search: only the passed companies are visible (plus the law); an empty list means nothing."""
 
     def search(self, question: str, tenants: Sequence[str]) -> list[SearchHit]:
         allowed = set(visible_tenants(tenants))

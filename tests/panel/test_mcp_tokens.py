@@ -1,4 +1,4 @@
-"""П9.6 «Токен для ИИ-агентов»: выдать, показать один раз, отозвать; только администратор."""
+"""П9.6 "Token for AI agents": issue, show once, revoke; administrator only."""
 
 from __future__ import annotations
 

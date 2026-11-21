@@ -1,8 +1,8 @@
-"""Хранилище документов бота: память (тесты, демо) и PostgreSQL (боевое).
+"""Document storage for the bot: in memory (tests, demo) and PostgreSQL (production).
 
-Документ = (kind, company_id, key) -> JSON. Каждый запрос — в границах company_id;
-глобальный поиск (по хэшу кода, по Telegram id) — только find(), он возвращает company_id
-найденного, и дальше код работает уже внутри компании.
+Document = (kind, company_id, key) -> JSON. Every request is scoped to company_id;
+global search (by code hash, by Telegram id) goes only through find(), which returns the company_id
+of the match, and from there the code works inside that company.
 """
 
 from __future__ import annotations
@@ -43,7 +43,7 @@ class DocStore(Protocol):
     def delete(self, kind: str, company_id: str, key: str) -> None: ...
 
     def find(self, kind: str, field: str, value: str) -> list[tuple[str, dict[str, Any]]]:
-        """Глобальный поиск по строковому полю верхнего уровня -> [(company_id, документ)]."""
+        """Global search by a top-level string field -> [(company_id, document)]."""
         ...
 
     def next_seq(self, company_id: str, name: str, start: int = 1) -> int: ...
@@ -94,7 +94,7 @@ class MemoryDocStore:
 
 
 class PgDocStore:
-    """Те же операции в PostgreSQL (таблицы bot_docs, bot_seq); autocommit-соединение."""
+    """The same operations in PostgreSQL (tables bot_docs, bot_seq); autocommit connection."""
 
     def __init__(self, conn: psycopg.Connection[Any]) -> None:
         self.conn = conn
