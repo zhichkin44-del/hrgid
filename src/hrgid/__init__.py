@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ctypes
 import os
+import sys
 from pathlib import Path
 
 
@@ -29,7 +30,8 @@ def _windows_libpq_fallback() -> None:
     if (bin_dir / "libpq.dll").exists():
         os.environ["PATH"] = f"{bin_dir}{os.pathsep}{os.environ.get('PATH', '')}"
         os.environ["PSYCOPG_IMPL"] = "python"
-        ctypes.WinDLL(str(bin_dir / "libpq.dll"))
+        if sys.platform == "win32":  # для mypy на Linux: WinDLL есть только в Windows
+            ctypes.WinDLL(str(bin_dir / "libpq.dll"))
 
 
 _windows_libpq_fallback()

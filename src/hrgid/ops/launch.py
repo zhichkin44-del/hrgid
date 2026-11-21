@@ -49,6 +49,9 @@ def run(role: str) -> None:
     elif importlib.util.find_spec("hrgid.mcp") is None:
         idle("модуль hrgid.mcp отсутствует (MCP-сервер — этап 7)")
     else:
+        # В контейнере нет stdin: MCP слушает HTTP, токен — в Authorization запроса.
+        port = os.environ.get("HRGID_MCP_PORT", "8765")
+        sys.argv = ["hrgid.mcp", "--http", "--host", "0.0.0.0", "--port", port]  # noqa: S104
         runpy.run_module("hrgid.mcp", run_name="__main__")
 
 
