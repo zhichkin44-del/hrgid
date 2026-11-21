@@ -1,6 +1,6 @@
 """Snapshots of the key HR panel screens: 1440 and 375 px.
 
-    python scripts/panel_shots.py --out C:/Studio/hh-transfer/out/hrgid-panel-shots
+    python scripts/panel_shots.py --out out/panel-shots
 
 Starts the panel on the populated stand (as scripts/panel_serve.py does), signs in in the browser with the code
 from the email (outbox directory), walks through the screens and writes PNG files and index.json (screen, address, layout reference).
