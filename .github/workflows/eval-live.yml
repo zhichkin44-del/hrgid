@@ -1,0 +1,58 @@
+name: eval-live
+# Живой прогон набора через поток ответа на Haiku (OpenRouter) с записью ответов.
+# Запуск вручную; ключ — секрет репозитория OPENROUTER_API_KEY (в логи не попадает).
+on:
+  workflow_dispatch:
+    inputs:
+      set:
+        description: "набор из data/evals"
+        default: retrieval.jsonl
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_PASSWORD: hrgid
+          POSTGRES_DB: hrgid
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s
+          --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:hrgid@localhost:5432/hrgid
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      HRGID_LLM_PROVIDER: openrouter
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ключ задан
+        run: test -n "$OPENROUTER_API_KEY" || { echo "нет секрета OPENROUTER_API_KEY"; exit 1; }
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-models-v1
+      - uses: actions/cache@v4
+        with:
+          path: data/raw
+          key: law-raw-v1
+      - run: pip install torch --index-url https://download.pytorch.org/whl/cpu
+      - run: pip install -e ".[dev]"
+      - name: Закон (data/raw не хранится в репозитории)
+        run: "[ -f data/raw/st_1.html ] || python scripts/fetch_tk.py"
+      - name: Живой прогон и запись
+        run: |
+          mkdir -p reports
+          python scripts/eval_flow.py --provider openrouter --record --set "${{ inputs.set }}" 2>&1 | tee reports/live.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eval-live
+          path: |
+            reports/
+            tests/recordings/
