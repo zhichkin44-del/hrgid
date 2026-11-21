@@ -64,7 +64,10 @@ def overtime_pay(
         formula=str(rule("R4")["formula"]),
         substituted=f"ставка {monthly_salary} / {norm_hours} = {rate}; {text}",
         article=str(rule("R4")["article"]),
-        notes=("Ст. 152 в ред. 25.05.2026: множитель 1,5 действует в пределах 120 часов в год",),
+        notes=(
+            "Ст. 152 в ред. 25.05.2026: первые 2 часа дня — x1,5, далее — x2; "
+            "со 121-го часа сверхурочных в году — x2 за каждый час",
+        ),
     )
 
 
