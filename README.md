@@ -14,13 +14,13 @@ Stack: Python 3.12, FastAPI, LangGraph, PostgreSQL 16 with pgvector, Redis, aiog
 
 ## Screenshots
 
-HR panel (test company, fictional employees).
+HR panel with a test company and fictional employees. The product's interface is in Russian (it serves Russian HR teams and Russian labour law); these screenshots show it translated to English for this README.
 
 | HR queue: question, legal basis, draft answer | Today: daily overview |
 |---|---|
-| ![HR queue](docs/screenshots/p2-ochered-1440.png) | ![Today](docs/screenshots/p1-segodnya-1440.png) |
+| ![HR queue](docs/screenshots/p2-queue.png) | ![Today](docs/screenshots/p1-today.png) |
 | **Company rules checked against the Labour Code** | **Analytics** |
-| ![Labour Code check](docs/screenshots/p5-proverka-tk-hr-1440.png) | ![Analytics](docs/screenshots/p7-analitika-1440.png) |
+| ![Labour Code check](docs/screenshots/p5-check.png) | ![Analytics](docs/screenshots/p7-analytics.png) |
 
 ## Features
 
