@@ -39,7 +39,7 @@ FALLBACK_USD_PER_TOKEN: dict[str, tuple[float, float]] = {
 }
 DEFAULT_USD_RUB = 95.0
 APP_TITLE = "HRgid"
-APP_REFERER = "https://hrgid.ru"
+APP_REFERER = "https://github.com/zhichkin44-del/hrgid"
 
 
 def usd_rub() -> float:
