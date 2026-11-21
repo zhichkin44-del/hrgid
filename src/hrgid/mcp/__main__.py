@@ -33,7 +33,7 @@ def build_gateway_from_env() -> McpGateway:
     init_schema(conn)
     store = PgDocStore(conn)
     store.init_schema()
-    searcher = make_searcher(conn, os.environ.get("HRGID_RERANKER", "mmarco-minilm"))
+    searcher = make_searcher(conn, os.environ.get("HRGID_RERANKER") or "mmarco-minilm")
     clause = None
     try:
         llm = ResilientLLM(make_client(provider_from_env("claude")))
