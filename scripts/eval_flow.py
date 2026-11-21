@@ -4,7 +4,8 @@ Replay of recordings (CI):  python scripts/eval_flow.py --provider claude
 Live recording (owner's key): python scripts/eval_flow.py --provider claude --record
   OPENROUTER_API_KEY (openrouter), ANTHROPIC_API_KEY (claude), GIGACHAT_CREDENTIALS (gigachat),
   YANDEX_API_KEY + YANDEX_FOLDER_ID (yandex).
-Report: reports/stage2-<provider>-<date>.md; the "no answer" threshold comes from ADR-0006 (--threshold).
+Report: reports/stage2-<provider>-<date>.md;
+the "no answer" threshold comes from ADR-0006 (--threshold).
 """
 
 from __future__ import annotations

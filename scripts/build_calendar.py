@@ -1,7 +1,8 @@
 """Builds data/calendar/<year>.json from the rules of the Russian production calendar.
 
 Source of the rules: ConsultantPlus, Russian production calendar (consultant.ru/law/ref/calendar);
-2025 - Government of the Russian Federation resolution No. 1335 of 04.10.2024, 2026 - No. 1466 of 24.09.2025.
+2025 - Government of the Russian Federation resolution No. 1335 of 04.10.2024,
+2026 - No. 1466 of 24.09.2025.
 """
 
 from __future__ import annotations

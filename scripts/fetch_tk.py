@@ -1,4 +1,4 @@
-"""Downloads the text of the Labor Code of the Russian Federation from consultant.ru (article by article) into data/raw/.
+"""Downloads the Russian Labor Code from consultant.ru (article by article) into data/raw/.
 
 The source is recorded in data/raw/SOURCE.json. Run: python scripts/fetch_tk.py
 """
