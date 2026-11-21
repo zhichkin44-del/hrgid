@@ -16,10 +16,10 @@ Stack: Python 3.12, FastAPI, LangGraph, PostgreSQL 16 with pgvector, Redis, aiog
 
 HR panel (test company, fictional employees).
 
-| HR queue: question, legal basis, draft answer | Today: SLA, new questions, alerts |
+| HR queue: question, legal basis, draft answer | Today: daily overview |
 |---|---|
 | ![HR queue](docs/screenshots/p2-ochered-1440.png) | ![Today](docs/screenshots/p1-segodnya-1440.png) |
-| **Company rules checked against the Labour Code** | **Analytics: topics, answered without HR, quality** |
+| **Company rules checked against the Labour Code** | **Analytics** |
 | ![Labour Code check](docs/screenshots/p5-proverka-tk-hr-1440.png) | ![Analytics](docs/screenshots/p7-analitika-1440.png) |
 
 ## Features
