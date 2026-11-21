@@ -194,6 +194,24 @@ Cost per answer is computed from real token usage and the provider price list (`
 `cost_rub`) and written to every trace. A live run of 200 questions for the cost per 1,000 answers is not
 done yet.
 
+## Architecture
+
+```mermaid
+flowchart LR
+  E[Employee: Telegram bot / web chat] --> F[Answer flow, LangGraph]
+  F --> R{Route}
+  R -->|law / rules| S[Hybrid search: pgvector + full-text, RRF, reranker]
+  R -->|calc| C[Calculations R1-R9, Decimal]
+  R -->|personal case| Q[HR queue]
+  S --> A[Answer with citations] --> V[Citation check against source]
+  V -->|verified| E
+  V -->|not verified| Q
+  H[HR panel] --> Q
+  H --> D[(PostgreSQL: documents, rules, tenants, trace)]
+  M[MCP server for AI agents] --> S
+  M --> C
+```
+
 ## Project structure
 
 ```
@@ -243,9 +261,3 @@ tests/              pytest suites; tests/recordings holds recorded model answers
 
 Source-available, all rights reserved: the code is published for viewing and evaluation only.
 Commercial or production use requires written permission. See [LICENSE](LICENSE).
-
-## Русская версия
-
-Краткое описание на русском: ИИ-помощник HR отвечает сотрудникам по Трудовому кодексу РФ и правилам
-компании, со ссылкой на статью и цитатой; при отсутствии основания передаёт вопрос HR. Не юридическая
-консультация. Подробная инструкция по установке и настройке — выше, на английском.
