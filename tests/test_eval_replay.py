@@ -33,7 +33,7 @@ def test_replay_main_set_meets_stage2_thresholds() -> None:
     chunks, _ = load_chunks(ROOT / "data" / "raw")
     conn.execute("TRUNCATE chunks RESTART IDENTITY")
     store_chunks(conn, chunks, E5Embedder())
-    llm = make_llm("claude", eval_file, record=False)
+    llm = make_llm("openrouter", eval_file, record=False)  # записи живого прогона на Haiku
     pipe = make_pipeline(llm, make_searcher(conn, next(iter(CANDIDATES))), None)
     s = summarize(run_eval(pipe, load_rows(eval_file)))
     assert all(verdict(s).values()), s

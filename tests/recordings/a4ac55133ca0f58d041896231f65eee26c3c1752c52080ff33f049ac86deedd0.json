@@ -1,0 +1,7 @@
+{
+ "text": "{\"route\": \"law\"}",
+ "model": "anthropic/claude-haiku-5.5",
+ "tool_calls": [],
+ "input_tokens": 335,
+ "output_tokens": 10
+}

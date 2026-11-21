@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
@@ -35,7 +36,8 @@ def main() -> int:
     chunks, _ = load_chunks(ROOT / "data" / "raw")
     conn.execute("TRUNCATE chunks RESTART IDENTITY")
     store_chunks(conn, chunks, E5Embedder())
-    llm = make_llm("claude", eval_file, record=False)
+    provider = os.environ.get("HRGID_LLM_PROVIDER") or "openrouter"  # решение владельца: Haiku
+    llm = make_llm(provider, eval_file, record=False)
     pipe = make_pipeline(llm, make_searcher(conn, next(iter(CANDIDATES))), None)
     res = evaluate_gate(pipe, load_rows(eval_file))
     print(f"{res.status}: {res.message}")

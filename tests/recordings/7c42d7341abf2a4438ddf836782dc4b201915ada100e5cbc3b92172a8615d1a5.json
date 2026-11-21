@@ -1,0 +1,7 @@
+{
+ "text": "{\"route\": \"off_topic\"}",
+ "model": "anthropic/claude-haiku-5.5",
+ "tool_calls": [],
+ "input_tokens": 340,
+ "output_tokens": 13
+}

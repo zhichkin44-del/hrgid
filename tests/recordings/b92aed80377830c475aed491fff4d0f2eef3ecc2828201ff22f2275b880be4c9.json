@@ -1,0 +1,7 @@
+{
+ "text": "нет",
+ "model": "anthropic/claude-haiku-5.5",
+ "tool_calls": [],
+ "input_tokens": 136,
+ "output_tokens": 4
+}
