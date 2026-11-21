@@ -1,11 +1,10 @@
 # HRgid
 
-An AI assistant for HR teams that answers employees' questions about the **Russian Labour Code (TK RF)**
-and their company's own rules. Every answer cites the article and quotes the source. When there is no
-basis for an answer, it says so and passes the question to HR.
+HRgid is a grounded RAG assistant for HR questions, with an MCP server for AI agents.
+Answers are built only from retrieved fragments of the law and the company's rules, and every answer cites its source article and quotes it.
+When there is no supporting evidence, it does not guess: the question is escalated to a human HR specialist.
 
-Interface language: **Russian** (the product serves Russian employees; the law text, company rules and
-evaluation sets are Russian content). The code, documentation and developer messages are in English.
+The demo dataset is the **Russian Labour Code (TK RF)** and the interface is in **Russian**, because the product serves Russian employees and HR teams. The code, documentation and developer messages are in English.
 
 > Not legal advice. An answer is a reference with a source link; disputed cases are for HR and a lawyer.
 
@@ -270,4 +269,5 @@ tests/              pytest suites; tests/recordings holds recorded model answers
 ## License
 
 Source-available, all rights reserved: the code is published for viewing and evaluation only.
+The code is published as a portfolio prototype under a view-only licence, not for production use.
 Commercial or production use requires written permission. See [LICENSE](LICENSE).
