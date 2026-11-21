@@ -1,11 +1,11 @@
-# ADR-0001. Гибридный поиск вместо только вектора
+# ADR-0001. Hybrid search instead of vector-only
 
-Статус: принято (цифры замера — в reports/retrieval-*.md; решение пересматривается по ним).
+Status: accepted (measurement figures are in reports/retrieval-*.md; the decision is reviewed against them).
 
-Контекст. Юридический текст богат точными терминами и номерами статей: вектор хорошо находит смысл, полнотекст — точные слова.
+Context. Legal text is rich in exact terms and article numbers: vectors capture meaning well, full-text search captures exact words.
 
-Решение. Вектор (pgvector, e5-small) и полнотекстовый поиск PostgreSQL (словарь russian) объединяются взвешенным слиянием рангов (RRF), затем переранжирование.
+Decision. The vector search (pgvector, e5-small) and PostgreSQL full-text search (the russian dictionary) are combined by weighted rank fusion (RRF), followed by reranking.
 
-Отвергнуто.
-- Только вектор: хуже на запросах с номерами и редкими терминами.
-- Только полнотекст: не находит перефразировки.
+Rejected.
+- Vector only: worse on queries with numbers and rare terms.
+- Full-text only: does not find paraphrases.

@@ -9,20 +9,20 @@ lint:
 	$(PY) -m ruff check src tests scripts
 	$(PY) -m mypy
 
-# Живая запись ответов модели ключом владельца (ANTHROPIC_API_KEY в окружении).
-# После первой записи удалить tests/recordings/PENDING: CI начнёт требовать записи.
+# Live recording of the model's answers with the owner's key (ANTHROPIC_API_KEY in the environment).
+# After the first recording, delete tests/recordings/PENDING: CI will start requiring recordings.
 record:
 	$(PY) scripts/eval_flow.py --provider $${PROVIDER:-claude} --record
 
-# Воспроизведение записей (то же, что CI): без ключа, без сети.
+# Replay of recordings (same as CI): no key, no network.
 eval:
 	$(PY) scripts/eval_flow.py --provider $${PROVIDER:-claude}
 
-# Ворота качества: набор на записанных ответах (то же, что CI); нет записей -> предупреждение.
+# Quality gate: the set on recorded answers (same as CI); no recordings -> warning.
 gate:
 	$(PY) scripts/quality_gate.py
 
-# Всё в Docker: панель и веб-чат на http://localhost:8000
+# Everything in Docker: the panel and web chat at http://localhost:8000
 up:
 	docker compose up -d --build
 

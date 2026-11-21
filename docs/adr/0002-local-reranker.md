@@ -1,21 +1,21 @@
-# ADR-0002. Локальный переранжировщик вместо API
+# ADR-0002. Local reranker instead of an API
 
-Статус: выбор модели — по замеру этапа 1 (reports/retrieval-*.md).
+Status: model choice is based on the stage 1 measurement (reports/retrieval-*.md).
 
-Решение. Небольшая многоязычная кросс-модель на CPU: нет внешних запросов, нет стоимости за запрос, оценка пригодна для порога «ответа нет».
+Decision. A small multilingual cross-model on CPU: no external requests, no per-request cost, and the score is usable for the "no answer" threshold.
 
-Отвергнуто. Переранжирование через API: задержка и стоимость на каждый запрос, данные уходят наружу.
+Rejected. Reranking through an API: latency and cost on every request, and the data leaves the system.
 
-## Замер в CI 21.11.2026 (GitHub Actions, 4 vCPU Xeon 8573C, 40 вопросов по закону)
+## Measurement in CI, 21.11.2026 (GitHub Actions, 4 vCPU Xeon 8573C, 40 questions on the law)
 
-Отчёт: прогон eval-retrieval 44864399153, файлы retrieval-report-2026-11-21.json и retrieval-select-2026-11-21.json.
+Report: eval-retrieval run 44864399153, files retrieval-report-2026-11-21.json and retrieval-select-2026-11-21.json.
 
-| Режим | hit@5 | p50 | p95 |
+| Mode | hit@5 | p50 | p95 |
 |---|---|---|---|
-| только вектор | 40/40 (1,0) | 18 мс | 20 мс |
-| гибрид (вектор + полнотекст, RRF) | 38/40 (0,95) | 23 мс | 33 мс |
-| гибрид + mmarco-minilm | 40/40 (1,0) | 1,26 с | 1,56 с |
-| гибрид + bge-m3 (15 вопросов отбора) | 15/15 | 13,5 с | 15,9 с |
+| vector only | 40/40 (1.0) | 18 ms | 20 ms |
+| hybrid (vector + full-text, RRF) | 38/40 (0.95) | 23 ms | 33 ms |
+| hybrid + mmarco-minilm | 40/40 (1.0) | 1.26 s | 1.56 s |
+| hybrid + bge-m3 (15 selection questions) | 15/15 | 13.5 s | 15.9 s |
 
-Вывод. Приёмка этапа 1 по SPEC-09 §16 не выполнена честно: (1) «гибрид + переранжирование выше, чем только вектор» — равны (1,0 = 1,0), набор насыщен, на нём режимы не различаются; (2) поиск p95 ≤ 400 мс (§12) — с переранжировщиком 1,56 с.
-Решение до расширения набора: в боте остаётся гибрид + mmarco-minilm (лучшее качество, укладывается в общий бюджет ответа p95 ≤ 8 с); bge-m3 отвергнут по задержке. Следующий шаг — набор потруднее (перефразы без слов закона, номера статей, вопросы «рядом с темой»), где режимы разойдутся; затем окончательный выбор и порог «ответа нет» (ADR-0006).
+Conclusion. Acceptance of stage 1 under SPEC-09 §16 is not honestly met: (1) "hybrid + reranking is better than vector only" is a tie (1.0 = 1.0), the set is saturated and the modes do not differ on it; (2) search p95 <= 400 ms (§12) is 1.56 s with the reranker.
+Decision until the set is extended: the bot keeps hybrid + mmarco-minilm (best quality, fits the overall answer budget p95 <= 8 s); bge-m3 is rejected because of latency. The next step is a harder set (paraphrases without the law's words, article numbers, questions "close to the topic") where the modes will diverge; then the final choice and the "no answer" threshold (ADR-0006).

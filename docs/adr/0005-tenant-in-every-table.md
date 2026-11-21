@@ -1,3 +1,3 @@
-# ADR-0005. tenant_id во всех таблицах; закон — общий корпус
+# ADR-0005. tenant_id in every table; the law is a shared corpus
 
-Решение. У каждой строки есть tenant_id. Фрагменты закона имеют tenant_id = 'law' и доступны всем; любой запрос поиска фильтрует `tenant_id IN (<компания>, 'law')`. Ключи кэша и трассы содержат company_id.
+Decision. Every row has a tenant_id. Fragments of the law have tenant_id = 'law' and are available to everyone; every search query filters by `tenant_id IN (<company>, 'law')`. The cache keys and traces contain company_id.

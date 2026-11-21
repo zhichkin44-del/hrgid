@@ -1,5 +1,5 @@
-# ADR-0004. LangGraph вместо собственного цикла
+# ADR-0004. LangGraph instead of a custom loop
 
-Решение. Поток ответа — граф LangGraph: узлы маршрутизации, поиска, ответа, проверки цитат, отказа; условные рёбра для перестроения ответа и передачи HR. Состояние явное и тестируется по узлам.
+Decision. The answer flow is a LangGraph graph: nodes for routing, search, answer, citation check, refusal; conditional edges for rebuilding the answer and handing off to HR. The state is explicit and is tested node by node.
 
-Отвергнуто. Собственный цикл на if/else: быстрее в начале, но поток с ветвлениями и повторами сложнее проверять и показывать.
+Rejected. A custom if/else loop: faster at the start, but a flow with branches and retries is harder to verify and to show.

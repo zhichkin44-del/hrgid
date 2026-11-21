@@ -1,6 +1,6 @@
 name: eval-live
-# Живой прогон набора через поток ответа на Haiku (OpenRouter) с записью ответов.
-# Запуск вручную; ключ — секрет репозитория OPENROUTER_API_KEY (в логи не попадает).
+# Live run of the set through the answer flow on Haiku (OpenRouter), recording the answers.
+# Started manually; the key is the repository secret OPENROUTER_API_KEY (it does not appear in logs).
 on:
   workflow_dispatch:
     inputs:

@@ -1,5 +1,5 @@
-# ADR-0003. Записанные ответы модели в CI вместо живого прогона
+# ADR-0003. Recorded model answers in CI instead of a live run
 
-Решение. В CI набор проверок идёт на записях; ключ записи = хэш(промпт + модель + версия набора). Смена промпта без обновления записей роняет тест. Живой прогон обновляет записи вручную ключом владельца.
+Decision. In CI the check set runs on recordings; the recording key = hash(prompt + model + set version). Changing a prompt without updating the recordings fails the test. A live run updates the recordings manually, with the owner's key.
 
-Отвергнуто. Живой прогон в каждом CI: стоимость, недетерминизм, секрет в CI.
+Rejected. A live run in every CI: cost, non-determinism, a secret in CI.

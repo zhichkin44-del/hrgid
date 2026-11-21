@@ -1,31 +1,31 @@
-# ADR-0007. Один образ на все роли и запуск без ключей
+# ADR-0007. One image for all roles and a start without keys
 
-Статус: принято (этап 8).
+Status: accepted (stage 8).
 
-## Решение
-- Один `Dockerfile` (многоступенчатый: зависимости → веса моделей → рабочий образ) и одна точка входа
-  `python -m hrgid.ops.launch <роль>`: init, api, worker, bot, mcp. Веса e5 и переранжировщика лежат в
-  отдельном слое: правка кода не перекачивает гигабайты; в рабочем образе `HF_HUB_OFFLINE=1`.
-- Рабочий образ запускается от непривилегированного пользователя (uid 10001); секреты в образ не
-  попадают. Перцы хэшей (`HRGID_PANEL_PEPPER`, `HRGID_CODE_PEPPER`), если не заданы, создаются
-  случайными при первом старте и живут в томе `state`.
-- `docker compose up` из чистого клона обязан быть зелёным без единого ключа: модель по умолчанию
-  `fake` (все ответы — «ответа нет», поиск, панель и веб-чат работают), `bot` без токена и `mcp`
-  без модуля ждут и пишут причину в журнал, а не падают в бесконечный перезапуск.
-- Разовая инициализация — отдельный сервис `init` (схема, загрузка закона и индексация при первом
-  старте, первая компания); остальные ждут его `service_completed_successfully`. Закон не хранится в
-  репозитории: при первом старте скачивается (нужна сеть), хранится в томе.
-- Код входа в панель без SMTP кладётся файлом в `/var/lib/hrgid/outbox` (том). Это режим
-  самостоятельной установки; боевая почта — отдельное решение владельца.
-- `worker`: удаление трасс старше срока хранения (§9, 1 год) и сигнал жизни в Redis. Доставку outbox
-  Telegram ведёт бот: у него уже есть фоновая задача и доступ к API Telegram.
+## Decision
+- One `Dockerfile` (multi-stage: dependencies → model weights → runtime image) and one entry point
+  `python -m hrgid.ops.launch <role>`: init, api, worker, bot, mcp. The e5 and reranker weights live in a
+  separate layer: a code change does not re-download gigabytes; in the runtime image `HF_HUB_OFFLINE=1`.
+- The runtime image runs as an unprivileged user (uid 10001); secrets do not get into the image. The hash
+  peppers (`HRGID_PANEL_PEPPER`, `HRGID_CODE_PEPPER`), if not set, are generated at random on the first start
+  and live in the `state` volume.
+- `docker compose up` from a clean clone must be green without a single key: the model defaults to
+  `fake` (all answers are "no answer", search, the panel and the web chat work), the `bot` without a token and
+  `mcp` without a module wait and write the reason to the log instead of crashing into an endless restart.
+- One-time initialization is a separate `init` service (schema, loading the law and indexing on the first
+  start, the first company); the others wait for it with `service_completed_successfully`. The law is not stored in the
+  repository: it is downloaded on the first start (network required) and kept in a volume.
+- Sign-in codes for the panel without SMTP are written as files to `/var/lib/hrgid/outbox` (volume). This is the
+  self-hosted install mode; real email is a separate decision of the owner.
+- `worker`: deletion of traces older than the retention period (§9, 1 year) and a liveness signal to Redis. The
+  Telegram outbox delivery is done by the bot: it already has a background task and access to the Telegram API.
 
-## Отвергнуто
-- Отдельный образ на роль: пять сборок torch ради запуска в одной машине.
-- Ключи в `docker-compose.yml` или в образе: нарушает §9 и модель угроз.
-- Обязательный `.env`: чистый клон перестал бы подниматься одной командой.
-- Скачивание весов при первом запуске: гонка сервисов за диск и сеть, нет воспроизводимости.
+## Rejected
+- A separate image per role: five builds of torch just to run on one machine.
+- Keys in `docker-compose.yml` or in the image: violates §9 and the threat model.
+- A mandatory `.env`: a clean clone would stop starting with one command.
+- Downloading the weights at the first start: a race between services for disk and network, no reproducibility.
 
-## Последствия
-Первый старт долгий (закон ≈ 600 статей, индексация на CPU). Проверка Compose в CI — job
-`compose-smoke`; на машине разработки без Docker файлы проверяются статически (`tests/test_ops_files.py`).
+## Consequences
+The first start is long (the law ≈ 600 articles, indexing on CPU). The Compose check in CI is the
+`compose-smoke` job; on a development machine without Docker the files are checked statically (`tests/test_ops_files.py`).

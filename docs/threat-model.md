@@ -1,13 +1,13 @@
-# Модель угроз HRgid
+# HRgid threat model
 
-| Угроза | Где | Мера | Тест |
+| Threat | Where | Control | Test |
 |---|---|---|---|
-| Инъекция в вопросе («игнорируй инструкции…») | чат, бот | вопрос — данные, не инструкция; ответ только из найденного; проверка цитат | 5 инъекций в наборе проверок (этап 2) |
-| Инъекция в загруженном документе | этап 5 | текст документа передаётся как данные, подозрительные фрагменты помечаются | тест документа с инъекцией (этап 5) |
-| Утечка персональных данных в модель, логи, кэш | этап 6 | маскирование, таблица меток только в памяти запроса, ключ кэша по замаскированному тексту | тест маскирования, тест «лишняя метка» (этап 6) |
-| Доступ к данным другой компании | поиск, API, бот, MCP, кэш | tenant_id в каждой таблице и запросе | тест изоляции поиска (этап 1), API/бот/MCP/кэш (этапы 2–7) |
-| Злоупотребление MCP | этап 7 | токен компании, ограничение частоты, только чтение | тест чужого токена (этап 7) |
-| Подмена или устаревание текста закона | загрузка | источник и редакция в метаданных, хэш содержимого фрагмента | тест хэшей (этап 1) |
-| Утечка ключей | все | только окружение, `.env.example` пуст | `tests/test_ops_files.py::test_no_secrets_in_history` (этап 8) |
-| Образ или Compose-файл с секретами, процесс от root | сборка, запуск | непривилегированный пользователь, секреты только из окружения или тома, база и Redis не опубликованы | `tests/test_ops_files.py` (этап 8) |
-| Ослабленный промпт проходит в main незамеченным | CI | ключ записи = хэш(промпт + модель + версия набора), без записей ворота красные | `tests/test_quality_gate.py` (этап 8) |
+| Injection in a question ("ignore the instructions…") | chat, bot | the question is data, not an instruction; the answer comes only from what was found; citation check | 5 injections in the check set (stage 2) |
+| Injection in an uploaded document | stage 5 | the document text is passed as data; suspicious fragments are marked | document test with an injection (stage 5) |
+| Leak of personal data into the model, logs, cache | stage 6 | masking; the label table lives only in the memory of the request; the cache key is built from the masked text | masking test, "extra label" test (stage 6) |
+| Access to another company's data | search, API, bot, MCP, cache | tenant_id in every table and every query | search isolation test (stage 1), API/bot/MCP/cache (stages 2–7) |
+| Abuse of MCP | stage 7 | company token, rate limiting, read-only | foreign token test (stage 7) |
+| Substitution or staleness of the law text | loading | source and edition in the metadata; a content hash of each fragment | hash test (stage 1) |
+| Key leak | all | environment only; `.env.example` is empty | `tests/test_ops_files.py::test_no_secrets_in_history` (stage 8) |
+| Image or Compose file with secrets, process running as root | build, run | unprivileged user; secrets only from the environment or a volume; database and Redis not published | `tests/test_ops_files.py` (stage 8) |
+| A weakened prompt gets into main unnoticed | CI | recording key = hash(prompt + model + set version); without recordings the gate is red | `tests/test_quality_gate.py` (stage 8) |

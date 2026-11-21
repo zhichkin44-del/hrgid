@@ -11,7 +11,7 @@ env:
   DATABASE_URL: postgresql://postgres:hrgid@localhost:5432/hrgid
 
 jobs:
-  # ruff, mypy --strict, быстрые тесты и тесты на PostgreSQL с pgvector
+   # ruff, mypy --strict, fast tests and tests on PostgreSQL with pgvector
   check:
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -31,14 +31,14 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-      # CPU-сборка torch: без гигабайтов CUDA; модели в этом job не скачиваются
+       # CPU build of torch: no multi-gigabyte CUDA; models are not downloaded in this job
       - run: pip install torch --index-url https://download.pytorch.org/whl/cpu
       - run: pip install -e ".[dev]"
       - run: ruff check .
       - run: mypy
       - run: pytest -m "not slow and not browser"
 
-  # Браузерные e2e панели: 6 сценариев §17 в Chromium
+   # Browser e2e tests of the panel: 6 scenarios of §17 in Chromium
   e2e:
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -56,8 +56,8 @@ jobs:
           pytest -m browser -rs | tee e2e.log
           if grep -q "SKIPPED" e2e.log; then echo "::error::браузерные тесты пропущены"; exit 1; fi
 
-  # Ворота качества: набор на записанных ответах. Нет записей (tests/recordings/PENDING) ->
-  # шаг пропускается с предупреждением и не падает; изменили промпт без записей -> красное.
+   # Quality gate: the set on recorded answers. No recordings (tests/recordings/PENDING) ->
+   # the step is skipped with a warning and does not fail; a prompt changed without recordings -> red.
   quality-gate:
     runs-on: ubuntu-latest
     timeout-minutes: 120
@@ -108,7 +108,7 @@ jobs:
         name: Прогон набора на записанных ответах
         run: python scripts/quality_gate.py
 
-  # Чистый клон -> docker compose up -> всё здоровое -> панель и веб-чат отвечают
+   # Clean clone -> docker compose up -> everything healthy -> the panel and web chat respond
   compose-smoke:
     runs-on: ubuntu-latest
     timeout-minutes: 45

@@ -1,5 +1,5 @@
-# HRgid: `docker compose up` из чистого клона. Секреты и ключи — в .env (см. .env.example);
-# без ключей запускается всё, кроме ответов модели (HRGID_PROVIDER по умолчанию fake).
+# HRgid: `docker compose up` from a clean clone. Secrets and keys go in .env (see .env.example);
+# without keys everything starts except the model answers (HRGID_PROVIDER defaults to fake).
 name: hrgid
 
 x-app: &app
@@ -48,7 +48,7 @@ services:
       timeout: 3s
       retries: 20
 
-  # Разовая инициализация: схема, закон -> индекс (первый старт дольше, нужна сеть), компания.
+  # One-time initialization: schema, law -> index (the first start is longer and needs network), company.
   init:
     <<: *app
     restart: "no"

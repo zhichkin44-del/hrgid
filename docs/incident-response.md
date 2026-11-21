@@ -1,49 +1,48 @@
-# Реагирование на инциденты с персональными данными
+# Incident response for personal data incidents
 
-Основание: 152-ФЗ «О персональных данных», ст. 21 ч. 3.1 (в редакции, действующей с 2023 г.). Документ
-рабочий: оператор — компания-клиент, HRgid — её инструмент; отвечает за уведомление оператор,
-администратор HRgid помогает собрать факты. Решение о юридической квалификации принимает владелец
-и юрист компании — этот документ порядок действий, не юридическая консультация.
+Basis: Federal Law No. 152-FZ "On Personal Data", Art. 21 part 3.1 (as in force since 2023). This document is
+a working one: the operator is the client company, HRgid is its tool; the operator is responsible for notification,
+and the HRgid administrator helps to collect the facts. The legal qualification is decided by the owner
+and the company's lawyer; this document is a procedure, not legal advice.
 
-## Что считается инцидентом
-Неправомерная или случайная передача (предоставление, распространение, доступ) персональных данных,
-повлёкшая нарушение прав субъектов: чужой диалог показан другому сотруднику или компании, утечка
-дампа БД, ключ или токен в публичном месте, ответ модели с чужими данными, потеря носителя.
+## What counts as an incident
+An unlawful or accidental transfer (provision, distribution, access) of personal data that
+violates the rights of data subjects: another person's dialogue shown to a different employee or company, a leak
+of a database dump, a key or token in a public place, a model answer with someone else's data, loss of a data carrier.
 
-## Сроки (ст. 21 ч. 3.1)
-| Срок | Что сделать |
+## Deadlines (Art. 21 part 3.1)
+| Deadline | What to do |
 |---|---|
-| 24 часа с момента выявления | Уведомить Роскомнадзор: что случилось, предполагаемые причины и вред правам субъектов, принятые меры, контакт ответственного за работу с инцидентом |
-| 72 часа с момента выявления | Дослать результаты внутреннего расследования и сведения о лицах, действия которых стали причиной |
+| 24 hours from detection | Notify Roskomnadzor: what happened, the presumed causes and the harm to data subjects' rights, the measures taken, the contact of the person responsible for the incident |
+| 72 hours from detection | Submit the results of the internal investigation and details of the persons whose actions caused the incident |
 
-Часы идут с момента, когда о событии узнали, а не когда оно произошло. Фиксируйте время выявления.
+The clock runs from the moment the event became known, not from the moment it happened. Record the time of detection.
 
-## Порядок действий
-1. **Остановить (минуты).** Отозвать скомпрометированный ключ или токен (модель, Telegram, MCP,
-   приглашения веб-чата); при необходимости остановить сервис: `docker compose stop api bot mcp`.
-   Данные не удалять — они нужны для расследования.
-2. **Зафиксировать.** Время выявления, кто и как заметил, что и у кого могло оказаться. Сохранить
-   журналы: `docker compose logs --no-color > incident-<дата>.log`, журнал входов и действий панели (П10).
-3. **Оценить масштаб.** Какие компании (`tenant_id`), какие категории данных, сколько субъектов. Трассы
-   хранят замаскированный текст вопросов (`traces.masked_question`), а не исходный: это сужает оценку,
-   но не отменяет её. Смотрите также таблицу меток маскирования — она живёт только в памяти запроса.
-4. **Уведомить в 24 часа** (оператор → Роскомнадзор, форма на сайте ведомства; администратор HRgid
-   готовит факты из п. 2–3). Параллельно предупредить затронутых сотрудников и HR компании.
-5. **Устранить причину.** Исправление и тест, который воспроизводит инцидент (запись в
-   `docs/threat-model.md`: угроза → тест). Сменить секреты: `HRGID_PANEL_PEPPER`, `HRGID_CODE_PEPPER`
-   (после смены все коды входа и приглашения выпускаются заново), пароль PostgreSQL, ключи моделей.
-6. **Дослать в 72 часа** результаты расследования и меры.
-7. **Разбор.** Что не сработало, что меняем. Итог — ADR или правка модели угроз.
+## Procedure
+1. **Stop (minutes).** Revoke the compromised key or token (model, Telegram, MCP, web chat invitations); if needed, stop the service: `docker compose stop api bot mcp`.
+   Do not delete data: it is needed for the investigation.
+2. **Record.** The time of detection, who noticed it and how, what and whose data could have been exposed. Save the logs:
+   `docker compose logs --no-color > incident-<date>.log`, and the panel's sign-in and action journal (П10).
+3. **Assess the scale.** Which companies (`tenant_id`), which categories of data, how many subjects. The traces
+   store the masked text of questions (`traces.masked_question`), not the original: this narrows the assessment,
+   but does not cancel it. Also check the masking label table: it lives only in the memory of the request.
+4. **Notify within 24 hours** (operator -> Roskomnadzor, through the form on the agency's website; the HRgid administrator
+   prepares the facts from items 2-3). In parallel, warn the affected employees and the company's HR.
+5. **Fix the cause.** A fix and a test that reproduces the incident (an entry in
+   `docs/threat-model.md`: threat -> test). Rotate the secrets: `HRGID_PANEL_PEPPER`, `HRGID_CODE_PEPPER`
+   (after rotation all sign-in codes and invitations are issued again), the PostgreSQL password, the model keys.
+6. **Submit within 72 hours** the results of the investigation and the measures.
+7. **Review.** What did not work, what we change. The result is an ADR or an update of the threat model.
 
-## Роли
-| Роль | Кто | Что делает |
+## Roles
+| Role | Who | What they do |
 |---|---|---|
-| Ответственный за обработку ПДн | назначает компания-оператор | решает об уведомлении, подписывает |
-| Администратор HRgid | админ панели | останавливает сервисы, собирает журналы, готовит факты |
-| Владелец проекта | по решению владельца | юридическая оценка, связь с юристом |
+| Person responsible for processing personal data | appointed by the operator company | decides on notification, signs |
+| HRgid administrator | panel administrator | stops the services, collects the logs, prepares the facts |
+| Project owner | by the owner's decision | legal assessment, contact with the lawyer |
 
-## Что подготовить заранее
-- Контакт ответственного лица в настройках компании (панель, П9).
-- Проверенный способ остановки сервисов и отзыва ключей (команды выше).
-- Резервная копия БД и порядок восстановления: `docker compose exec postgres pg_dump -U hrgid hrgid`.
-- Срок хранения диалогов — 1 год по умолчанию (`HRGID_RETENTION_DAYS`, чистит `worker`).
+## What to prepare in advance
+- The contact of the responsible person in the company settings (panel, П9).
+- A verified way to stop the services and revoke keys (the commands above).
+- A database backup and the restore procedure: `docker compose exec postgres pg_dump -U hrgid hrgid`.
+- The retention period for dialogues: 1 year by default (`HRGID_RETENTION_DAYS`, purged by `worker`).
