@@ -79,6 +79,11 @@ RUB_PER_MTOK: dict[str, tuple[float, float]] = {
 }
 
 
+def register_price(model: str, rub_in: float, rub_out: float) -> None:
+    """Добавить/обновить цену модели (₽ за 1 млн токенов), например из списка цен OpenRouter."""
+    RUB_PER_MTOK[model] = (rub_in, rub_out)
+
+
 def cost_rub(model: str, input_tokens: int, output_tokens: int) -> float:
     pin, pout = RUB_PER_MTOK.get(model, (0.0, 0.0))
     return (input_tokens * pin + output_tokens * pout) / 1_000_000

@@ -262,3 +262,16 @@ def test_budget_exhausted_flow_p1_warning_and_gate() -> None:
     assert "Бюджет месяца исчерпан" in r.text
     assert d.ops.budget(CO, env.clock.now).exhausted
     assert msk(2026, 11, 18).month == 11
+
+
+def test_openrouter_needs_foreign_warning_and_ack() -> None:
+    env = make_env()
+    adm = env.login(ADMIN)
+    r = adm.post("/settings/model", data={"provider": "openrouter"})
+    assert "Вопросы уйдут за границу" in r.text and "OpenRouter" in r.text
+    assert env.deps.ops.tech(CO).provider == "gigachat"
+    r = adm.post("/settings/model", data={"provider": "openrouter", "confirm_claude": "1"})
+    assert "Сотрудники уведомлены" in r.text and env.deps.ops.tech(CO).provider == "gigachat"
+    form = {"provider": "openrouter", "confirm_claude": "1", "ack": "1"}
+    r = adm.post("/settings/model", data=form)
+    assert "Модель изменена" in r.text and env.deps.ops.tech(CO).provider == "openrouter"
