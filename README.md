@@ -1,234 +1,251 @@
 # HRgid
 
-ИИ-помощник HR: отвечает сотрудникам по Трудовому кодексу РФ и правилам их компании **со ссылкой на
-статью и цитатой из источника**. Не нашёл основание — так и говорит и передаёт вопрос HR. Работает в
-Telegram, в веб-чате и через MCP; HR ведёт компанию в панели.
+An AI assistant for HR teams that answers employees' questions about the **Russian Labour Code (TK RF)**
+and their company's own rules. Every answer cites the article and quotes the source. When there is no
+basis for an answer, it says so and passes the question to HR.
 
-> Не юридическая консультация. Ответ — справка со ссылкой на источник; спорные случаи решает HR и юрист.
+Interface language: **Russian** (the product serves Russian employees; the law text, company rules and
+evaluation sets are Russian content). The code, documentation and developer messages are in English.
 
-## Что умеет
+> Not legal advice. An answer is a reference with a source link; disputed cases are for HR and a lawyer.
 
-- **Закон и правила компании.** Гибридный поиск (вектор + полнотекст), локальное переранжирование,
-  ответ строго из найденных фрагментов; каждое утверждение проверяется цитатой, которой не нашлось в
-  источнике — ответ не выдаётся (ADR-0001…0003, 0006).
-- **Расчёты** отпуска, больничного, сверхурочных, сроков: считает детерминированный Python, модель
-  только вызывает инструменты и объясняет (R1–R9).
-- **Telegram-бот** для сотрудника: согласие на обработку данных, вход по коду, вопросы, расчёты,
-  обращения к HR (сценарии 4.1–4.8).
-- **Панель HR** (П1–П11): очередь обращений, база ответов, документы компании и проверка правил на
-  соответствие ТК, сотрудники и группы, аналитика, настройки, журнал действий, отмена.
-- **Веб-чат** по ссылке-приглашению и **MCP-сервер** (этап 7).
-- **Персональные данные:** маскирование перед моделью, изоляция компаний по `tenant_id`, кэш без данных
-  профиля, хранение 1 год.
-- **Качество проверяется в CI**: ответы модели записаны, при изменении промпта без новых записей CI
-  краснеет намеренно.
+Channels: a Telegram bot, a web chat, an MCP server for AI agents, and a web panel for HR.
+Stack: Python 3.12, FastAPI, LangGraph, PostgreSQL 16 with pgvector, Redis, aiogram.
 
-## Схема
+## Features
 
-```mermaid
-flowchart LR
-    E[Сотрудник] -->|Telegram| BOT[bot<br/>aiogram]
-    E -->|ссылка-приглашение| API
-    HR[HR / админ] -->|панель| API[api<br/>FastAPI: панель + веб-чат]
-    AI[Claude Code / агент] -->|токен компании| MCP[mcp]
-    BOT --> FLOW
-    API --> FLOW
-    MCP --> FLOW
-    subgraph FLOW[Поток ответа, LangGraph]
-        direction LR
-        R[маршрут] --> S[поиск + переранжирование] --> A[ответ] --> C[проверка цитат]
-        M[маскирование ПДн] -.-> R
-        K[расчёты R1–R9] -.-> A
-    end
-    FLOW --> LLM[(Модель:<br/>GigaChat / YandexGPT / Claude)]
-    FLOW --> PG[(PostgreSQL 16<br/>+ pgvector)]
-    API --> PG
-    BOT --> PG
-    WRK[worker<br/>хранение, сигнал жизни] --> PG
-    WRK --> RD[(Redis)]
-    INIT[init<br/>схема, закон, компания] --> PG
-```
+- **Law and company rules.** Hybrid search (vector + full text), local reranking, answers built only from
+  retrieved fragments. Every claim is checked against the quoted source; an answer without a supporting quote
+  is not sent (ADR-0001, 0002, 0003, 0006).
+- **Calculations.** Leave, sick pay, overtime and deadlines are computed by deterministic Python code
+  (rules R1-R9). The model only calls the tools and explains the result.
+- **Telegram bot** for employees: consent to personal-data processing, sign-in by code, questions,
+  calculations, requests to HR (scenarios 4.1-4.8).
+- **HR panel** (sections P0-P11): request queue, answer base, company documents with a check against the
+  Labour Code, employees and groups, analytics, settings, action journal, undo.
+- **Web chat** via an invite link, and an **MCP server** with read-only tools for AI agents.
+- **Personal data:** masking before the model (names, passport, SNILS, TIN, phone, e-mail), tenant
+  isolation by `tenant_id` in every table, 1-year retention.
 
-## Запуск одной командой
+## Requirements
 
-Нужны Docker и Docker Compose v2.24+.
+- Docker with Docker Compose v2.24+ (recommended), or Python 3.12 for development.
+- The first start downloads and indexes the law text on CPU, which takes a long time; later starts take seconds.
+- Internet access on the first start (the Labour Code text is downloaded).
+- No API keys are needed to run. Without a model key every answer is a refusal, while search, the panel
+  and the web chat work.
+- Optional: an API key for the model provider (OpenRouter, Claude, GigaChat or YandexGPT) and a Telegram
+  bot token from @BotFather.
 
-```
-git clone <репозиторий> hrgid && cd hrgid
-docker compose up            # или: make up
-```
+## Installation
 
-Ключи не нужны: без них модель выключена (`HRGID_PROVIDER=fake`, на любой вопрос честный отказ), а
-поиск по закону, панель и веб-чат работают. Первый старт долгий: сервис `init` загружает текст ТК
-(нужна сеть), индексирует его на CPU и создаёт первую компанию. Повторные запуски — секунды.
+### Option A: Docker Compose (Windows, macOS, Linux)
 
-| Что | Где |
-|---|---|
-| Панель HR | http://localhost:8000 (вход по почте `HRGID_ADMIN_EMAIL`; письмо с кодом лежит файлом: `docker compose exec api sh -c 'cat /var/lib/hrgid/outbox/*'`) |
-| Веб-чат | `http://localhost:8000/c/<токен>`; токен: `docker compose exec api cat /var/lib/hrgid/web_invite` |
-| Проверка | `curl http://localhost:8000/healthz` |
+1. Install Docker Desktop (Windows, macOS) or Docker Engine with the Compose plugin (Linux). Check:
 
-Настройка — `cp .env.example .env` и значения (все необязательны): `HRGID_LLM_PROVIDER` (`openrouter`,
-`gigachat`, `yandex`, `claude`; старое имя `HRGID_PROVIDER` тоже работает) и ключ выбранного провайдера, `TELEGRAM_BOT_TOKEN`, `HRGID_COMPANY`,
-`HRGID_ADMIN_EMAIL`. Сервис `bot` без токена ждёт и пишет причину в журнал, не падая. Секреты-«перцы» (`HRGID_PANEL_PEPPER`, `HRGID_CODE_PEPPER`) без значений создаются случайными
-и хранятся в томе `state`. Устройство образов и причины решений — [ADR-0007](docs/adr/0007-compose-one-image.md).
+   ```bash
+   docker compose version
+   ```
 
-### Без Docker (разработка)
+   The version must be v2.24 or newer.
 
-```
+2. Clone the repository and enter the folder:
+
+   ```bash
+   git clone https://github.com/zhichkin44-del/hrgid.git
+   cd hrgid
+   ```
+
+3. Start everything:
+
+   ```bash
+   docker compose up
+   ```
+
+   Or `make up` if you have GNU Make. The first start is slow: the `init` service downloads the Labour
+   Code, indexes it on CPU and creates the first company. Later starts take seconds.
+
+4. Open the panel at <http://localhost:8000>. Sign-in is by e-mail (`HRGID_ADMIN_EMAIL`). With the default
+   mail mode the one-time code is written to a file inside the container:
+
+   ```bash
+   docker compose exec api sh -c 'cat /var/lib/hrgid/outbox/*'
+   ```
+
+5. The web chat link is printed by:
+
+   ```bash
+   docker compose exec api cat /var/lib/hrgid/web_invite
+   ```
+
+   Open `http://localhost:8000/c/<token>`.
+
+6. Health check: `curl http://localhost:8000/healthz` returns `{"status": "ok"}`.
+
+To stop: `docker compose down` (or `make down`).
+
+### Option B: Python for development (Windows, macOS, Linux)
+
+Python 3.12 is required. Some native libraries (PyTorch, libpq) may be blocked by security software on
+Windows (for example Smart App Control); in that case use Option A or the CI logs.
+
+```bash
+git clone https://github.com/zhichkin44-del/hrgid.git
+cd hrgid
+python -m venv .venv
+# Windows (PowerShell):  .venv\Scripts\Activate.ps1
+# macOS / Linux:         source .venv/bin/activate
+python -m pip install --upgrade pip
 pip install torch --index-url https://download.pytorch.org/whl/cpu
 pip install -e ".[dev]"
-python scripts/fetch_tk.py          # текст ТК -> data/raw
-python scripts/run_panel.py         # панель на наполненной компании «Студия Жичкина», Fake-модель
-python -m hrgid.bot                 # бот (нужны TELEGRAM_BOT_TOKEN, ключ модели, DATABASE_URL или pgserver)
 ```
 
-## MCP-сервер (этап 7)
+Then:
 
-ИИ-агенты (Claude Code, Claude Desktop) получают те же знания, что и бот, только на чтение:
-`search_law` (ТК РФ со ссылкой на статью), `search_policy` (действующие правила вашей компании),
-`calc` (расчёты R1–R9; у каждого своя схема входа), `check_policy_clause` (оценка пункта правил:
-«соответствует / лучше закона / риск» со статьёй). Данные других компаний недоступны, ПДн в ответах
-маскируются ([ФИО_1], [ТЕЛЕФОН_1] …), текст пункта уходит в модель замаскированным.
-
-1. Администратор открывает панель: «Настройки» → «Токен для ИИ-агентов…» → «Выдать токен».
-   Токен (`hrg_…`) показывается один раз, хранится хэшем, отзывается там же — действует сразу.
-2. Подключение к Claude Code одной строкой:
-
-```
-claude mcp add hrgid -e HRGID_MCP_TOKEN=hrg_ВАШ_ТОКЕН -e DATABASE_URL=postgresql://... -- python -m hrgid.mcp
+```bash
+python scripts/fetch_tk.py     # downloads the Labour Code text into data/raw
+python scripts/run_panel.py    # panel on a filled demo company, fake model
+python -m hrgid.bot            # Telegram bot (needs TELEGRAM_BOT_TOKEN and DATABASE_URL or pgserver)
 ```
 
-3. Claude Desktop (`claude_desktop_config.json`):
+## Configuration
 
-```json
-{
-  "mcpServers": {
-    "hrgid": {
-      "command": "python",
-      "args": ["-m", "hrgid.mcp"],
-      "env": {
-        "HRGID_MCP_TOKEN": "hrg_ВАШ_ТОКЕН",
-        "DATABASE_URL": "postgresql://...",
-        "ANTHROPIC_API_KEY": "нужен только для check_policy_clause"
-      }
-    }
-  }
-}
+Copy the template and fill in what you need:
+
+```bash
+cp .env.example .env            # Windows: copy .env.example .env
 ```
 
-Удалённый доступ (streamable HTTP): `python -m hrgid.mcp --http --port 8765`, адрес `/mcp`,
-токен в заголовке `Authorization: Bearer hrg_…` (без токена или с отозванным — 401).
-Модель проверки пункта — `HRGID_LLM_PROVIDER` (openrouter, claude, gigachat, yandex); без ключа остальные три
-инструмента работают. Тесты: `pytest tests/mcpsrv tests/panel/test_mcp_tokens.py`.
+Every variable is optional for a first run. The most important ones:
 
-## Модель через OpenRouter
+| Variable | Purpose | Where to get it |
+|---|---|---|
+| `HRGID_LLM_PROVIDER` | model: `fake` (default), `openrouter`, `claude`, `gigachat`, `yandex` | - |
+| `OPENROUTER_API_KEY` | key for OpenRouter | <https://openrouter.ai/keys> |
+| `ANTHROPIC_API_KEY` | key for Claude | <https://console.anthropic.com/> |
+| `GIGACHAT_CREDENTIALS`, `YANDEX_API_KEY`, `YANDEX_FOLDER_ID` | keys for Russian providers | the provider's console |
+| `TELEGRAM_BOT_TOKEN` | Telegram bot token | create a bot with @BotFather |
+| `HRGID_COMPANY`, `HRGID_COMPANY_NAME` | first company | any short id and display name |
+| `HRGID_ADMIN_EMAIL`, `HRGID_ADMIN_NAME` | first HR administrator | your e-mail |
+| `HRGID_PANEL_PEPPER`, `HRGID_CODE_PEPPER` | secrets for hashing codes | leave empty: generated on the first start |
+| `POSTGRES_PASSWORD` | database password (letters and digits only) | choose one |
+| `HRGID_MAIL` | `log` writes codes to the log, empty writes a file in the volume | - |
+| `HRGID_RETENTION_DAYS` | retention of dialogues in days (default 365) | - |
 
-Один ключ — доступ к моделям Claude через шлюз OpenRouter. Владелец сам добавляет в `.env`:
+Do not commit `.env` (it is in `.gitignore`). Keys are never stored in the repository. For a model
+provider, set `HRGID_LLM_PROVIDER` and the matching key in `.env`.
 
-```
-HRGID_LLM_PROVIDER=openrouter
-OPENROUTER_API_KEY=sk-or-...   # ключ кладёт владелец, в репозиторий не попадает
-HRGID_USD_RUB=95               # курс для расчёта стоимости в ₽ (необязательно)
-```
+Cross-border transfer: Claude and OpenRouter send masked data to servers in the USA. The administrator
+enables them in the panel (section P9.5) with a warning, and employees are notified.
 
-По умолчанию для **всех ролей** (маршрутизация, ответ, проверка цитат) используется бюджетная модель
-`anthropic/claude-haiku-5.5` (самая новая Haiku в списке openrouter.ai/api/v1/models на 21.11.2026);
-Sonnet по умолчанию не используется. Цены берутся из открытого списка моделей OpenRouter, при его
-недоступности — из запасной таблицы. Повторы и запасная модель работают как у остальных провайдеров.
-OpenRouter — трансграничная передача данных (США), как и Claude: в панели (П9.5) включается
-с предупреждением и отметкой «Сотрудники уведомлены». Прогон набора: `make record PROVIDER=openrouter`
-или `python scripts/eval_flow.py --provider openrouter --record`.
+## Usage
 
-## Тесты и качество
+1. Open the panel, sign in, and upload the company's documents: they are checked against the Labour Code.
+2. Open the Telegram bot as an employee, accept the consent, and ask a question, for example
+   "How many days of paid annual leave do I have?". The answer cites the article.
+3. Or open the web chat link and ask the same question.
+4. An AI agent can use the MCP server. Create a token in the panel (Settings, "Token for AI agents") and
+   connect it:
 
-```
-make lint        # ruff + mypy --strict
-make test        # быстрые тесты (pytest -m "not slow")
-pytest -m browser -rs      # браузерные e2e панели (Playwright; playwright install chromium)
-make gate        # ворота качества: набор на записанных ответах (БД, e5, закон)
-make record      # локально, ключом владельца: записать ответы модели (PROVIDER=openrouter|claude|gigachat|yandex)
-```
+   ```bash
+   claude mcp add hrgid -e HRGID_MCP_TOKEN=hrg_YOUR_TOKEN -e DATABASE_URL=postgresql://... -- python -m hrgid.mcp
+   ```
 
-Как устроены ворота (`.github/workflows/ci.yml`, ADR-0003): CI не вызывает модель, а воспроизводит
-записи из `tests/recordings/`. Ключ записи = хэш(промпт + модель + версия набора): изменили промпт,
-не обновили записи — ворота красные. Пока первой живой записи нет (файл `tests/recordings/PENDING`),
-шаг пропускается с предупреждением в журнале CI. Что ворота краснеют, доказывает
-`tests/test_quality_gate.py` (Fake-модель, нарочно ухудшенный промпт и ухудшенные записи).
+   Tools: `search_law`, `search_policy`, `calc`, `check_policy_clause`. Remote access over streamable
+   HTTP: `python -m hrgid.mcp --http --port 8765`, endpoint `/mcp`, header `Authorization: Bearer hrg_...`.
 
-Задачи CI: `check` (ruff, mypy --strict, быстрые тесты на PostgreSQL с pgvector), `e2e` (Chromium),
-`quality-gate`, `compose-smoke` (чистый клон → `docker compose up` → панель и веб-чат отвечают).
+## Tests and quality checks
 
-## Качество
-
-Таблица заполняется живым прогоном ключом владельца; **появится после живого прогона** (`make record`,
-затем нагрузочный прогон этапа 9). Числа не выдумываются: пока ячейка пуста, измерения не было.
-
-| Метрика | Порог | «Только вектор» | «Гибрид» | «+ переранжирование» | «+ проверка цитат» |
-|---|---|---|---|---|---|
-| hit@5 на законе | ≥ 0,85 | | | | |
-| Правильная статья в ответе | ≥ 85 % | | | | |
-| Верные отказы («ответа нет») | ≥ 9 из 10 | | | | |
-| Отбитые инъекции | 5 из 5 | | | | |
-| Расчёты до рубля | 10 из 10 | | | | |
-| Поиск, p95 на CPU | ≤ 400 мс | | | | |
-| Ответ, p95 | ≤ 8 с | | | | |
-
-Дата и состав прогона будут указаны под таблицей (набор: 80+ вопросов, `data/evals/`).
-
-## Стоимость ответа
-
-Считается по токенам реального ответа и прайсу провайдера (`hrgid/llm/base.py`, `cost_rub`) и пишется
-в каждую трассу (`traces.cost_rub`, панель П8). Один ответ = вызов дешёвой модели (маршрут, проверка
-цитат) + вызов основной; ответ из кэша стоит 0 ₽. Цифра «стоимость 1 000 ответов в ₽» появится после
-живого прогона 200 вопросов (§13) и будет записана здесь с датой. Сейчас — **не измерено**.
-
-## Ограничения
-
-- Только Трудовой кодекс РФ, 255-ФЗ и производственный календарь, правила и документы компании;
-  иное законодательство и судебная практика не входят.
-- Это справка со ссылкой, а не юридическое заключение; при отсутствии основания — отказ и передача HR.
-- Модель по умолчанию российская (GigaChat/YandexGPT); Claude и OpenRouter включаются администратором с
-  предупреждением о трансграничной передаче (данные уходят замаскированными).
-- Реальной отправки почты нет: код входа в панель кладётся файлом в том (режим самостоятельной установки).
-- Живой записи ответов и нагрузочного прогона пока нет: таблица качества пуста.
-- Не входит в v1: голос, интеграции с кадровыми системами, подписание документов (см. SPEC §18).
-
-## Безопасность и 152-ФЗ
-
-- Согласие сотрудника при первом входе, `/privacy` — состав данных, срок, удаление по запросу.
-- Маскирование ФИО (natasha), паспорта, СНИЛС, ИНН, телефона, почты до отправки в модель; таблица меток
-  только в памяти запроса.
-- Изоляция компаний: `tenant_id` во всех таблицах, запросах, кэше, трассах; доступ к диалогам — только
-  HR своей компании; хранение 1 год (`HRGID_RETENTION_DAYS`, чистит `worker`).
-- Образ запускается от непривилегированного пользователя; база и Redis наружу не опубликованы; секреты
-  только в окружении или томе, `.env.example` без значений.
-- [Модель угроз](docs/threat-model.md) (угроза → мера → тест), [порядок при инциденте](docs/incident-response.md)
-  (уведомление Роскомнадзора: 24 часа и 72 часа), [решения с отвергнутыми вариантами](docs/adr).
-
-## Лицензия
-
-Заглушка: лицензия **по решению владельца**. До решения код не распространяется и не предоставляется
-для повторного использования.
-
----
-
-## English
-
-**HRgid** is an AI assistant for HR: it answers employees' questions on the Russian Labour Code and on
-company rules, always citing the article and quoting the source; when there is no basis it says so and
-hands the question to HR. Channels: Telegram bot, web chat, MCP server; HR works in a web panel.
-Stack: Python 3.12, FastAPI, LangGraph, PostgreSQL 16 + pgvector, Redis, aiogram.
-
-Quick start (Docker Compose v2.24+, no API keys needed; without a model key every answer is a polite
-refusal, search/panel/web chat work):
-
-```
-git clone <repo> hrgid && cd hrgid
-docker compose up      # panel and web chat on http://localhost:8000
+```bash
+make lint                       # ruff + mypy --strict
+make test                       # fast tests (pytest -m "not slow")
+pytest -m "not slow and not browser"   # what the install check runs
+pytest -m browser -rs           # browser end-to-end tests of the panel (Playwright; playwright install chromium)
+make gate                       # quality gate on recorded model answers
+make record                     # records model answers with your own key (PROVIDER=openrouter|claude|gigachat|yandex)
 ```
 
-Quality is enforced in CI from recorded model answers (ADR-0003): changing a prompt without re-recording
-turns the gate red, on purpose. The quality table above is empty until the first live run. Not legal
-advice. PII is masked before it reaches a model; see the threat model and the incident-response plan
-(Roskomnadzor notification within 24 h and 72 h). License: placeholder, owner's decision pending.
+Markers: `db` (needs PostgreSQL with libpq), `natasha` (downloads NLP models), `browser` (needs Playwright),
+`slow` (needs models and a local database). The CI jobs in `.github/workflows/ci.yml` run them.
+
+How the quality gate works (`.github/workflows/ci.yml`, ADR-0003): CI does not call a model. It replays
+recorded answers from `tests/recordings/`. The recording key is a hash of (prompt + model + set version): if
+you change a prompt without re-recording, the gate turns red on purpose. `tests/test_quality_gate.py` proves
+that the gate turns red on a deliberately degraded prompt.
+
+## Quality
+
+The quality table is filled in by a live run with the owner's key. **It is not filled in yet.** No numbers
+are invented: an empty cell means that the measurement has not been done.
+
+| Metric | Threshold |
+|---|---|
+| hit@5 on the law | >= 0.85 |
+| correct article in the answer | >= 85 % |
+| correct refusals ("no answer") | >= 9 of 10 |
+| rejected prompt injections | 5 of 5 |
+| calculations to the rouble | 10 of 10 |
+| search, p95 on CPU | <= 400 ms |
+| answer, p95 | <= 8 s |
+
+The evaluation set has 80+ questions (`data/evals/`).
+
+Cost per answer is computed from real token usage and the provider price list (`hrgid/llm/base.py`,
+`cost_rub`) and written to every trace. A live run of 200 questions for the cost per 1,000 answers is not
+done yet.
+
+## Project structure
+
+```
+src/hrgid/flow/     answer flow (LangGraph): routing, search, answer, citation check, calculations
+src/hrgid/search/   hybrid search, reranking, tenant isolation
+src/hrgid/calc/     calculations R1-R9 (pure Decimal functions, rules in YAML)
+src/hrgid/llm/      model adapters (fake, OpenRouter, Claude, GigaChat, YandexGPT), retries, cache
+src/hrgid/bot/      Telegram bot (aiogram), dialogue engine, outbox
+src/hrgid/panel/    HR panel (FastAPI, Jinja2)
+src/hrgid/mcp/      MCP server for AI agents
+data/               law text, company rules, calendar, evaluation sets (Russian content)
+docs/adr/           architecture decision records (English)
+tests/              pytest suites; tests/recordings holds recorded model answers
+```
+
+## Documentation
+
+- [Threat model](docs/threat-model.md): threat, control, test.
+- [Incident response](docs/incident-response.md): what to do after a leak, including the notification
+  deadlines for the regulator (24 hours and 72 hours).
+- [Architecture decision records](docs/adr): options considered and the reasons for the choices.
+
+## Limitations
+
+- Only the Labour Code of the Russian Federation, Federal Law 255-FZ and the production calendar, company
+  rules and documents are covered. Other legislation and court practice are not included.
+- An answer is a reference with a source link, not a legal opinion. If there is no basis, the assistant
+  refuses and passes the question to HR.
+- The default model is a fake model that refuses everything until you configure a provider. The
+  Russian providers (GigaChat, YandexGPT) and Claude / OpenRouter are optional.
+- No real e-mail is sent: the sign-in code is written to a file in the volume (self-hosted mode).
+- The live recording of answers and the load test are not done yet, so the quality table is empty.
+- Not in v1: voice, integration with HR systems, document signing.
+
+## Security and personal data (Russian Federal Law 152-FZ)
+
+- Employee consent at the first sign-in; `/privacy` describes the data, the retention period and deletion
+  on request.
+- Masking of names, passport, SNILS, TIN, phone and e-mail before anything goes to the model. The mapping
+  table lives only in memory for the request.
+- Company isolation: `tenant_id` in every table, query, cache and trace. Dialogues are visible only to HR of
+  the same company. Retention is 1 year (`HRGID_RETENTION_DAYS`, cleaned by the `worker` service).
+- The image runs as a non-root user; the database and Redis are not published to the host; secrets come only
+  from the environment or a volume; `.env.example` has no values.
+
+## License
+
+No license has been chosen yet. The owner has not decided on the license, so the code is not licensed for
+reuse until that decision is made.
+
+## Русская версия
+
+Краткое описание на русском: ИИ-помощник HR отвечает сотрудникам по Трудовому кодексу РФ и правилам
+компании, со ссылкой на статью и цитатой; при отсутствии основания передаёт вопрос HR. Не юридическая
+консультация. Подробная инструкция по установке и настройке — выше, на английском.
