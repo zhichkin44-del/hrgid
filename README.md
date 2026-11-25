@@ -184,24 +184,28 @@ that the gate turns red on a deliberately degraded prompt.
 
 ## Quality
 
-The quality table is filled in by a live run with the owner's key. **It is not filled in yet.** No numbers
-are invented: an empty cell means that the measurement has not been done.
+Results of the live run on 2026-11-21 (GitHub Actions run 44869034958, commit ddad582,
+`anthropic/claude-haiku-5.5` through OpenRouter, reasoning off). Full report:
+[reports/live-runs/stage2-openrouter-2026-11-21-run2.md](reports/live-runs/stage2-openrouter-2026-11-21-run2.md).
+An empty cell means the measurement has not been done; no numbers are invented.
 
-| Metric | Threshold |
-|---|---|
-| hit@5 on the law | >= 0.85 |
-| correct article in the answer | >= 85 % |
-| correct refusals ("no answer") | >= 9 of 10 |
-| rejected prompt injections | 5 of 5 |
-| calculations to the rouble | 10 of 10 |
-| search, p95 on CPU | <= 400 ms |
-| answer, p95 | <= 8 s |
+| Metric | Threshold | Result |
+|---|---|---|
+| correct article in the answer | >= 85 % | 34 of 40 (85 %) |
+| correct refusals ("no answer") | >= 9 of 10 | 10 of 10 |
+| rejected prompt injections | 5 of 5 | 5 of 5 |
+| answers citing text that is not in the source | 0 | 0 |
+| hit@5 on the law | >= 0.85 | |
+| calculations to the rouble | 10 of 10 | |
+| search, p95 on CPU | <= 400 ms | |
+| answer, p95 | <= 8 s | |
 
-The evaluation set has 80+ questions (`data/evals/`).
+Cost of that run: $0.038 for 252 model calls (171,562 input and 42,423 output tokens), about $0.70 per
+1,000 questions at OpenRouter prices on 2026-11-21. An earlier run the same day with reasoning on scored
+7 of 40 on the article metric; its report is kept next to this one.
 
-Cost per answer is computed from real token usage and the provider price list (`hrgid/llm/base.py`,
-`cost_rub`) and written to every trace. A live run of 200 questions for the cost per 1,000 answers is not
-done yet.
+The evaluation set has 80+ questions (`data/evals/`). Cost per answer is computed from real token usage and
+the provider price list (`hrgid/llm/base.py`, `cost_rub`) and written to every trace.
 
 ## Architecture
 
@@ -252,7 +256,7 @@ tests/              pytest suites; tests/recordings holds recorded model answers
 - The default model is a fake model that refuses everything until you configure a provider. The
   Russian providers (GigaChat, YandexGPT) and Claude / OpenRouter are optional.
 - No real e-mail is sent: the sign-in code is written to a file in the volume (self-hosted mode).
-- The live recording of answers and the load test are not done yet, so the quality table is empty.
+- The load test and the retrieval, calculation and latency measurements are not done yet (empty cells in the quality table).
 - Not in v1: voice, integration with HR systems, document signing.
 
 ## Security and personal data (Russian Federal Law 152-FZ)
@@ -271,3 +275,6 @@ tests/              pytest suites; tests/recordings holds recorded model answers
 Source-available, all rights reserved: the code is published for viewing and evaluation only.
 The code is published as a portfolio prototype under a view-only licence, not for production use.
 Commercial or production use requires written permission. See [LICENSE](LICENSE).
+Why view-only: the assistant gives answers on labour law and processes employees' personal data (152-FZ),
+so a production deployment needs consent, data-processing and legal setup that this repository does not
+provide on its own.
